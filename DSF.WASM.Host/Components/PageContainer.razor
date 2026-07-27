@@ -1,0 +1,45 @@
+@using DSF.WASM.Host.Services
+@implements IDisposable
+@inject ModuleLoader ModuleLoader
+
+@if (_isLoading)
+{
+    <div class="module-loading">
+        <div class="spinner"></div>
+        <p class="text-gray-500">Đang tải module...</p>
+    </div>
+}
+else if (Type is null)
+{
+    <div class="flex items-center justify-center h-full">
+        <div class="text-center text-gray-500">
+            <RadzenIcon Icon="dashboard" class="text-6xl mb-4 text-gray-300" />
+            <p class="text-lg">Chọn một menu để bắt đầu</p>
+        </div>
+    </div>
+}
+else
+{
+    <DynamicComponent Type="Type" />
+}
+
+@code {
+    [Parameter] public Type? Type { get; set; }
+    private bool _isLoading;
+
+    protected override void OnInitialized()
+    {
+        ModuleLoader.OnLoadingChanged += OnLoadingChanged;
+    }
+
+    private void OnLoadingChanged(bool isLoading)
+    {
+        _isLoading = isLoading;
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        ModuleLoader.OnLoadingChanged -= OnLoadingChanged;
+    }
+}

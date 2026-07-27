@@ -1,0 +1,31 @@
+@inherits LayoutComponentBase
+@using DSF.WASM.Host.Services
+@inject MenuService MenuService
+@inject ModuleLoader ModuleLoader
+
+<div class="flex flex-col h-screen w-screen overflow-hidden">
+    <AppHeader />
+
+    <div class="flex flex-1 overflow-hidden">
+        <AppMenu OnMenuSelected="OnMenuSelected" />
+
+        <main class="flex-1 overflow-auto bg-gray-50 p-6">
+            <PageContainer Type="_currentPageType" />
+        </main>
+    </div>
+</div>
+
+@code {
+    private Type? _currentPageType;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await MenuService.LoadMenusAsync();
+    }
+
+    private void OnMenuSelected(Type? pageType)
+    {
+        _currentPageType = pageType;
+        StateHasChanged();
+    }
+}

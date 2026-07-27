@@ -1,0 +1,62 @@
+@namespace DSF.WASM.Products.Pages
+
+<div class="p-2">
+    <h2 class="text-2xl font-bold text-gray-800 mb-6">Thêm sản phẩm mới</h2>
+
+    <RadzenCard class="p-6 max-w-2xl">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <RadzenLabel Text="Mã sản phẩm" />
+                <RadzenTextBox @bind-Value="product.Id" class="w-full" Placeholder="Nhập mã SP" />
+            </div>
+            <div>
+                <RadzenLabel Text="Tên sản phẩm" />
+                <RadzenTextBox @bind-Value="product.Name" class="w-full" Placeholder="Nhập tên sản phẩm" />
+            </div>
+            <div>
+                <RadzenLabel Text="Danh mục" />
+                <RadzenDropDown @bind-Value="product.Category" Data="@categories" class="w-full"
+                    Placeholder="Chọn danh mục" />
+            </div>
+            <div>
+                <RadzenLabel Text="Giá bán (VNĐ)" />
+                <RadzenNumeric @bind-Value="product.Price" class="w-full" Min="0" />
+            </div>
+            <div>
+                <RadzenLabel Text="Số lượng tồn kho" />
+                <RadzenNumeric @bind-Value="product.Stock" class="w-full" Min="0" />
+            </div>
+            <div class="flex items-end">
+                <RadzenButton Text="Lưu sản phẩm" ButtonStyle="ButtonStyle.Primary" Icon="save"
+                    Click="@SaveProduct" />
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(message))
+        {
+            <RadzenAlert AlertStyle="AlertStyle.Success" Text="@message" class="mt-4" />
+        }
+    </RadzenCard>
+</div>
+
+@code {
+    private string message = "";
+
+    private class ProductForm
+    {
+        public string Id { get; set; } = "";
+        public string Name { get; set; } = "";
+        public string Category { get; set; } = "";
+        public double Price { get; set; }
+        public int Stock { get; set; }
+    }
+
+    private ProductForm product = new();
+    private List<string> categories = new() { "Điện tử", "Điện thoại", "Máy tính bảng", "Phụ kiện", "Âm thanh", "Màn hình", "Thiết bị đeo" };
+
+    private void SaveProduct()
+    {
+        message = $"Đã lưu sản phẩm: {product.Name} - {product.Price:N0} ₫";
+        product = new();
+    }
+}
