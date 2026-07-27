@@ -38,3 +38,6 @@ artifacts/
 ## Rider
 .idea/
 *.sln.iml
+
+## Command code
+.commandcode/
