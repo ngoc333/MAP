@@ -1,0 +1,110 @@
+@namespace MAP.M.Customers.Pages
+
+<div class="p-2">
+    <h2 class="text-2xl font-bold text-gray-800 mb-6">Chi tiết khách hàng</h2>
+
+    <RadzenCard class="p-6 max-w-3xl">
+        <div class="flex items-center gap-4 mb-6">
+            <div class="w-16 h-16 rounded-full bg-blue-500 flex items-center justify-center text-white text-2xl font-bold">
+                @customer.FirstName[0]
+            </div>
+            <div>
+                <h3 class="text-xl font-semibold text-gray-800">@customer.FullName</h3>
+                <p class="text-gray-500">@customer.Email</p>
+            </div>
+        </div>
+
+        <RadzenTabs>
+            <Tabs>
+                <RadzenTabsItem Text="Thông tin chung">
+                    <div class="grid grid-cols-2 gap-4 p-2">
+                        <div>
+                            <p class="text-sm text-gray-500">Mã khách hàng</p>
+                            <p class="font-medium">@customer.Code</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Số điện thoại</p>
+                            <p class="font-medium">@customer.Phone</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Địa chỉ</p>
+                            <p class="font-medium">@customer.Address</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Thành phố</p>
+                            <p class="font-medium">@customer.City</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Ngày đăng ký</p>
+                            <p class="font-medium">@customer.RegisteredDate.ToString("dd/MM/yyyy")</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Tổng đơn hàng</p>
+                            <p class="font-medium">@customer.TotalOrders</p>
+                        </div>
+                    </div>
+                </RadzenTabsItem>
+                <RadzenTabsItem Text="Lịch sử mua hàng">
+                    <div class="p-2">
+                        <RadzenDataGrid Data="@purchaseHistory" TItem="PurchaseRecord" AllowPaging="true" PageSize="5">
+                            <Columns>
+                                <RadzenDataGridColumn TItem="PurchaseRecord" Property="Date" Title="Ngày"
+                                    FormatString="{0:dd/MM/yyyy}" />
+                                <RadzenDataGridColumn TItem="PurchaseRecord" Property="Product" Title="Sản phẩm" />
+                                <RadzenDataGridColumn TItem="PurchaseRecord" Property="Quantity" Title="SL"
+                                    Width="70px" />
+                                <RadzenDataGridColumn TItem="PurchaseRecord" Property="Amount" Title="Thành tiền"
+                                    FormatString="{0:N0} ₫" />
+                            </Columns>
+                        </RadzenDataGrid>
+                    </div>
+                </RadzenTabsItem>
+            </Tabs>
+        </RadzenTabs>
+    </RadzenCard>
+</div>
+
+@code {
+    private CustomerDetailModel customer = new()
+    {
+        Code = "KH001",
+        FirstName = "Nguyễn",
+        FullName = "Nguyễn Văn An",
+        Email = "an.nguyen@email.com",
+        Phone = "0901234567",
+        Address = "123 Nguyễn Huệ, Quận 1",
+        City = "TP.HCM",
+        RegisteredDate = new DateTime(2024, 3, 15),
+        TotalOrders = 12
+    };
+
+    private List<PurchaseRecord> purchaseHistory = new()
+    {
+        new() { Date = new DateTime(2025, 7, 20), Product = "Laptop Dell XPS 15", Quantity = 1, Amount = 35000000 },
+        new() { Date = new DateTime(2025, 6, 15), Product = "AirPods Pro 3", Quantity = 2, Amount = 11980000 },
+        new() { Date = new DateTime(2025, 5, 10), Product = "Logitech MX Master 4S", Quantity = 1, Amount = 2890000 },
+        new() { Date = new DateTime(2025, 4, 5), Product = "LG UltraFine 5K", Quantity = 1, Amount = 32990000 },
+        new() { Date = new DateTime(2025, 2, 28), Product = "Sony WH-1000XM6", Quantity = 1, Amount = 7990000 },
+    };
+
+    public class CustomerDetailModel
+    {
+        public string Code { get; set; } = "";
+        public string FirstName { get; set; } = "";
+        public string FullName { get; set; } = "";
+        public string Email { get; set; } = "";
+        public string Phone { get; set; } = "";
+        public string Address { get; set; } = "";
+        public string City { get; set; } = "";
+        public DateTime RegisteredDate { get; set; }
+        public int TotalOrders { get; set; }
+    }
+
+    public class PurchaseRecord
+    {
+        public DateTime Date { get; set; }
+        public string Product { get; set; } = "";
+        public int Quantity { get; set; }
+        public long Amount { get; set; }
+    }
+}

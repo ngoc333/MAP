@@ -1,0 +1,85 @@
+@namespace MAP.M.Reports.Pages
+
+<div class="p-2">
+    <h2 class="text-2xl font-bold text-gray-800 mb-6">Biểu đồ doanh thu</h2>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <RadzenCard class="p-4">
+            <h3 class="text-lg font-semibold text-gray-700 mb-4">Doanh thu theo tháng (tỷ đồng)</h3>
+            <RadzenChart>
+                <RadzenBarSeries Data="@revenueData" CategoryProperty="Month" ValueProperty="Revenue"
+                    Fill="var(--rz-primary)">
+                </RadzenBarSeries>
+                <RadzenCategoryAxis />
+                <RadzenValueAxis FormatString="{0:N1}" />
+                <RadzenBarOptions Radius="6" />
+            </RadzenChart>
+        </RadzenCard>
+
+        <RadzenCard class="p-4">
+            <h3 class="text-lg font-semibold text-gray-700 mb-4">Cơ cấu danh mục</h3>
+            <RadzenChart>
+                <RadzenPieSeries Data="@categoryData" CategoryProperty="Category" ValueProperty="Value">
+                </RadzenPieSeries>
+            </RadzenChart>
+        </RadzenCard>
+
+        <RadzenCard class="p-4 lg:col-span-2">
+            <h3 class="text-lg font-semibold text-gray-700 mb-4">Doanh thu theo quý</h3>
+            <RadzenChart>
+                <RadzenLineSeries Data="@quarterlyData" CategoryProperty="Quarter" ValueProperty="Revenue"
+                    LineType="LineType.Solid" Stroke="var(--rz-primary)" />
+                <RadzenCategoryAxis />
+                <RadzenValueAxis FormatString="{0:N0}" />
+            </RadzenChart>
+        </RadzenCard>
+    </div>
+</div>
+
+@code {
+    private class RevenueItem
+    {
+        public string Month { get; set; } = "";
+        public double Revenue { get; set; }
+    }
+
+    private class CategoryItem
+    {
+        public string Category { get; set; } = "";
+        public double Value { get; set; }
+    }
+
+    private class QuarterItem
+    {
+        public string Quarter { get; set; } = "";
+        public double Revenue { get; set; }
+    }
+
+    private RevenueItem[] revenueData = new[]
+    {
+        new RevenueItem { Month = "T1", Revenue = 4.2 },
+        new RevenueItem { Month = "T2", Revenue = 3.8 },
+        new RevenueItem { Month = "T3", Revenue = 5.1 },
+        new RevenueItem { Month = "T4", Revenue = 5.6 },
+        new RevenueItem { Month = "T5", Revenue = 4.9 },
+        new RevenueItem { Month = "T6", Revenue = 6.2 },
+        new RevenueItem { Month = "T7", Revenue = 5.3 },
+    };
+
+    private CategoryItem[] categoryData = new[]
+    {
+        new CategoryItem { Category = "Điện tử", Value = 35 },
+        new CategoryItem { Category = "Điện thoại", Value = 28 },
+        new CategoryItem { Category = "Phụ kiện", Value = 15 },
+        new CategoryItem { Category = "Âm thanh", Value = 12 },
+        new CategoryItem { Category = "Khác", Value = 10 },
+    };
+
+    private QuarterItem[] quarterlyData = new[]
+    {
+        new QuarterItem { Quarter = "Q1", Revenue = 13100 },
+        new QuarterItem { Quarter = "Q2", Revenue = 16700 },
+        new QuarterItem { Quarter = "Q3", Revenue = 18900 },
+        new QuarterItem { Quarter = "Q4", Revenue = 21000 },
+    };
+}

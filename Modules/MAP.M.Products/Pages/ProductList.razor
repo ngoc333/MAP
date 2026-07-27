@@ -1,0 +1,61 @@
+@namespace MAP.M.Products.Pages
+
+<div class="p-2">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-800">Danh sách sản phẩm</h2>
+        <RadzenTextBox @bind-Value="searchText" Placeholder="Tìm kiếm..." class="w-64"
+            Change="@(args => OnSearch(args))" />
+    </div>
+
+    <RadzenCard class="p-0 overflow-hidden">
+        <RadzenDataGrid Data="@filteredProducts" TItem="Product" AllowSorting="true" AllowFiltering="false"
+            AllowPaging="true" PageSize="10" class="w-full">
+            <Columns>
+                <RadzenDataGridColumn TItem="Product" Property="Id" Title="Mã" Width="80px" />
+                <RadzenDataGridColumn TItem="Product" Property="Name" Title="Tên sản phẩm" />
+                <RadzenDataGridColumn TItem="Product" Property="Category" Title="Danh mục" />
+                <RadzenDataGridColumn TItem="Product" Property="Price" Title="Giá" FormatString="{0:N0} ₫" />
+                <RadzenDataGridColumn TItem="Product" Property="Stock" Title="Tồn kho" Width="100px" />
+            </Columns>
+        </RadzenDataGrid>
+    </RadzenCard>
+</div>
+
+@code {
+    private string searchText = "";
+
+    private List<Product> products = new()
+    {
+        new() { Id = "SP001", Name = "Laptop Dell XPS 15", Category = "Điện tử", Price = 35000000, Stock = 25 },
+        new() { Id = "SP002", Name = "iPhone 16 Pro Max", Category = "Điện thoại", Price = 29990000, Stock = 50 },
+        new() { Id = "SP003", Name = "Samsung Galaxy S25", Category = "Điện thoại", Price = 24990000, Stock = 40 },
+        new() { Id = "SP004", Name = "iPad Air M3", Category = "Máy tính bảng", Price = 16990000, Stock = 30 },
+        new() { Id = "SP005", Name = "MacBook Pro 14", Category = "Điện tử", Price = 49990000, Stock = 15 },
+        new() { Id = "SP006", Name = "AirPods Pro 3", Category = "Phụ kiện", Price = 5990000, Stock = 100 },
+        new() { Id = "SP007", Name = "Apple Watch Ultra 2", Category = "Thiết bị đeo", Price = 21990000, Stock = 20 },
+        new() { Id = "SP008", Name = "Logitech MX Master 4S", Category = "Phụ kiện", Price = 2890000, Stock = 60 },
+        new() { Id = "SP009", Name = "LG UltraFine 5K", Category = "Màn hình", Price = 32990000, Stock = 10 },
+        new() { Id = "SP010", Name = "Sony WH-1000XM6", Category = "Âm thanh", Price = 7990000, Stock = 35 },
+        new() { Id = "SP011", Name = "Razer Blade 16", Category = "Điện tử", Price = 45990000, Stock = 8 },
+        new() { Id = "SP012", Name = "Samsung Galaxy Tab S10", Category = "Máy tính bảng", Price = 12990000, Stock = 22 },
+    };
+
+    private IEnumerable<Product> filteredProducts => string.IsNullOrWhiteSpace(searchText)
+        ? products
+        : products.Where(p => p.Name.Contains(searchText, StringComparison.OrdinalIgnoreCase)
+                           || p.Category.Contains(searchText, StringComparison.OrdinalIgnoreCase));
+
+    private void OnSearch(string value)
+    {
+        searchText = value;
+    }
+
+    public class Product
+    {
+        public string Id { get; set; } = "";
+        public string Name { get; set; } = "";
+        public string Category { get; set; } = "";
+        public long Price { get; set; }
+        public int Stock { get; set; }
+    }
+}

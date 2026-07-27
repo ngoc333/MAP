@@ -1,0 +1,88 @@
+{
+  "menus": [
+    {
+      "id": "home",
+      "title": "Trang chủ",
+      "icon": "home",
+      "children": [
+        {
+          "id": "home-dashboard",
+          "title": "Dashboard",
+          "icon": "dashboard",
+          "assembly": "MAP.M.Home.dll",
+          "component": "MAP.M.Home.Pages.DashboardPage"
+        },
+        {
+          "id": "home-welcome",
+          "title": "Giới thiệu",
+          "icon": "info",
+          "assembly": "MAP.M.Home.dll",
+          "component": "MAP.M.Home.Pages.HomePage"
+        }
+      ]
+    },
+    {
+      "id": "products",
+      "title": "Sản phẩm",
+      "icon": "inventory_2",
+      "children": [
+        {
+          "id": "product-list",
+          "title": "Danh sách",
+          "icon": "list",
+          "assembly": "MAP.M.Products.dll",
+          "component": "MAP.M.Products.Pages.ProductList"
+        },
+        {
+          "id": "product-add",
+          "title": "Thêm mới",
+          "icon": "add_circle",
+          "assembly": "MAP.M.Products.dll",
+          "component": "MAP.M.Products.Pages.ProductAdd"
+        }
+      ]
+    },
+    {
+      "id": "customers",
+      "title": "Khách hàng",
+      "icon": "people",
+      "children": [
+        {
+          "id": "customer-list",
+          "title": "Danh sách",
+          "icon": "list_alt",
+          "assembly": "MAP.M.Customers.dll",
+          "component": "MAP.M.Customers.Pages.CustomerList"
+        },
+        {
+          "id": "customer-detail",
+          "title": "Chi tiết",
+          "icon": "person",
+          "assembly": "MAP.M.Customers.dll",
+          "component": "MAP.M.Customers.Pages.CustomerDetail"
+        }
+      ]
+    },
+    {
+      "id": "reports",
+      "title": "Báo cáo",
+      "icon": "bar_chart",
+      "children": [
+        {
+          "id": "report-sales",
+          "title": "Doanh số",
+          "icon": "trending_up",
+          "assembly": "MAP.M.Reports.dll",
+          "component": "MAP.M.Reports.Pages.SalesReport"
+        },
+        {
+          "id": "report-revenue",
+          "title": "Biểu đồ doanh thu",
+          "icon": "pie_chart",
+          "assembly": "MAP.M.Reports.dll",
+          "component": "MAP.M.Reports.Pages.RevenueChart"
+        }
+      ]
+    }
+  ]
+}

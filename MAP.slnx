@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="Core/MAP.C.Contract/MAP.C.Contract.csproj" />
+  <Project Path="Core/MAP.C.Runtime/MAP.C.Runtime.csproj" />
+  <Project Path="Core/MAP.C.Components/MAP.C.Components.csproj" />
+  <Project Path="MAP.H.Web/MAP.H.Web.csproj" />
+</Solution>

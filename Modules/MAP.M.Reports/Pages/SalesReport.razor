@@ -1,0 +1,64 @@
+@namespace MAP.M.Reports.Pages
+
+<div class="p-2">
+    <h2 class="text-2xl font-bold text-gray-800 mb-6">Báo cáo doanh số</h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <RadzenCard class="p-3 text-center">
+            <p class="text-sm text-gray-500">Tổng đơn hàng</p>
+            <p class="text-xl font-bold text-blue-600">1,245</p>
+        </RadzenCard>
+        <RadzenCard class="p-3 text-center">
+            <p class="text-sm text-gray-500">Đã giao</p>
+            <p class="text-xl font-bold text-green-600">1,102</p>
+        </RadzenCard>
+        <RadzenCard class="p-3 text-center">
+            <p class="text-sm text-gray-500">Đang xử lý</p>
+            <p class="text-xl font-bold text-yellow-600">98</p>
+        </RadzenCard>
+        <RadzenCard class="p-3 text-center">
+            <p class="text-sm text-gray-500">Đã hủy</p>
+            <p class="text-xl font-bold text-red-600">45</p>
+        </RadzenCard>
+    </div>
+
+    <RadzenCard class="p-0 overflow-hidden">
+        <RadzenDataGrid Data="@salesData" TItem="SalesRecord" AllowSorting="true"
+            AllowPaging="true" PageSize="12" class="w-full">
+            <Columns>
+                <RadzenDataGridColumn TItem="SalesRecord" Property="Month" Title="Tháng" Width="100px" />
+                <RadzenDataGridColumn TItem="SalesRecord" Property="OrderCount" Title="Số đơn" Width="100px" />
+                <RadzenDataGridColumn TItem="SalesRecord" Property="Revenue" Title="Doanh thu"
+                    FormatString="{0:N0} ₫" />
+                <RadzenDataGridColumn TItem="SalesRecord" Property="Growth" Title="Tăng trưởng"
+                    FormatString="{0:P1}" />
+            </Columns>
+        </RadzenDataGrid>
+    </RadzenCard>
+</div>
+
+@code {
+    private List<SalesRecord> salesData = new()
+    {
+        new() { Month = "T1/2025", OrderCount = 89, Revenue = 256000000, Growth = 0.12 },
+        new() { Month = "T2/2025", OrderCount = 76, Revenue = 198000000, Growth = -0.05 },
+        new() { Month = "T3/2025", OrderCount = 102, Revenue = 312000000, Growth = 0.18 },
+        new() { Month = "T4/2025", OrderCount = 115, Revenue = 345000000, Growth = 0.08 },
+        new() { Month = "T5/2025", OrderCount = 98, Revenue = 289000000, Growth = -0.03 },
+        new() { Month = "T6/2025", OrderCount = 125, Revenue = 378000000, Growth = 0.15 },
+        new() { Month = "T7/2025", OrderCount = 108, Revenue = 320000000, Growth = 0.22 },
+        new() { Month = "T8/2025", OrderCount = 95, Revenue = 267000000, Growth = -0.08 },
+        new() { Month = "T9/2025", OrderCount = 132, Revenue = 401000000, Growth = 0.11 },
+        new() { Month = "T10/2025", OrderCount = 110, Revenue = 335000000, Growth = 0.07 },
+        new() { Month = "T11/2025", OrderCount = 88, Revenue = 278000000, Growth = 0.05 },
+        new() { Month = "T12/2025", OrderCount = 107, Revenue = 342000000, Growth = -0.04 },
+    };
+
+    public class SalesRecord
+    {
+        public string Month { get; set; } = "";
+        public int OrderCount { get; set; }
+        public long Revenue { get; set; }
+        public double Growth { get; set; }
+    }
+}

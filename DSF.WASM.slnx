@@ -1,8 +1,0 @@
-<Solution>
-  <Project Path="DSF.WASM.Host/DSF.WASM.Host.csproj" />
-  <Project Path="DSF.WASM.Shared/DSF.WASM.Shared.csproj" />
-  <Project Path="Pages/DSF.WASM.Customers/DSF.WASM.Customers.csproj" />
-  <Project Path="Pages/DSF.WASM.Home/DSF.WASM.Home.csproj" />
-  <Project Path="Pages/DSF.WASM.Products/DSF.WASM.Products.csproj" />
-  <Project Path="Pages/DSF.WASM.Reports/DSF.WASM.Reports.csproj" />
-</Solution>

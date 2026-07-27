@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <OverrideHtmlAssetPlaceholders>true</OverrideHtmlAssetPlaceholders>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.10" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.10" PrivateAssets="all" />
+    <PackageReference Include="Radzen.Blazor" Version="11.1.7" />
+  </ItemGroup>
+
+  <!-- Platform references (cố định) -->
+  <ItemGroup>
+    <ProjectReference Include="..\Core\MAP.C.Contract\MAP.C.Contract.csproj" />
+    <ProjectReference Include="..\Core\MAP.C.Runtime\MAP.C.Runtime.csproj" />
+    <ProjectReference Include="..\Core\MAP.C.Components\MAP.C.Components.csproj" />
+  </ItemGroup>
+
+  <!-- Tự động phát hiện tất cả Page DLL từ Modules -->
+  <ItemGroup>
+    <PageAssembly Include="Modules\*.dll" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="@(PageAssembly->'%(Filename)')">
+      <HintPath>%(PageAssembly.Identity)</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup Condition="@(PageAssembly->Count()) &gt; 0">
+    <BlazorWebAssemblyLazyLoad Include="@(PageAssembly->'%(Filename)')" />
+  </ItemGroup>
+
+</Project>

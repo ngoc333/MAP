@@ -39,5 +39,8 @@ artifacts/
 .idea/
 *.sln.iml
 
+## Modules
+**/MAP.H.Web/Modules/
+
 ## Command code
 .commandcode/
