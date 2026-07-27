@@ -42,5 +42,8 @@ artifacts/
 ## Modules
 **/MAP.H.Web/Modules/
 
+## Tools
+tools/tailwindcss.exe
+
 ## Command code
 .commandcode/

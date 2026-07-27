@@ -35,4 +35,21 @@
     <BlazorWebAssemblyLazyLoad Include="@(PageAssembly->'%(Filename)')" />
   </ItemGroup>
 
+  <Target Name="EnsureTailwindCli" BeforeTargets="BuildTailwindCss">
+    <PropertyGroup>
+      <TailwindExe>$(MSBuildProjectDirectory)\..\tools\tailwindcss.exe</TailwindExe>
+      <TailwindUrl>https://github.com/tailwindlabs/tailwindcss/releases/download/v3.4.17/tailwindcss-windows-x64.exe</TailwindUrl>
+    </PropertyGroup>
+    <MakeDir Directories="$(MSBuildProjectDirectory)\..\tools" Condition="!Exists('$(MSBuildProjectDirectory)\..\tools')" />
+    <Exec
+      Command="powershell -NoProfile -Command &quot;Invoke-WebRequest -Uri '$(TailwindUrl)' -OutFile '$(TailwindExe)' -UseBasicParsing&quot;"
+      Condition="!Exists('$(TailwindExe)')" />
+  </Target>
+
+  <Target Name="BuildTailwindCss" BeforeTargets="BeforeBuild" DependsOnTargets="EnsureTailwindCli">
+    <Exec
+      Command="..\tools\tailwindcss.exe -i Styles\tailwind-input.css -o wwwroot\css\tailwind.css --minify"
+      WorkingDirectory="$(MSBuildProjectDirectory)" />
+  </Target>
+
 </Project>

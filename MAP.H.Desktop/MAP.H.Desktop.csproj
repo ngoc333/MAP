@@ -53,6 +53,14 @@
           DestinationFolder="$(_ModulesOut)" />
   </Target>
 
+  <Target Name="CopyTailwindCss" AfterTargets="Build">
+    <Copy
+      SourceFiles="..\MAP.H.Web\wwwroot\css\tailwind.css"
+      DestinationFolder="$(OutputPath)css"
+      SkipUnchangedFiles="true"
+      Condition="Exists('..\MAP.H.Web\wwwroot\css\tailwind.css')" />
+  </Target>
+
   <!-- Flatten wwwroot for BlazorWebView -->
   <Target Name="FlattenWwwrootForPublish" AfterTargets="Publish">
     <ItemGroup>
