@@ -2,5 +2,11 @@
   <Project Path="Core/MAP.C.Contract/MAP.C.Contract.csproj" />
   <Project Path="Core/MAP.C.Runtime/MAP.C.Runtime.csproj" />
   <Project Path="Core/MAP.C.Components/MAP.C.Components.csproj" />
+  <Project Path="Core/MAP.C.Wpf/MAP.C.Wpf.csproj" />
   <Project Path="MAP.H.Web/MAP.H.Web.csproj" />
+  <Project Path="MAP.H.Desktop/MAP.H.Desktop.csproj" />
+  <Project Path="Modules/MAP.M.Home/MAP.M.Home.csproj" />
+  <Project Path="Modules/MAP.M.Customers/MAP.M.Customers.csproj" />
+  <Project Path="Modules/MAP.M.Products/MAP.M.Products.csproj" />
+  <Project Path="Modules/MAP.M.Reports/MAP.M.Reports.csproj" />
 </Solution>

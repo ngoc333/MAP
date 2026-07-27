@@ -1,0 +1,68 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.17763.0</TargetFramework>
+    <RuntimeIdentifiers>win-x64;win-x86</RuntimeIdentifiers>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>MAP.H.Desktop</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Core\MAP.C.Wpf\MAP.C.Wpf.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="index.html" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="page.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <!-- Module discovery: all module projects under Modules/ -->
+  <ItemGroup>
+    <ModuleProject Include="$(MSBuildProjectDirectory)\..\Modules\*\*.csproj" />
+  </ItemGroup>
+
+  <Target Name="BuildModules" BeforeTargets="Build;Publish">
+    <MSBuild Projects="@(ModuleProject)"
+             Targets="Build;GetTargetPath"
+             Properties="Configuration=$(Configuration)"
+             BuildInParallel="true">
+      <Output TaskParameter="TargetOutputs" ItemName="_ModuleAssembly" />
+    </MSBuild>
+  </Target>
+
+  <Target Name="CopyModulesToBuildOutput"
+          AfterTargets="Build"
+          DependsOnTargets="BuildModules">
+    <PropertyGroup>
+      <_ModulesOut>$(OutputPath)modules\</_ModulesOut>
+    </PropertyGroup>
+    <Copy SourceFiles="@(_ModuleAssembly)"
+          DestinationFolder="$(_ModulesOut)" />
+  </Target>
+
+  <Target Name="CopyModulesToPublishOutput"
+          AfterTargets="Publish"
+          DependsOnTargets="BuildModules">
+    <PropertyGroup>
+      <_ModulesOut>$(PublishDir)modules\</_ModulesOut>
+    </PropertyGroup>
+    <Copy SourceFiles="@(_ModuleAssembly)"
+          DestinationFolder="$(_ModulesOut)" />
+  </Target>
+
+  <!-- Flatten wwwroot for BlazorWebView -->
+  <Target Name="FlattenWwwrootForPublish" AfterTargets="Publish">
+    <ItemGroup>
+      <_WwwrootFiles Include="$(PublishDir)wwwroot\**\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_WwwrootFiles)"
+          DestinationFiles="@(_WwwrootFiles -> '$(PublishDir)%(RecursiveDir)%(Filename)%(Extension)')"
+          Condition="'@(_WwwrootFiles)' != ''"
+          SkipUnchangedFiles="true" />
+    <RemoveDir Directories="$(PublishDir)wwwroot" ContinueOnError="true" />
+  </Target>
+
+</Project>
