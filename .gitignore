@@ -29,6 +29,9 @@ project.fragment.lock.json
 artifacts/
 **/Properties/launchSettings.json
 
+## Publish output
+publish/
+
 ## Code analysis
 *.DotSettings.user
 
