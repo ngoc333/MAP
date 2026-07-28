@@ -2,15 +2,15 @@
 @namespace MAP.M.Customers.Pages
 
 <div class="p-2">
-    <h2 class="text-2xl font-bold text-gray-800 mb-6">Chi tiết khách hàng</h2>
+    <h2 class="text-2xl font-bold text-gray-800 mb-6">@Lang.T("CustomerDetail.headerTitle")</h2>
 
     @if (PageParameters is not null)
     {
         dynamic p = PageParameters;
         <div class="mb-4">
             <RadzenAlert AlertStyle="AlertStyle.Info">
-                <strong>Page gọi:</strong> @FromPageId |
-                <strong>Params:</strong> Code=@p.Code, Name=@p.FullName, City=@p.City
+                <strong>@Lang.T("CustomerDetail.pageCalled"):</strong> @FromPageId |
+                <strong>@Lang.T("CustomerDetail.params"):</strong> Code=@p.Code, Name=@p.FullName, City=@p.City
             </RadzenAlert>
         </div>
     }
@@ -28,44 +28,44 @@
 
         <RadzenTabs>
             <Tabs>
-                <RadzenTabsItem Text="Thông tin chung">
+                <RadzenTabsItem Text="@Lang.T("CustomerDetail.generalInfo")">
                     <div class="grid grid-cols-2 gap-4 p-2">
                         <div>
-                            <p class="text-sm text-gray-500">Mã khách hàng</p>
+                            <p class="text-sm text-gray-500">@Lang.T("CustomerDetail.customerCode")</p>
                             <p class="font-medium">@customer.Code</p>
                         </div>
                         <div>
-                            <p class="text-sm text-gray-500">Số điện thoại</p>
+                            <p class="text-sm text-gray-500">@Lang.T("CustomerDetail.phone")</p>
                             <p class="font-medium">@customer.Phone</p>
                         </div>
                         <div>
-                            <p class="text-sm text-gray-500">Địa chỉ</p>
+                            <p class="text-sm text-gray-500">@Lang.T("CustomerDetail.address")</p>
                             <p class="font-medium">@customer.Address</p>
                         </div>
                         <div>
-                            <p class="text-sm text-gray-500">Thành phố</p>
+                            <p class="text-sm text-gray-500">@Lang.T("CustomerDetail.city")</p>
                             <p class="font-medium">@customer.City</p>
                         </div>
                         <div>
-                            <p class="text-sm text-gray-500">Ngày đăng ký</p>
+                            <p class="text-sm text-gray-500">@Lang.T("CustomerDetail.registeredDate")</p>
                             <p class="font-medium">@customer.RegisteredDate.ToString("dd/MM/yyyy")</p>
                         </div>
                         <div>
-                            <p class="text-sm text-gray-500">Tổng đơn hàng</p>
+                            <p class="text-sm text-gray-500">@Lang.T("CustomerDetail.totalOrders")</p>
                             <p class="font-medium">@customer.TotalOrders</p>
                         </div>
                     </div>
                 </RadzenTabsItem>
-                <RadzenTabsItem Text="Lịch sử mua hàng">
+                <RadzenTabsItem Text="@Lang.T("CustomerDetail.purchaseHistory")">
                     <div class="p-2">
                         <RadzenDataGrid Data="@purchaseHistory" TItem="PurchaseRecord" AllowPaging="true" PageSize="5">
                             <Columns>
-                                <RadzenDataGridColumn TItem="PurchaseRecord" Property="Date" Title="Ngày"
+                                <RadzenDataGridColumn TItem="PurchaseRecord" Property="Date" Title="@Lang.T("CustomerDetail.colDate")"
                                     FormatString="{0:dd/MM/yyyy}" />
-                                <RadzenDataGridColumn TItem="PurchaseRecord" Property="Product" Title="Sản phẩm" />
-                                <RadzenDataGridColumn TItem="PurchaseRecord" Property="Quantity" Title="SL"
+                                <RadzenDataGridColumn TItem="PurchaseRecord" Property="Product" Title="@Lang.T("CustomerDetail.colProduct")" />
+                                <RadzenDataGridColumn TItem="PurchaseRecord" Property="Quantity" Title="@Lang.T("CustomerDetail.colQuantity")"
                                     Width="70px" />
-                                <RadzenDataGridColumn TItem="PurchaseRecord" Property="Amount" Title="Thành tiền"
+                                <RadzenDataGridColumn TItem="PurchaseRecord" Property="Amount" Title="@Lang.T("CustomerDetail.colAmount")"
                                     FormatString="{0:N0} ₫" />
                             </Columns>
                         </RadzenDataGrid>
@@ -77,14 +77,14 @@
         <div class="mt-6">
             <RadzenButton ButtonStyle="ButtonStyle.Secondary"
                 Click="@(() => Navigator.OpenAsync("customer-list"))">
-                ← Về danh sách
+                @Lang.T("CustomerDetail.backToList")
             </RadzenButton>
         </div>
     </RadzenCard>
 </div>
 
 @code {
-    protected override string HeaderTitle => "Chi tiết khách hàng";
+    protected override string HeaderTitleKey => "CustomerDetail.headerTitle";
 
     private CustomerDetailModel customer = new()
     {

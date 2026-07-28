@@ -1,10 +1,11 @@
+using MAP.C.Contract.Localization;
 using MAP.C.Contract.Navigation;
 using MAP.C.Contract.UI.Headers;
 using Microsoft.AspNetCore.Components;
 
 namespace MAP.C.Contract.UI.Pages;
 
-public abstract class BasePage : ComponentBase
+public abstract class BasePage : ComponentBase, IDisposable
 {
     [Inject]
     protected IPageNavigator Navigator { get; private set; } = default!;
@@ -12,11 +13,14 @@ public abstract class BasePage : ComponentBase
     [Inject]
     protected IPageHeaderState Header { get; private set; } = default!;
 
+    [Inject]
+    protected ILanguageService Lang { get; private set; } = default!;
+
     protected object? PageParameters => Navigator.Current?.RawParameters;
 
     protected string? FromPageId => Navigator.Current?.FromPageId;
 
-    protected virtual string HeaderTitle => string.Empty;
+    protected virtual string HeaderTitleKey => string.Empty;
 
     protected virtual HeaderKind HeaderKind => HeaderKind.Default;
 
@@ -26,14 +30,33 @@ public abstract class BasePage : ComponentBase
 
     protected virtual RenderFragment? HeaderEnd => null;
 
+    protected string HeaderTitle =>
+        string.IsNullOrEmpty(HeaderTitleKey) ? string.Empty : Lang.T(HeaderTitleKey);
+
     protected void RefreshHeader()
     {
         Header.Set(new PageHeader(HeaderKind, HeaderTitle, HeaderStart, HeaderCenter, HeaderEnd));
+    }
+
+    protected override void OnInitialized()
+    {
+        Lang.LanguageChanged += OnLanguageChanged;
     }
 
     protected override void OnAfterRender(bool firstRender)
     {
         if (firstRender)
             RefreshHeader();
+    }
+
+    private void OnLanguageChanged()
+    {
+        RefreshHeader();
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        Lang.LanguageChanged -= OnLanguageChanged;
     }
 }

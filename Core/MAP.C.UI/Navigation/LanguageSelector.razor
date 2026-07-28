@@ -1,0 +1,37 @@
+@inject ILanguageService Lang
+
+<RadzenSelectBar @bind-Value="currentLanguage" TValue="string" Size="ButtonSize.Small"
+    Change="OnLanguageChanged">
+    <Items>
+        @foreach (var lang in Lang.AvailableLanguages)
+        {
+            <RadzenSelectBarItem Text="@lang.Name" Value="@lang.Code" />
+        }
+    </Items>
+</RadzenSelectBar>
+
+@code {
+    private string currentLanguage = "vi";
+
+    protected override void OnInitialized()
+    {
+        currentLanguage = Lang.CurrentLanguage;
+        Lang.LanguageChanged += OnLangChanged;
+    }
+
+    private void OnLangChanged()
+    {
+        currentLanguage = Lang.CurrentLanguage;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void OnLanguageChanged(string value)
+    {
+        Lang.SetLanguage(value);
+    }
+
+    public void Dispose()
+    {
+        Lang.LanguageChanged -= OnLangChanged;
+    }
+}

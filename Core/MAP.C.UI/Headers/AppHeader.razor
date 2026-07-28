@@ -1,4 +1,5 @@
 @inject IPageHeaderState HeaderState
+@inject ILanguageService Lang
 
 <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 shadow-sm flex-shrink-0">
     <div class="flex items-center gap-3">
@@ -16,7 +17,8 @@
 
     <div class="flex items-center gap-3">
         @HeaderState.Active?.End
-        <RadzenButton Text="Admin" ButtonStyle="ButtonStyle.Secondary" Size="ButtonSize.Small"
+        <LanguageSelector />
+        <RadzenButton Text="@Lang.T("layout.admin", "Admin")" ButtonStyle="ButtonStyle.Secondary" Size="ButtonSize.Small"
             Icon="account_circle" class="text-gray-600" />
     </div>
 </header>

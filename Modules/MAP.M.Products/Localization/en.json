@@ -1,0 +1,28 @@
+{
+  "ProductList": {
+    "headerTitle": "Product List",
+    "searchPlaceholder": "Search...",
+    "addNew": "+ Add New",
+    "colId": "ID",
+    "colName": "Product Name",
+    "colCategory": "Category",
+    "colPrice": "Price",
+    "colStock": "Stock",
+    "edit": "Edit"
+  },
+  "ProductAdd": {
+    "headerTitle": "Add New Product",
+    "editingProduct": "Edit Product",
+    "productId": "Product ID",
+    "productName": "Product Name",
+    "category": "Category",
+    "price": "Price (VND)",
+    "stock": "Stock Quantity",
+    "save": "Save Product",
+    "backToList": "← Back to List",
+    "placeholderId": "Enter product ID",
+    "placeholderName": "Enter product name",
+    "selectCategory": "Select category",
+    "savedMessage": "Product saved"
+  }
+}

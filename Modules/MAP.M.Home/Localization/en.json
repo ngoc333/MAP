@@ -1,0 +1,29 @@
+{
+  "HomePage": {
+    "headerTitle": "Home",
+    "intro": "Introduction",
+    "welcome": "Welcome to DSF WASM",
+    "description": "This is a Blazor WebAssembly application with dynamic module architecture. Each page is a separate DLL, loaded when you click a menu item.",
+    "lazyLoading": "Lazy Loading",
+    "lazyLoadingDesc": "Modules are loaded on demand, reducing startup time",
+    "independentModule": "Independent Modules",
+    "independentModuleDesc": "Each module is a separate Razor Class Library",
+    "radzenComponents": "Radzen Components",
+    "radzenComponentsDesc": "UI powered by Radzen Blazor component library",
+    "tailwindcss": "TailwindCSS",
+    "tailwindcssDesc": "Layout styling with TailwindCSS utility classes",
+    "testNav": "Test Page Navigation",
+    "openDashboard": "Open Dashboard",
+    "openCustomerList": "Open Customer List",
+    "openCustomerDetail": "Open Customer Detail (with params)",
+    "openProductAdd": "Open Add Product (with params)",
+    "openSales": "Open Sales Report"
+  },
+  "DashboardPage": {
+    "headerTitle": "Dashboard",
+    "totalOrders": "Total Orders",
+    "revenue": "Revenue",
+    "customers": "Customers",
+    "monthlyRevenue": "Monthly Revenue"
+  }
+}

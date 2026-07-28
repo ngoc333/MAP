@@ -2,25 +2,25 @@
 @namespace MAP.M.Reports.Pages
 
 <div class="p-2">
-    <h2 class="text-2xl font-bold text-gray-800 mb-6">Báo cáo doanh số</h2>
+    <h2 class="text-2xl font-bold text-gray-800 mb-6">@Lang.T("SalesReport.headerTitle")</h2>
 
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <RadzenCard class="p-3 text-center cursor-pointer hover:shadow-md transition-shadow"
             Click="@(() => Navigator.OpenAsync("report-revenue"))">
-            <p class="text-sm text-gray-500">Tổng đơn hàng</p>
+            <p class="text-sm text-gray-500">@Lang.T("SalesReport.totalOrders")</p>
             <p class="text-xl font-bold text-blue-600">1,245</p>
-            <p class="text-xs text-gray-400 mt-1">→ Xem biểu đồ</p>
+            <p class="text-xs text-gray-400 mt-1">@Lang.T("SalesReport.viewChart")</p>
         </RadzenCard>
         <RadzenCard class="p-3 text-center">
-            <p class="text-sm text-gray-500">Đã giao</p>
+            <p class="text-sm text-gray-500">@Lang.T("SalesReport.delivered")</p>
             <p class="text-xl font-bold text-green-600">1,102</p>
         </RadzenCard>
         <RadzenCard class="p-3 text-center">
-            <p class="text-sm text-gray-500">Đang xử lý</p>
+            <p class="text-sm text-gray-500">@Lang.T("SalesReport.processing")</p>
             <p class="text-xl font-bold text-yellow-600">98</p>
         </RadzenCard>
         <RadzenCard class="p-3 text-center">
-            <p class="text-sm text-gray-500">Đã hủy</p>
+            <p class="text-sm text-gray-500">@Lang.T("SalesReport.cancelled")</p>
             <p class="text-xl font-bold text-red-600">45</p>
         </RadzenCard>
     </div>
@@ -29,11 +29,11 @@
         <RadzenDataGrid Data="@salesData" TItem="SalesRecord" AllowSorting="true"
             AllowPaging="true" PageSize="12" class="w-full">
             <Columns>
-                <RadzenDataGridColumn TItem="SalesRecord" Property="Month" Title="Tháng" Width="100px" />
-                <RadzenDataGridColumn TItem="SalesRecord" Property="OrderCount" Title="Số đơn" Width="100px" />
-                <RadzenDataGridColumn TItem="SalesRecord" Property="Revenue" Title="Doanh thu"
+                <RadzenDataGridColumn TItem="SalesRecord" Property="Month" Title="@Lang.T("SalesReport.colMonth")" Width="100px" />
+                <RadzenDataGridColumn TItem="SalesRecord" Property="OrderCount" Title="@Lang.T("SalesReport.colOrderCount")" Width="100px" />
+                <RadzenDataGridColumn TItem="SalesRecord" Property="Revenue" Title="@Lang.T("SalesReport.colRevenue")"
                     FormatString="{0:N0} ₫" />
-                <RadzenDataGridColumn TItem="SalesRecord" Property="Growth" Title="Tăng trưởng"
+                <RadzenDataGridColumn TItem="SalesRecord" Property="Growth" Title="@Lang.T("SalesReport.colGrowth")"
                     FormatString="{0:P1}" />
             </Columns>
         </RadzenDataGrid>
@@ -41,7 +41,7 @@
 </div>
 
 @code {
-    protected override string HeaderTitle => "Báo cáo doanh số";
+    protected override string HeaderTitleKey => "SalesReport.headerTitle";
 
     private List<SalesRecord> salesData = new()
     {

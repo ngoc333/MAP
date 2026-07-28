@@ -1,0 +1,29 @@
+{
+  "HomePage": {
+    "headerTitle": "Trang chủ",
+    "intro": "Giới thiệu",
+    "welcome": "Chào mừng đến với DSF WASM",
+    "description": "Đây là ứng dụng Blazor WebAssembly với kiến trúc module động. Mỗi trang là một DLL riêng biệt, được tải về khi bạn click vào menu.",
+    "lazyLoading": "Lazy Loading",
+    "lazyLoadingDesc": "Module chỉ được tải khi cần, giảm thời gian khởi động",
+    "independentModule": "Module độc lập",
+    "independentModuleDesc": "Mỗi module là một Razor Class Library riêng biệt",
+    "radzenComponents": "Radzen Components",
+    "radzenComponentsDesc": "Giao diện sử dụng bộ components Radzen Blazor",
+    "tailwindcss": "TailwindCSS",
+    "tailwindcssDesc": "Layout styling với TailwindCSS utility classes",
+    "testNav": "Test Page Navigation",
+    "openDashboard": "Mở Dashboard",
+    "openCustomerList": "Mở DS Khách hàng",
+    "openCustomerDetail": "Mở Chi tiết KH (có param)",
+    "openProductAdd": "Mở SP (có param)",
+    "openSales": "Mở Doanh số"
+  },
+  "DashboardPage": {
+    "headerTitle": "Dashboard",
+    "totalOrders": "Tổng đơn hàng",
+    "revenue": "Doanh thu",
+    "customers": "Khách hàng",
+    "monthlyRevenue": "Doanh thu theo tháng"
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "menu": {
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "welcome": "Welcome",
+    "products": "Products",
+    "productList": "List",
+    "productAdd": "Add New",
+    "customers": "Customers",
+    "customerList": "List",
+    "customerDetail": "Detail",
+    "reports": "Reports",
+    "sales": "Sales",
+    "revenueChart": "Revenue Chart"
+  },
+  "layout": {
+    "loading": "Loading module...",
+    "selectMenu": "Select a menu to get started",
+    "admin": "Admin",
+    "back": "Back"
+  },
+  "notFound": {
+    "title": "Not Found",
+    "message": "Sorry, the content you are looking for does not exist."
+  },
+  "radzen": {
+    "DataGrid_FilterText": "Filter",
+    "DataGrid_ClearFilterText": "Clear filter",
+    "DataGrid_ApplyFilterText": "Apply",
+    "DataGrid_FilterOperatorLogicAnd": "And",
+    "DataGrid_FilterOperatorLogicOr": "Or",
+    "DataGrid_FilterOperatorEq": "Equals",
+    "DataGrid_FilterOperatorNeq": "Not equals",
+    "DataGrid_FilterOperatorContains": "Contains",
+    "DataGrid_FilterOperatorStartsWith": "Starts with",
+    "DataGrid_FilterOperatorEndsWith": "Ends with",
+    "DataGrid_FilterOperatorGt": "Greater than",
+    "DataGrid_FilterOperatorGte": "Greater than or equal",
+    "DataGrid_FilterOperatorLt": "Less than",
+    "DataGrid_FilterOperatorLte": "Less than or equal",
+    "DataGrid_FilterOperatorIsNull": "Is null",
+    "DataGrid_FilterOperatorIsNotNull": "Is not null",
+    "DataGrid_GroupPanelText": "Drag a column header here to group by that column",
+    "Pager_FirstPageTitle": "First page",
+    "Pager_PreviousPageTitle": "Previous page",
+    "Pager_NextPageTitle": "Next page",
+    "Pager_LastPageTitle": "Last page",
+    "Pager_Page": "Page",
+    "Pager_Of": "of",
+    "Pager_Items": "items",
+    "Pager_PageSizes": "items per page",
+    "DatePicker_Today": "Today",
+    "DatePicker_Clear": "Clear",
+    "Numeric_Min": "Minimum value",
+    "Numeric_Max": "Maximum value"
+  }
+}

@@ -1,21 +1,22 @@
 @inject IMenuService MenuService
+@inject ILanguageService Lang
 
 <aside class="w-64 bg-white border-r border-gray-200 overflow-y-auto flex-shrink-0 pt-4">
     <RadzenPanelMenu>
         @foreach (var menu in MenuService.Menus)
         {
-            <RadzenPanelMenuItem Text="@menu.Title" Icon="@menu.Icon" Expanded="@(menu.Id == "home")">
+            <RadzenPanelMenuItem Text="@GetMenuTitle(menu)" Icon="@menu.Icon" Expanded="@(menu.Id == "home")">
                 @if (menu.Children is not null)
                 {
                     @foreach (var child in menu.Children)
                     {
-                        <RadzenPanelMenuItem Text="@child.Title" Icon="@child.Icon"
+                        <RadzenPanelMenuItem Text="@GetMenuTitle(child)" Icon="@child.Icon"
                             Click="@(async () => await OnMenuItemClick(child))" />
                     }
                 }
                 else if (menu.IsPage)
                 {
-                    <RadzenPanelMenuItem Text="@menu.Title" Icon="@menu.Icon"
+                    <RadzenPanelMenuItem Text="@GetMenuTitle(menu)" Icon="@menu.Icon"
                         Click="@(async () => await OnMenuItemClick(menu))" />
                 }
             </RadzenPanelMenuItem>
@@ -26,9 +27,33 @@
 @code {
     [Parameter] public EventCallback<MenuItem> OnMenuSelected { get; set; }
 
+    private static readonly Dictionary<string, string> MenuKeys = new()
+    {
+        ["home"] = "menu.home",
+        ["home-dashboard"] = "menu.dashboard",
+        ["home-welcome"] = "menu.welcome",
+        ["products"] = "menu.products",
+        ["product-list"] = "menu.productList",
+        ["product-add"] = "menu.productAdd",
+        ["customers"] = "menu.customers",
+        ["customer-list"] = "menu.customerList",
+        ["customer-detail"] = "menu.customerDetail",
+        ["reports"] = "menu.reports",
+        ["report-sales"] = "menu.sales",
+        ["report-revenue"] = "menu.revenueChart",
+    };
+
     protected override void OnInitialized()
     {
         MenuService.OnMenusLoaded += () => InvokeAsync(StateHasChanged);
+        Lang.LanguageChanged += () => InvokeAsync(StateHasChanged);
+    }
+
+    private string GetMenuTitle(MenuItem menu)
+    {
+        if (MenuKeys.TryGetValue(menu.Id, out var key))
+            return Lang.T(key, menu.Title);
+        return menu.Title;
     }
 
     private async Task OnMenuItemClick(MenuItem item)

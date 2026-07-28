@@ -4,6 +4,7 @@
 @inject IModuleLoader ModuleLoader
 @inject IPageNavigator Navigator
 @inject IPageHeaderState HeaderState
+@inject ILanguageService Lang
 
 <div class="flex flex-col h-screen w-screen overflow-hidden">
     <AppHeader NavigationControls="NavigationControls" />
@@ -14,7 +15,7 @@
         <main class="flex-1 overflow-auto bg-gray-50 p-6">
             @if (Navigator.Current is { } active)
             {
-                <PageContainer Type="active.ComponentType" @key="active.PageId" />
+                <PageContainer Type="active.ComponentType" @key="@($"{active.PageId}_{Lang.CurrentLanguage}")" />
             }
             else
             {
@@ -34,7 +35,13 @@
         Navigator.Changed += _navigatorChanged;
         _headerChanged = () => InvokeAsync(StateHasChanged);
         HeaderState.Changed += _headerChanged;
+        Lang.LanguageChanged += OnLanguageChanged;
         await MenuService.LoadMenusAsync();
+    }
+
+    private void OnLanguageChanged()
+    {
+        InvokeAsync(StateHasChanged);
     }
 
     private RenderFragment NavigationControls => builder =>
@@ -62,5 +69,6 @@
             Navigator.Changed -= _navigatorChanged;
         if (_headerChanged is not null)
             HeaderState.Changed -= _headerChanged;
+        Lang.LanguageChanged -= OnLanguageChanged;
     }
 }

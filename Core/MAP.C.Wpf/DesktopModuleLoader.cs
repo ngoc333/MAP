@@ -1,22 +1,26 @@
 using System.IO;
 using System.Reflection;
+using MAP.C.Contract.Localization;
 using MAP.C.Contract.Models;
 using MAP.C.Contract.Modules;
+using MAP.C.UI.Localization;
 
 namespace MAP.C.Wpf;
 
 public class DesktopModuleLoader : IModuleLoader
 {
     private readonly string _modulesRoot;
+    private readonly ILanguageService? _langService;
     private readonly Dictionary<string, Assembly> _loadedAssemblies = new();
     private readonly Dictionary<string, Type> _cachedTypes = new();
 
     public event Action<bool>? OnLoadingChanged;
     public event Action<string>? OnError;
 
-    public DesktopModuleLoader(string modulesRoot)
+    public DesktopModuleLoader(string modulesRoot, ILanguageService? langService = null)
     {
         _modulesRoot = modulesRoot;
+        _langService = langService;
     }
 
     public Task<Type?> LoadComponentAsync(MenuItem menuItem)
@@ -32,7 +36,9 @@ public class DesktopModuleLoader : IModuleLoader
             if (!_loadedAssemblies.ContainsKey(menuItem.Assembly!))
             {
                 var path = Path.Combine(_modulesRoot, menuItem.Assembly!);
-                _loadedAssemblies[menuItem.Assembly!] = Assembly.LoadFrom(path);
+                var assembly = Assembly.LoadFrom(path);
+                _loadedAssemblies[menuItem.Assembly!] = assembly;
+                LoadModuleLocalization(assembly);
             }
 
             var type = _loadedAssemblies[menuItem.Assembly!].GetType(menuItem.Component!);
@@ -56,5 +62,13 @@ public class DesktopModuleLoader : IModuleLoader
     {
         _cachedTypes.TryGetValue(componentName, out var type);
         return type;
+    }
+
+    private void LoadModuleLocalization(Assembly assembly)
+    {
+        if (_langService is null) return;
+        var loader = new EmbeddedResourceLoader();
+        var moduleName = assembly.GetName().Name!;
+        loader.LoadModuleResourcesAsync(_langService, assembly, moduleName).GetAwaiter().GetResult();
     }
 }

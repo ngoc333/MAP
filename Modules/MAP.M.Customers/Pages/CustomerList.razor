@@ -2,22 +2,22 @@
 @namespace MAP.M.Customers.Pages
 
 <div class="p-2">
-    <h2 class="text-2xl font-bold text-gray-800 mb-6">Danh sách khách hàng</h2>
+    <h2 class="text-2xl font-bold text-gray-800 mb-6">@Lang.T("CustomerList.headerTitle")</h2>
 
     <RadzenCard class="p-0 overflow-hidden">
         <RadzenDataGrid Data="@customers" TItem="Customer" AllowSorting="true" AllowFiltering="true"
             AllowPaging="true" PageSize="8" class="w-full">
             <Columns>
-                <RadzenDataGridColumn TItem="Customer" Property="Code" Title="Mã KH" Width="100px" />
-                <RadzenDataGridColumn TItem="Customer" Property="FullName" Title="Họ và tên" />
-                <RadzenDataGridColumn TItem="Customer" Property="Email" Title="Email" />
-                <RadzenDataGridColumn TItem="Customer" Property="Phone" Title="Số điện thoại" />
-                <RadzenDataGridColumn TItem="Customer" Property="City" Title="Thành phố" Filterable="false" />
-                <RadzenDataGridColumn TItem="Customer" Property="TotalOrders" Title="Đơn hàng" Width="100px"
+                <RadzenDataGridColumn TItem="Customer" Property="Code" Title="@Lang.T("CustomerList.colCode")" Width="100px" />
+                <RadzenDataGridColumn TItem="Customer" Property="FullName" Title="@Lang.T("CustomerList.colFullName")" />
+                <RadzenDataGridColumn TItem="Customer" Property="Email" Title="@Lang.T("CustomerList.colEmail")" />
+                <RadzenDataGridColumn TItem="Customer" Property="Phone" Title="@Lang.T("CustomerList.colPhone")" />
+                <RadzenDataGridColumn TItem="Customer" Property="City" Title="@Lang.T("CustomerList.colCity")" Filterable="false" />
+                <RadzenDataGridColumn TItem="Customer" Property="TotalOrders" Title="@Lang.T("CustomerList.colOrders")" Width="100px"
                     Filterable="false" />
                 <RadzenDataGridColumn TItem="Customer" Title="" Width="80px" Filterable="false">
                     <Template Context="item">
-                        <RadzenButton Text="Xem" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Small"
+                        <RadzenButton Text="@Lang.T("CustomerList.view")" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Small"
                             Click="@(() => Navigator.OpenAsync("customer-detail", PageParams.Create(p => { p.Code = item.Code; p.FullName = item.FullName; p.Email = item.Email; p.Phone = item.Phone; p.City = item.City; p.TotalOrders = item.TotalOrders; })))" />
                     </Template>
                 </RadzenDataGridColumn>
@@ -27,7 +27,7 @@
 </div>
 
 @code {
-    protected override string HeaderTitle => "Danh sách khách hàng";
+    protected override string HeaderTitleKey => "CustomerList.headerTitle";
 
     private List<Customer> customers = new()
     {

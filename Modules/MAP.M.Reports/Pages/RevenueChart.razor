@@ -2,11 +2,11 @@
 @namespace MAP.M.Reports.Pages
 
 <div class="p-2">
-    <h2 class="text-2xl font-bold text-gray-800 mb-6">Biểu đồ doanh thu</h2>
+    <h2 class="text-2xl font-bold text-gray-800 mb-6">@Lang.T("RevenueChart.headerTitle")</h2>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <RadzenCard class="p-4">
-            <h3 class="text-lg font-semibold text-gray-700 mb-4">Doanh thu theo tháng (tỷ đồng)</h3>
+            <h3 class="text-lg font-semibold text-gray-700 mb-4">@Lang.T("RevenueChart.monthlyRevenue")</h3>
             <RadzenChart>
                 <RadzenBarSeries Data="@revenueData" CategoryProperty="Month" ValueProperty="Revenue"
                     Fill="var(--rz-primary)">
@@ -18,7 +18,7 @@
         </RadzenCard>
 
         <RadzenCard class="p-4">
-            <h3 class="text-lg font-semibold text-gray-700 mb-4">Cơ cấu danh mục</h3>
+            <h3 class="text-lg font-semibold text-gray-700 mb-4">@Lang.T("RevenueChart.categoryBreakdown")</h3>
             <RadzenChart>
                 <RadzenPieSeries Data="@categoryData" CategoryProperty="Category" ValueProperty="Value">
                 </RadzenPieSeries>
@@ -26,7 +26,7 @@
         </RadzenCard>
 
         <RadzenCard class="p-4 lg:col-span-2">
-            <h3 class="text-lg font-semibold text-gray-700 mb-4">Doanh thu theo quý</h3>
+            <h3 class="text-lg font-semibold text-gray-700 mb-4">@Lang.T("RevenueChart.quarterlyRevenue")</h3>
             <RadzenChart>
                 <RadzenLineSeries Data="@quarterlyData" CategoryProperty="Quarter" ValueProperty="Revenue"
                     LineType="LineType.Solid" Stroke="var(--rz-primary)" />
@@ -37,13 +37,13 @@
     </div>
 
     <div class="mt-6">
-        <RadzenButton Text="← Về báo cáo doanh số" ButtonStyle="ButtonStyle.Secondary"
+        <RadzenButton Text="@Lang.T("RevenueChart.backToSales")" ButtonStyle="ButtonStyle.Secondary"
             Click="@(() => Navigator.OpenAsync("report-sales"))" />
     </div>
 </div>
 
 @code {
-    protected override string HeaderTitle => "Biểu đồ doanh thu";
+    protected override string HeaderTitleKey => "RevenueChart.headerTitle";
 
     private class RevenueItem
     {

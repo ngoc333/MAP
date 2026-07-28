@@ -1,0 +1,30 @@
+{
+  "CustomerList": {
+    "headerTitle": "Danh sách khách hàng",
+    "colCode": "Mã KH",
+    "colFullName": "Họ và tên",
+    "colEmail": "Email",
+    "colPhone": "Số điện thoại",
+    "colCity": "Thành phố",
+    "colOrders": "Đơn hàng",
+    "view": "Xem"
+  },
+  "CustomerDetail": {
+    "headerTitle": "Chi tiết khách hàng",
+    "pageCalled": "Page gọi",
+    "params": "Params",
+    "generalInfo": "Thông tin chung",
+    "customerCode": "Mã khách hàng",
+    "phone": "Số điện thoại",
+    "address": "Địa chỉ",
+    "city": "Thành phố",
+    "registeredDate": "Ngày đăng ký",
+    "totalOrders": "Tổng đơn hàng",
+    "purchaseHistory": "Lịch sử mua hàng",
+    "colDate": "Ngày",
+    "colProduct": "Sản phẩm",
+    "colQuantity": "SL",
+    "colAmount": "Thành tiền",
+    "backToList": "← Về danh sách"
+  }
+}

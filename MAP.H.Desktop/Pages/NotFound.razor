@@ -1,5 +1,11 @@
 @page "/not-found"
-@layout MAP.C.UI.Layout.MainLayout
+@inject ILanguageService Lang
 
-<h3>Not Found</h3>
-<p>Sorry, the content you are looking for does not exist.</p>
+<PageTitle>@Lang.T("notFound.title", "Not Found")</PageTitle>
+
+<div class="flex items-center justify-center h-full">
+    <div class="text-center">
+        <h3>@Lang.T("notFound.title", "Not Found")</h3>
+        <p>@Lang.T("notFound.message", "Sorry, the content you are looking for does not exist.")</p>
+    </div>
+</div>

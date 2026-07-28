@@ -1,0 +1,21 @@
+{
+  "SalesReport": {
+    "headerTitle": "Sales Report",
+    "totalOrders": "Total Orders",
+    "viewChart": "→ View Chart",
+    "delivered": "Delivered",
+    "processing": "Processing",
+    "cancelled": "Cancelled",
+    "colMonth": "Month",
+    "colOrderCount": "Orders",
+    "colRevenue": "Revenue",
+    "colGrowth": "Growth"
+  },
+  "RevenueChart": {
+    "headerTitle": "Revenue Chart",
+    "monthlyRevenue": "Monthly Revenue (billion VND)",
+    "categoryBreakdown": "Category Breakdown",
+    "quarterlyRevenue": "Quarterly Revenue",
+    "backToSales": "← Back to Sales Report"
+  }
+}

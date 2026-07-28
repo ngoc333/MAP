@@ -3,11 +3,11 @@
 
 <div class="p-2">
     <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-bold text-gray-800">Danh sách sản phẩm</h2>
+        <h2 class="text-2xl font-bold text-gray-800">@Lang.T("ProductList.headerTitle")</h2>
         <div class="flex gap-3">
-            <RadzenTextBox @bind-Value="searchText" Placeholder="Tìm kiếm..." class="w-64"
+            <RadzenTextBox @bind-Value="searchText" Placeholder="@Lang.T("ProductList.searchPlaceholder")" class="w-64"
                 Change="@(args => OnSearch(args))" />
-            <RadzenButton Text="+ Thêm mới" ButtonStyle="ButtonStyle.Primary" Icon="add_circle"
+            <RadzenButton Text="@Lang.T("ProductList.addNew")" ButtonStyle="ButtonStyle.Primary" Icon="add_circle"
                 Click="@(() => Navigator.OpenAsync("product-add"))" />
         </div>
     </div>
@@ -16,14 +16,14 @@
         <RadzenDataGrid Data="@filteredProducts" TItem="Product" AllowSorting="true" AllowFiltering="false"
             AllowPaging="true" PageSize="10" class="w-full">
             <Columns>
-                <RadzenDataGridColumn TItem="Product" Property="Id" Title="Mã" Width="80px" />
-                <RadzenDataGridColumn TItem="Product" Property="Name" Title="Tên sản phẩm" />
-                <RadzenDataGridColumn TItem="Product" Property="Category" Title="Danh mục" />
-                <RadzenDataGridColumn TItem="Product" Property="Price" Title="Giá" FormatString="{0:N0} ₫" />
-                <RadzenDataGridColumn TItem="Product" Property="Stock" Title="Tồn kho" Width="100px" />
+                <RadzenDataGridColumn TItem="Product" Property="Id" Title="@Lang.T("ProductList.colId")" Width="80px" />
+                <RadzenDataGridColumn TItem="Product" Property="Name" Title="@Lang.T("ProductList.colName")" />
+                <RadzenDataGridColumn TItem="Product" Property="Category" Title="@Lang.T("ProductList.colCategory")" />
+                <RadzenDataGridColumn TItem="Product" Property="Price" Title="@Lang.T("ProductList.colPrice")" FormatString="{0:N0} ₫" />
+                <RadzenDataGridColumn TItem="Product" Property="Stock" Title="@Lang.T("ProductList.colStock")" Width="100px" />
                 <RadzenDataGridColumn TItem="Product" Title="" Width="80px" Filterable="false">
                     <Template Context="item">
-                        <RadzenButton Text="Sửa" ButtonStyle="ButtonStyle.Secondary" Size="ButtonSize.Small"
+                        <RadzenButton Text="@Lang.T("ProductList.edit")" ButtonStyle="ButtonStyle.Secondary" Size="ButtonSize.Small"
                             Click="@(() => Navigator.OpenAsync("product-add", PageParams.Create(p => { p.Id = item.Id; p.Name = item.Name; p.Category = item.Category; })))" />
                     </Template>
                 </RadzenDataGridColumn>
@@ -33,7 +33,7 @@
 </div>
 
 @code {
-    protected override string HeaderTitle => "Danh sách sản phẩm";
+    protected override string HeaderTitleKey => "ProductList.headerTitle";
 
     private string searchText = "";
 

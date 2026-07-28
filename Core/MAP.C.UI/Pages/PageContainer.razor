@@ -1,11 +1,12 @@
 @implements IDisposable
 @inject IModuleLoader ModuleLoader
+@inject ILanguageService Lang
 
 @if (_isLoading)
 {
     <div class="module-loading">
         <div class="spinner"></div>
-        <p class="text-gray-500">Đang tải module...</p>
+        <p class="text-gray-500">@Lang.T("layout.loading", "Đang tải module...")</p>
     </div>
 }
 else if (Type is null)
@@ -13,7 +14,7 @@ else if (Type is null)
     <div class="flex items-center justify-center h-full">
         <div class="text-center text-gray-500">
             <RadzenIcon Icon="dashboard" class="text-6xl mb-4 text-gray-300" />
-            <p class="text-lg">Chọn một menu để bắt đầu</p>
+            <p class="text-lg">@Lang.T("layout.selectMenu", "Chọn một menu để bắt đầu")</p>
         </div>
     </div>
 }
@@ -29,6 +30,7 @@ else
     protected override void OnInitialized()
     {
         ModuleLoader.OnLoadingChanged += OnLoadingChanged;
+        Lang.LanguageChanged += OnLanguageChanged;
     }
 
     private void OnLoadingChanged(bool isLoading)
@@ -37,8 +39,14 @@ else
         StateHasChanged();
     }
 
+    private void OnLanguageChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
     public void Dispose()
     {
         ModuleLoader.OnLoadingChanged -= OnLoadingChanged;
+        Lang.LanguageChanged -= OnLanguageChanged;
     }
 }

@@ -1,12 +1,14 @@
+@inject ILanguageService Lang
+
 <Router AppAssembly="@typeof(DesktopApp).Assembly">
     <Found Context="routeData">
         <RouteView RouteData="@routeData" DefaultLayout="@typeof(MAP.C.UI.Layout.MainLayout)" />
         <FocusOnNavigate RouteData="@routeData" Selector="h1" />
     </Found>
     <NotFound>
-        <PageTitle>Not Found</PageTitle>
+        <PageTitle>@Lang.T("notFound.title", "Not Found")</PageTitle>
         <LayoutView Layout="@typeof(MAP.C.UI.Layout.MainLayout)">
-            <p>Sorry, the content you are looking for does not exist.</p>
+            <p>@Lang.T("notFound.message", "Sorry, the content you are looking for does not exist.")</p>
         </LayoutView>
     </NotFound>
 </Router>

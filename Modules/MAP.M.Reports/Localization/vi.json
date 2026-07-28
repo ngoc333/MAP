@@ -1,0 +1,21 @@
+{
+  "SalesReport": {
+    "headerTitle": "Báo cáo doanh số",
+    "totalOrders": "Tổng đơn hàng",
+    "viewChart": "→ Xem biểu đồ",
+    "delivered": "Đã giao",
+    "processing": "Đang xử lý",
+    "cancelled": "Đã hủy",
+    "colMonth": "Tháng",
+    "colOrderCount": "Số đơn",
+    "colRevenue": "Doanh thu",
+    "colGrowth": "Tăng trưởng"
+  },
+  "RevenueChart": {
+    "headerTitle": "Biểu đồ doanh thu",
+    "monthlyRevenue": "Doanh thu theo tháng (tỷ đồng)",
+    "categoryBreakdown": "Cơ cấu danh mục",
+    "quarterlyRevenue": "Doanh thu theo quý",
+    "backToSales": "← Về báo cáo doanh số"
+  }
+}

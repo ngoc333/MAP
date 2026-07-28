@@ -3,6 +3,7 @@ $root = $PSScriptRoot
 $publishRoot = Join-Path $root "publish"
 $publishCore = Join-Path $publishRoot "core"
 $publishModules = Join-Path $publishRoot "modules"
+$webModulesDir = Join-Path (Join-Path $root "MAP.H.Web") "Modules"
 
 Write-Host "=== MAP Build ===" -ForegroundColor Cyan
 Write-Host ""
@@ -63,21 +64,40 @@ function Build-And-Copy {
     }
 }
 
+function Test-ModuleLocalization {
+    param([string]$dll)
+
+    try {
+        $assembly = [System.Reflection.Assembly]::LoadFrom((Resolve-Path $dll))
+        $prefix = "$($assembly.GetName().Name).Localization"
+        $resources = $assembly.GetManifestResourceNames()
+        $missing = @("$prefix.vi.json", "$prefix.en.json") | Where-Object { $_ -notin $resources }
+
+        if ($missing.Count -gt 0) {
+            throw "Missing embedded localization resource(s): $($missing -join ', ')"
+        }
+    }
+    catch {
+        Write-Host "ERROR: Module '$dll' is invalid: $($_.Exception.Message)" -ForegroundColor Red
+        exit 1
+    }
+}
+
 # Core (theo thứ tự phụ thuộc)
 $cores = @(
     @{Csproj="Core/MAP.C.Contract/MAP.C.Contract.csproj";    Label="MAP.C.Contract"},
     @{Csproj="Core/MAP.C.Runtime/MAP.C.Runtime.csproj";      Label="MAP.C.Runtime"},
-    @{Csproj="Core/MAP.C.Components/MAP.C.Components.csproj"; Label="MAP.C.Components"},
+    @{Csproj="Core/MAP.C.UI/MAP.C.UI.csproj";                Label="MAP.C.UI"},
+    @{Csproj="Core/MAP.C.Wasm/MAP.C.Wasm.csproj";            Label="MAP.C.Wasm"},
     @{Csproj="Core/MAP.C.Wpf/MAP.C.Wpf.csproj";             Label="MAP.C.Wpf"}
 )
 
-# Modules
-$modules = @(
-    @{Csproj="Modules/MAP.M.Home/MAP.M.Home.csproj";             Label="MAP.M.Home"},
-    @{Csproj="Modules/MAP.M.Customers/MAP.M.Customers.csproj";    Label="MAP.M.Customers"},
-    @{Csproj="Modules/MAP.M.Products/MAP.M.Products.csproj";      Label="MAP.M.Products"},
-    @{Csproj="Modules/MAP.M.Reports/MAP.M.Reports.csproj";        Label="MAP.M.Reports"}
-)
+# Modules are discovered so new module projects require no host configuration.
+$modules = @(Get-ChildItem (Join-Path $root "Modules") -Filter "*.csproj" -Recurse -File |
+    Sort-Object FullName |
+    ForEach-Object {
+        @{Csproj=$_.FullName; Label=$_.BaseName}
+    })
 
 Write-Host "  -- Core --" -ForegroundColor DarkGray
 foreach ($c in $cores) {
@@ -86,13 +106,17 @@ foreach ($c in $cores) {
 
 Write-Host "  -- Modules --" -ForegroundColor DarkGray
 foreach ($m in $modules) {
-    Build-And-Copy (Join-Path $root $m.Csproj) $m.Label $publishModules
+    Build-And-Copy $m.Csproj $m.Label $publishModules
 }
 
-# Copy modules vào MAP.H.Web/Modules/ để Web publish
-$webModulesDir = Join-Path (Join-Path $root "MAP.H.Web") "Modules"
+# Copy fresh modules into MAP.H.Web/Modules/ for Web lazy loading.
 if (-not (Test-Path $webModulesDir)) {
     New-Item -ItemType Directory -Force -Path $webModulesDir | Out-Null
+}
+Remove-Item (Join-Path $webModulesDir "*.dll") -Force -ErrorAction SilentlyContinue
+
+Get-ChildItem $publishModules -Filter "*.dll" -File | ForEach-Object {
+    Test-ModuleLocalization $_.FullName
 }
 Copy-Item (Join-Path $publishModules "*.dll") $webModulesDir -Force
 

@@ -20,4 +20,10 @@
     <ProjectReference Include="..\..\Core\MAP.C.Contract\MAP.C.Contract.csproj" PrivateAssets="all" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="Localization\vi.json" LogicalName="MAP.M.Products.Localization.vi.json" />
+    <EmbeddedResource Include="Localization\en.json" LogicalName="MAP.M.Products.Localization.en.json" />
+    <Content Remove="Localization\**" />
+  </ItemGroup>
+
 </Project>

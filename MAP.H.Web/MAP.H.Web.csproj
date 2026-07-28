@@ -5,6 +5,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <OverrideHtmlAssetPlaceholders>true</OverrideHtmlAssetPlaceholders>
+    <WebModulesDir>$(MSBuildProjectDirectory)\Modules\</WebModulesDir>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,8 +22,8 @@
     <ProjectReference Include="..\Core\MAP.C.Wasm\MAP.C.Wasm.csproj" />
   </ItemGroup>
 
-  <!-- Tự động phát hiện tất cả Page DLL từ Modules -->
   <ItemGroup>
+    <ModuleProject Include="$(MSBuildProjectDirectory)\..\Modules\*\*.csproj" />
     <PageAssembly Include="Modules\*.dll" />
   </ItemGroup>
 
@@ -35,6 +36,28 @@
   <ItemGroup Condition="@(PageAssembly->Count()) &gt; 0">
     <BlazorWebAssemblyLazyLoad Include="@(PageAssembly->'%(Filename)')" />
   </ItemGroup>
+
+  <Target Name="BuildAndSyncModules" BeforeTargets="ResolveReferences">
+    <MSBuild Projects="@(ModuleProject)"
+             Targets="Build"
+             Properties="Configuration=$(Configuration)"
+             BuildInParallel="true" />
+
+    <MSBuild Projects="@(ModuleProject)"
+             Targets="GetTargetPath"
+             Properties="Configuration=$(Configuration)"
+             BuildInParallel="true">
+      <Output TaskParameter="TargetOutputs" ItemName="_ModuleAssembly" />
+    </MSBuild>
+
+    <MakeDir Directories="$(WebModulesDir)" />
+    <Delete Files="$(WebModulesDir)*.dll" />
+    <Delete Files="$(WebModulesDir)*.pdb" />
+    <Copy SourceFiles="@(_ModuleAssembly)" DestinationFolder="$(WebModulesDir)" />
+    <Copy SourceFiles="@(_ModuleAssembly->'%(RootDir)%(Directory)%(Filename).pdb')"
+          DestinationFolder="$(WebModulesDir)"
+          SkipUnchangedFiles="true" />
+  </Target>
 
   <Target Name="EnsureTailwindCli" BeforeTargets="BuildTailwindCss">
     <PropertyGroup>

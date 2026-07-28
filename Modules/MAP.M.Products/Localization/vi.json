@@ -1,0 +1,28 @@
+{
+  "ProductList": {
+    "headerTitle": "Danh sách sản phẩm",
+    "searchPlaceholder": "Tìm kiếm...",
+    "addNew": "+ Thêm mới",
+    "colId": "Mã",
+    "colName": "Tên sản phẩm",
+    "colCategory": "Danh mục",
+    "colPrice": "Giá",
+    "colStock": "Tồn kho",
+    "edit": "Sửa"
+  },
+  "ProductAdd": {
+    "headerTitle": "Thêm sản phẩm mới",
+    "editingProduct": "Sửa SP",
+    "productId": "Mã sản phẩm",
+    "productName": "Tên sản phẩm",
+    "category": "Danh mục",
+    "price": "Giá bán (VNĐ)",
+    "stock": "Số lượng tồn kho",
+    "save": "Lưu sản phẩm",
+    "backToList": "← Về danh sách",
+    "placeholderId": "Nhập mã SP",
+    "placeholderName": "Nhập tên sản phẩm",
+    "selectCategory": "Chọn danh mục",
+    "savedMessage": "Đã lưu sản phẩm"
+  }
+}

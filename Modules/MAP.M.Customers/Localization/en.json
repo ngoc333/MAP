@@ -1,0 +1,30 @@
+{
+  "CustomerList": {
+    "headerTitle": "Customer List",
+    "colCode": "Code",
+    "colFullName": "Full Name",
+    "colEmail": "Email",
+    "colPhone": "Phone",
+    "colCity": "City",
+    "colOrders": "Orders",
+    "view": "View"
+  },
+  "CustomerDetail": {
+    "headerTitle": "Customer Detail",
+    "pageCalled": "Called from",
+    "params": "Params",
+    "generalInfo": "General Info",
+    "customerCode": "Customer Code",
+    "phone": "Phone",
+    "address": "Address",
+    "city": "City",
+    "registeredDate": "Registered Date",
+    "totalOrders": "Total Orders",
+    "purchaseHistory": "Purchase History",
+    "colDate": "Date",
+    "colProduct": "Product",
+    "colQuantity": "Qty",
+    "colAmount": "Amount",
+    "backToList": "← Back to List"
+  }
+}

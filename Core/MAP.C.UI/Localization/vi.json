@@ -1,0 +1,57 @@
+{
+  "menu": {
+    "home": "Trang chủ",
+    "dashboard": "Dashboard",
+    "welcome": "Giới thiệu",
+    "products": "Sản phẩm",
+    "productList": "Danh sách",
+    "productAdd": "Thêm mới",
+    "customers": "Khách hàng",
+    "customerList": "Danh sách",
+    "customerDetail": "Chi tiết",
+    "reports": "Báo cáo",
+    "sales": "Doanh số",
+    "revenueChart": "Biểu đồ doanh thu"
+  },
+  "layout": {
+    "loading": "Đang tải module...",
+    "selectMenu": "Chọn một menu để bắt đầu",
+    "admin": "Admin",
+    "back": "Quay lại"
+  },
+  "notFound": {
+    "title": "Không tìm thấy",
+    "message": "Nội dung bạn tìm kiếm không tồn tại."
+  },
+  "radzen": {
+    "DataGrid_FilterText": "Lọc",
+    "DataGrid_ClearFilterText": "Xóa bộ lọc",
+    "DataGrid_ApplyFilterText": "Áp dụng",
+    "DataGrid_FilterOperatorLogicAnd": "Và",
+    "DataGrid_FilterOperatorLogicOr": "Hoặc",
+    "DataGrid_FilterOperatorEq": "Bằng",
+    "DataGrid_FilterOperatorNeq": "Không bằng",
+    "DataGrid_FilterOperatorContains": "Chứa",
+    "DataGrid_FilterOperatorStartsWith": "Bắt đầu bằng",
+    "DataGrid_FilterOperatorEndsWith": "Kết thúc bằng",
+    "DataGrid_FilterOperatorGt": "Lớn hơn",
+    "DataGrid_FilterOperatorGte": "Lớn hơn hoặc bằng",
+    "DataGrid_FilterOperatorLt": "Nhỏ hơn",
+    "DataGrid_FilterOperatorLte": "Nhỏ hơn hoặc bằng",
+    "DataGrid_FilterOperatorIsNull": "Trống",
+    "DataGrid_FilterOperatorIsNotNull": "Không trống",
+    "DataGrid_GroupPanelText": "Kéo cột vào đây để nhóm",
+    "Pager_FirstPageTitle": "Trang đầu",
+    "Pager_PreviousPageTitle": "Trang trước",
+    "Pager_NextPageTitle": "Trang sau",
+    "Pager_LastPageTitle": "Trang cuối",
+    "Pager_Page": "Trang",
+    "Pager_Of": "của",
+    "Pager_Items": "mục",
+    "Pager_PageSizes": "mục/trang",
+    "DatePicker_Today": "Hôm nay",
+    "DatePicker_Clear": "Xóa",
+    "Numeric_Min": "Giá trị nhỏ nhất",
+    "Numeric_Max": "Giá trị lớn nhất"
+  }
+}

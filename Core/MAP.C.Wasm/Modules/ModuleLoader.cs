@@ -1,6 +1,8 @@
 using System.Reflection;
+using MAP.C.Contract.Localization;
 using MAP.C.Contract.Models;
 using MAP.C.Contract.Modules;
+using MAP.C.UI.Localization;
 using Microsoft.AspNetCore.Components.WebAssembly.Services;
 
 namespace MAP.C.Wasm.Modules;
@@ -8,15 +10,17 @@ namespace MAP.C.Wasm.Modules;
 public class ModuleLoader : IModuleLoader
 {
     private readonly LazyAssemblyLoader _assemblyLoader;
+    private readonly ILanguageService _langService;
     private readonly Dictionary<string, Assembly> _loadedAssemblies = new();
     private readonly Dictionary<string, Type> _cachedTypes = new();
 
     public event Action<bool>? OnLoadingChanged;
     public event Action<string>? OnError;
 
-    public ModuleLoader(LazyAssemblyLoader assemblyLoader)
+    public ModuleLoader(LazyAssemblyLoader assemblyLoader, ILanguageService langService)
     {
         _assemblyLoader = assemblyLoader;
+        _langService = langService;
     }
 
     public async Task<Type?> LoadComponentAsync(MenuItem menuItem)
@@ -37,7 +41,10 @@ public class ModuleLoader : IModuleLoader
             {
                 var assemblies = (await _assemblyLoader.LoadAssembliesAsync(new[] { menuItem.Assembly })).ToList();
                 if (assemblies.Count > 0)
+                {
                     _loadedAssemblies[menuItem.Assembly] = assemblies[0];
+                    await LoadModuleLocalizationAsync(assemblies[0]);
+                }
             }
 
             var assembly = _loadedAssemblies[menuItem.Assembly];
@@ -67,5 +74,12 @@ public class ModuleLoader : IModuleLoader
     {
         _cachedTypes.TryGetValue(componentName, out var type);
         return type;
+    }
+
+    private async Task LoadModuleLocalizationAsync(Assembly assembly)
+    {
+        var loader = new EmbeddedResourceLoader();
+        var moduleName = assembly.GetName().Name!;
+        await loader.LoadModuleResourcesAsync(_langService, assembly, moduleName);
     }
 }
