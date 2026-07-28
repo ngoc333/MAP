@@ -1,3 +1,4 @@
+@inherits BasePage
 @namespace MAP.M.Reports.Pages
 
 <div class="p-2">
@@ -34,9 +35,16 @@
             </RadzenChart>
         </RadzenCard>
     </div>
+
+    <div class="mt-6">
+        <RadzenButton Text="← Về báo cáo doanh số" ButtonStyle="ButtonStyle.Secondary"
+            Click="@(() => Navigator.OpenAsync("report-sales"))" />
+    </div>
 </div>
 
 @code {
+    protected override string HeaderTitle => "Biểu đồ doanh thu";
+
     private class RevenueItem
     {
         public string Month { get; set; } = "";

@@ -1,3 +1,4 @@
+@inherits BasePage
 @namespace MAP.M.Home.Pages
 
 <div class="p-2">
@@ -32,5 +33,25 @@
                 <p class="text-sm text-gray-500">Layout styling với TailwindCSS utility classes</p>
             </div>
         </div>
+
+        <div class="mt-6 border-t pt-4">
+            <h4 class="font-semibold text-gray-700 mb-3">🧪 Test Page Navigation</h4>
+            <div class="flex flex-wrap gap-3">
+                <RadzenButton Text="Mở Dashboard" ButtonStyle="ButtonStyle.Primary"
+                    Click="@(() => Navigator.OpenAsync("home-dashboard"))" />
+                <RadzenButton Text="Mở DS Khách hàng" ButtonStyle="ButtonStyle.Secondary"
+                    Click="@(() => Navigator.OpenAsync("customer-list"))" />
+                <RadzenButton Text="Mở Chi tiết KH (có param)" ButtonStyle="ButtonStyle.Secondary"
+                    Click="@(() => Navigator.OpenAsync("customer-detail", PageParams.Create(p => { p.Code = "KH999"; p.FullName = "Test User"; p.Email = "test@test.com"; p.Phone = "000"; p.City = "Test"; p.TotalOrders = 0; })))" />
+                <RadzenButton Text="Mở SP (có param)" ButtonStyle="ButtonStyle.Secondary"
+                    Click="@(() => Navigator.OpenAsync("product-add", PageParams.Create(p => { p.Id = "SP-NEW"; p.Name = "Sản phẩm test"; p.Category = "Điện tử"; })))" />
+                <RadzenButton Text="Mở Doanh số" ButtonStyle="ButtonStyle.Light"
+                    Click="@(() => Navigator.OpenAsync("report-sales"))" />
+            </div>
+        </div>
     </RadzenCard>
 </div>
+
+@code {
+    protected override string HeaderTitle => "Trang chủ";
+}

@@ -1,5 +1,4 @@
 @inject IMenuService MenuService
-@inject IModuleLoader ModuleLoader
 
 <aside class="w-64 bg-white border-r border-gray-200 overflow-y-auto flex-shrink-0 pt-4">
     <RadzenPanelMenu>
@@ -25,7 +24,7 @@
 </aside>
 
 @code {
-    [Parameter] public EventCallback<Type?> OnMenuSelected { get; set; }
+    [Parameter] public EventCallback<MenuItem> OnMenuSelected { get; set; }
 
     protected override void OnInitialized()
     {
@@ -35,8 +34,6 @@
     private async Task OnMenuItemClick(MenuItem item)
     {
         if (!item.IsPage) return;
-
-        var type = await ModuleLoader.LoadComponentAsync(item);
-        await OnMenuSelected.InvokeAsync(type);
+        await OnMenuSelected.InvokeAsync(item);
     }
 }

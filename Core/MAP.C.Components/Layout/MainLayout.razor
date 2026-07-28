@@ -1,30 +1,66 @@
 @inherits LayoutComponentBase
+@implements IDisposable
 @inject IMenuService MenuService
 @inject IModuleLoader ModuleLoader
+@inject IPageNavigator Navigator
+@inject IPageHeaderState HeaderState
 
 <div class="flex flex-col h-screen w-screen overflow-hidden">
-    <AppHeader />
+    <AppHeader NavigationControls="NavigationControls" />
 
     <div class="flex flex-1 overflow-hidden">
         <AppMenu OnMenuSelected="OnMenuSelected" />
 
         <main class="flex-1 overflow-auto bg-gray-50 p-6">
-            <PageContainer Type="_currentPageType" />
+            @if (Navigator.Current is { } active)
+            {
+                <PageContainer Type="active.ComponentType" @key="active.PageId" />
+            }
+            else
+            {
+                <PageContainer Type="null" />
+            }
         </main>
     </div>
 </div>
 
 @code {
-    private Type? _currentPageType;
+    private Action? _navigatorChanged;
+    private Action? _headerChanged;
 
     protected override async Task OnInitializedAsync()
     {
+        _navigatorChanged = () => InvokeAsync(StateHasChanged);
+        Navigator.Changed += _navigatorChanged;
+        _headerChanged = () => InvokeAsync(StateHasChanged);
+        HeaderState.Changed += _headerChanged;
         await MenuService.LoadMenusAsync();
     }
 
-    private void OnMenuSelected(Type? pageType)
+    private RenderFragment NavigationControls => builder =>
     {
-        _currentPageType = pageType;
-        StateHasChanged();
+        if (Navigator.CanBack)
+        {
+            builder.OpenComponent<RadzenButton>(0);
+            builder.AddAttribute(1, "Icon", "arrow_back");
+            builder.AddAttribute(2, "ButtonStyle", ButtonStyle.Light);
+            builder.AddAttribute(3, "Click", EventCallback.Factory.Create<MouseEventArgs>(
+                this, async _ => await Navigator.BackAsync()));
+            builder.CloseComponent();
+        }
+    };
+
+    private async Task OnMenuSelected(MenuItem menuItem)
+    {
+        if (!menuItem.IsPage) return;
+        await Navigator.OpenAsync(menuItem.Id);
+    }
+
+    public void Dispose()
+    {
+        if (_navigatorChanged is not null)
+            Navigator.Changed -= _navigatorChanged;
+        if (_headerChanged is not null)
+            HeaderState.Changed -= _headerChanged;
     }
 }

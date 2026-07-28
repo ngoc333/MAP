@@ -1,7 +1,19 @@
+@inherits BasePage
 @namespace MAP.M.Products.Pages
 
 <div class="p-2">
     <h2 class="text-2xl font-bold text-gray-800 mb-6">Thêm sản phẩm mới</h2>
+
+    @if (PageParameters is not null)
+    {
+        dynamic p = PageParameters;
+        <div class="mb-4">
+            <RadzenAlert AlertStyle="AlertStyle.Info">
+                <strong>Page gọi:</strong> @FromPageId |
+                <strong>Sửa SP:</strong> @p.Id (@p.Name) - @p.Category
+            </RadzenAlert>
+        </div>
+    }
 
     <RadzenCard class="p-6 max-w-2xl">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -26,9 +38,11 @@
                 <RadzenLabel Text="Số lượng tồn kho" />
                 <RadzenNumeric @bind-Value="product.Stock" class="w-full" Min="0" />
             </div>
-            <div class="flex items-end">
+            <div class="flex items-end gap-2">
                 <RadzenButton Text="Lưu sản phẩm" ButtonStyle="ButtonStyle.Primary" Icon="save"
                     Click="@SaveProduct" />
+                <RadzenButton Text="← Về danh sách" ButtonStyle="ButtonStyle.Secondary"
+                    Click="@(() => Navigator.OpenAsync("product-list"))" />
             </div>
         </div>
 
@@ -40,6 +54,8 @@
 </div>
 
 @code {
+    protected override string HeaderTitle => "Thêm sản phẩm mới";
+
     private string message = "";
 
     private class ProductForm
@@ -53,6 +69,17 @@
 
     private ProductForm product = new();
     private List<string> categories = new() { "Điện tử", "Điện thoại", "Máy tính bảng", "Phụ kiện", "Âm thanh", "Màn hình", "Thiết bị đeo" };
+
+    protected override void OnInitialized()
+    {
+        if (PageParameters is not null)
+        {
+            dynamic p = PageParameters;
+            product.Id = (string)p.Id;
+            product.Name = (string)p.Name;
+            product.Category = (string)p.Category;
+        }
+    }
 
     private void SaveProduct()
     {

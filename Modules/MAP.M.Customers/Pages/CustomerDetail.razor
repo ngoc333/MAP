@@ -1,7 +1,19 @@
+@inherits BasePage
 @namespace MAP.M.Customers.Pages
 
 <div class="p-2">
     <h2 class="text-2xl font-bold text-gray-800 mb-6">Chi tiết khách hàng</h2>
+
+    @if (PageParameters is not null)
+    {
+        dynamic p = PageParameters;
+        <div class="mb-4">
+            <RadzenAlert AlertStyle="AlertStyle.Info">
+                <strong>Page gọi:</strong> @FromPageId |
+                <strong>Params:</strong> Code=@p.Code, Name=@p.FullName, City=@p.City
+            </RadzenAlert>
+        </div>
+    }
 
     <RadzenCard class="p-6 max-w-3xl">
         <div class="flex items-center gap-4 mb-6">
@@ -61,10 +73,19 @@
                 </RadzenTabsItem>
             </Tabs>
         </RadzenTabs>
+
+        <div class="mt-6">
+            <RadzenButton ButtonStyle="ButtonStyle.Secondary"
+                Click="@(() => Navigator.OpenAsync("customer-list"))">
+                ← Về danh sách
+            </RadzenButton>
+        </div>
     </RadzenCard>
 </div>
 
 @code {
+    protected override string HeaderTitle => "Chi tiết khách hàng";
+
     private CustomerDetailModel customer = new()
     {
         Code = "KH001",

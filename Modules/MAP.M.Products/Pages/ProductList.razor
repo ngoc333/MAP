@@ -1,10 +1,15 @@
+@inherits BasePage
 @namespace MAP.M.Products.Pages
 
 <div class="p-2">
     <div class="flex justify-between items-center mb-6">
         <h2 class="text-2xl font-bold text-gray-800">Danh sách sản phẩm</h2>
-        <RadzenTextBox @bind-Value="searchText" Placeholder="Tìm kiếm..." class="w-64"
-            Change="@(args => OnSearch(args))" />
+        <div class="flex gap-3">
+            <RadzenTextBox @bind-Value="searchText" Placeholder="Tìm kiếm..." class="w-64"
+                Change="@(args => OnSearch(args))" />
+            <RadzenButton Text="+ Thêm mới" ButtonStyle="ButtonStyle.Primary" Icon="add_circle"
+                Click="@(() => Navigator.OpenAsync("product-add"))" />
+        </div>
     </div>
 
     <RadzenCard class="p-0 overflow-hidden">
@@ -16,12 +21,20 @@
                 <RadzenDataGridColumn TItem="Product" Property="Category" Title="Danh mục" />
                 <RadzenDataGridColumn TItem="Product" Property="Price" Title="Giá" FormatString="{0:N0} ₫" />
                 <RadzenDataGridColumn TItem="Product" Property="Stock" Title="Tồn kho" Width="100px" />
+                <RadzenDataGridColumn TItem="Product" Title="" Width="80px" Filterable="false">
+                    <Template Context="item">
+                        <RadzenButton Text="Sửa" ButtonStyle="ButtonStyle.Secondary" Size="ButtonSize.Small"
+                            Click="@(() => Navigator.OpenAsync("product-add", PageParams.Create(p => { p.Id = item.Id; p.Name = item.Name; p.Category = item.Category; })))" />
+                    </Template>
+                </RadzenDataGridColumn>
             </Columns>
         </RadzenDataGrid>
     </RadzenCard>
 </div>
 
 @code {
+    protected override string HeaderTitle => "Danh sách sản phẩm";
+
     private string searchText = "";
 
     private List<Product> products = new()

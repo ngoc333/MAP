@@ -1,3 +1,4 @@
+@inherits BasePage
 @namespace MAP.M.Customers.Pages
 
 <div class="p-2">
@@ -14,12 +15,20 @@
                 <RadzenDataGridColumn TItem="Customer" Property="City" Title="Thành phố" Filterable="false" />
                 <RadzenDataGridColumn TItem="Customer" Property="TotalOrders" Title="Đơn hàng" Width="100px"
                     Filterable="false" />
+                <RadzenDataGridColumn TItem="Customer" Title="" Width="80px" Filterable="false">
+                    <Template Context="item">
+                        <RadzenButton Text="Xem" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Small"
+                            Click="@(() => Navigator.OpenAsync("customer-detail", PageParams.Create(p => { p.Code = item.Code; p.FullName = item.FullName; p.Email = item.Email; p.Phone = item.Phone; p.City = item.City; p.TotalOrders = item.TotalOrders; })))" />
+                    </Template>
+                </RadzenDataGridColumn>
             </Columns>
         </RadzenDataGrid>
     </RadzenCard>
 </div>
 
 @code {
+    protected override string HeaderTitle => "Danh sách khách hàng";
+
     private List<Customer> customers = new()
     {
         new() { Code = "KH001", FullName = "Nguyễn Văn An", Email = "an.nguyen@email.com", Phone = "0901234567", City = "Hà Nội", TotalOrders = 12 },

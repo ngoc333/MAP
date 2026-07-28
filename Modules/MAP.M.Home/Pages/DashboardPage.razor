@@ -1,10 +1,12 @@
+@inherits BasePage
 @namespace MAP.M.Home.Pages
 
 <div class="p-2">
     <h2 class="text-2xl font-bold text-gray-800 mb-6">Dashboard</h2>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <RadzenCard class="p-4">
+        <RadzenCard class="p-4 cursor-pointer hover:shadow-md transition-shadow"
+            Click="@(() => Navigator.OpenAsync("product-list"))">
             <div class="flex items-center gap-4">
                 <RadzenIcon Icon="shopping_cart" class="text-4xl text-blue-500" />
                 <div>
@@ -14,7 +16,8 @@
             </div>
         </RadzenCard>
 
-        <RadzenCard class="p-4">
+        <RadzenCard class="p-4 cursor-pointer hover:shadow-md transition-shadow"
+            Click="@(() => Navigator.OpenAsync("report-sales"))">
             <div class="flex items-center gap-4">
                 <RadzenIcon Icon="trending_up" class="text-4xl text-green-500" />
                 <div>
@@ -24,7 +27,8 @@
             </div>
         </RadzenCard>
 
-        <RadzenCard class="p-4">
+        <RadzenCard class="p-4 cursor-pointer hover:shadow-md transition-shadow"
+            Click="@(() => Navigator.OpenAsync("customer-list"))">
             <div class="flex items-center gap-4">
                 <RadzenIcon Icon="people" class="text-4xl text-purple-500" />
                 <div>
@@ -49,6 +53,8 @@
 </div>
 
 @code {
+    protected override string HeaderTitle => "Dashboard";
+
     private class RevenueItem
     {
         public string Month { get; set; } = "";
