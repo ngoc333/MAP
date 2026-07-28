@@ -3,10 +3,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Components.WebView.Wpf;
 using MAP.C.Contract.Navigation;
-using MAP.C.Contract.Services;
-using MAP.C.Contract.Shell;
-using MAP.C.Components.Shell;
+using MAP.C.Contract.Menus;
+using MAP.C.Contract.Modules;
+using MAP.C.Contract.UI.Headers;
 using MAP.C.Runtime.Navigation;
+using MAP.C.Runtime.UI.Headers;
 using Radzen;
 
 namespace MAP.C.Wpf;

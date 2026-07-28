@@ -1,7 +1,7 @@
 using System.IO;
 using System.Reflection;
 using MAP.C.Contract.Models;
-using MAP.C.Contract.Services;
+using MAP.C.Contract.Modules;
 
 namespace MAP.C.Wpf;
 

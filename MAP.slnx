@@ -1,7 +1,8 @@
 <Solution>
   <Project Path="Core/MAP.C.Contract/MAP.C.Contract.csproj" />
   <Project Path="Core/MAP.C.Runtime/MAP.C.Runtime.csproj" />
-  <Project Path="Core/MAP.C.Components/MAP.C.Components.csproj" />
+  <Project Path="Core/MAP.C.UI/MAP.C.UI.csproj" />
+  <Project Path="Core/MAP.C.Wasm/MAP.C.Wasm.csproj" />
   <Project Path="Core/MAP.C.Wpf/MAP.C.Wpf.csproj" />
   <Project Path="MAP.H.Web/MAP.H.Web.csproj" />
   <Project Path="MAP.H.Web.Host/MAP.H.Web.Host.csproj" />

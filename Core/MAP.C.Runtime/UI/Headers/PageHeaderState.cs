@@ -1,6 +1,6 @@
-using MAP.C.Contract.Shell;
+using MAP.C.Contract.UI.Headers;
 
-namespace MAP.C.Components.Shell;
+namespace MAP.C.Runtime.UI.Headers;
 
 public sealed class PageHeaderState : IPageHeaderState
 {

@@ -1,7 +1,8 @@
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using MAP.C.Contract.Navigation;
-using MAP.C.Contract.Services;
+using MAP.C.Contract.Menus;
+using MAP.C.Contract.Modules;
 using MAP.C.Contract.Models;
 
 namespace MAP.C.Runtime.Navigation;

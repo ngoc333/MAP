@@ -1,9 +1,9 @@
 using System.Reflection;
 using MAP.C.Contract.Models;
-using MAP.C.Contract.Services;
+using MAP.C.Contract.Modules;
 using Microsoft.AspNetCore.Components.WebAssembly.Services;
 
-namespace MAP.C.Runtime.Services;
+namespace MAP.C.Wasm.Modules;
 
 public class ModuleLoader : IModuleLoader
 {

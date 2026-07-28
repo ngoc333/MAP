@@ -17,7 +17,8 @@
   <ItemGroup>
     <ProjectReference Include="..\Core\MAP.C.Contract\MAP.C.Contract.csproj" />
     <ProjectReference Include="..\Core\MAP.C.Runtime\MAP.C.Runtime.csproj" />
-    <ProjectReference Include="..\Core\MAP.C.Components\MAP.C.Components.csproj" />
+    <ProjectReference Include="..\Core\MAP.C.UI\MAP.C.UI.csproj" />
+    <ProjectReference Include="..\Core\MAP.C.Wasm\MAP.C.Wasm.csproj" />
   </ItemGroup>
 
   <!-- Tự động phát hiện tất cả Page DLL từ Modules -->

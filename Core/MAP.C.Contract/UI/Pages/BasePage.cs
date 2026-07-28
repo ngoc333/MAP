@@ -1,8 +1,8 @@
 using MAP.C.Contract.Navigation;
-using MAP.C.Contract.Shell;
+using MAP.C.Contract.UI.Headers;
 using Microsoft.AspNetCore.Components;
 
-namespace MAP.C.Contract.Pages;
+namespace MAP.C.Contract.UI.Pages;
 
 public abstract class BasePage : ComponentBase
 {

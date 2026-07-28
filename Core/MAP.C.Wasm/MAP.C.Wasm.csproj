@@ -4,8 +4,12 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <RootNamespace>MAP.C.Runtime</RootNamespace>
+    <RootNamespace>MAP.C.Wasm</RootNamespace>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.10" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\MAP.C.Contract\MAP.C.Contract.csproj" />

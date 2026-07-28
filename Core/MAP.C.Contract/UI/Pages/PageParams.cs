@@ -1,6 +1,6 @@
 using System.Dynamic;
 
-namespace MAP.C.Contract.Pages;
+namespace MAP.C.Contract.UI.Pages;
 
 public static class PageParams
 {

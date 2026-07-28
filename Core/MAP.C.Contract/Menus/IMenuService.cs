@@ -1,6 +1,6 @@
 using MAP.C.Contract.Models;
 
-namespace MAP.C.Contract.Services;
+namespace MAP.C.Contract.Menus;
 
 public interface IMenuService
 {

@@ -5,7 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using MAP.C.Contract.Models;
-using MAP.C.Contract.Services;
+using MAP.C.Contract.Menus;
 
 namespace MAP.C.Wpf;
 
