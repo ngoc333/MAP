@@ -24,7 +24,7 @@
                 <RadzenDataGridColumn TItem="Product" Title="" Width="80px" Filterable="false">
                     <Template Context="item">
                         <RadzenButton Text="@Lang.T("ProductList.edit")" ButtonStyle="ButtonStyle.Secondary" Size="ButtonSize.Small"
-                            Click="@(() => Navigator.OpenAsync("product-add", PageParams.Create(p => { p.Id = item.Id; p.Name = item.Name; p.Category = item.Category; })))" />
+                            Click="@(() => Navigator.OpenAsync("product-add", new { Id = item.Id, Name = item.Name, Category = item.Category }))" />
                     </Template>
                 </RadzenDataGridColumn>
             </Columns>

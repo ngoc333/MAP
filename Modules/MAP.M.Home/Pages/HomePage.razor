@@ -41,9 +41,9 @@
                 <RadzenButton Text="@Lang.T("HomePage.openCustomerList")" ButtonStyle="ButtonStyle.Secondary"
                     Click="@(() => Navigator.OpenAsync("customer-list"))" />
                 <RadzenButton Text="@Lang.T("HomePage.openCustomerDetail")" ButtonStyle="ButtonStyle.Secondary"
-                    Click="@(() => Navigator.OpenAsync("customer-detail", PageParams.Create(p => { p.Code = "KH999"; p.FullName = "Test User"; p.Email = "test@test.com"; p.Phone = "000"; p.City = "Test"; p.TotalOrders = 0; })))" />
+                    Click="@(() => Navigator.OpenAsync("customer-detail", new { Code = "KH999", FullName = "Test User", Email = "test@test.com", Phone = "000", City = "Test", TotalOrders = 0 }))" />
                 <RadzenButton Text="@Lang.T("HomePage.openProductAdd")" ButtonStyle="ButtonStyle.Secondary"
-                    Click="@(() => Navigator.OpenAsync("product-add", PageParams.Create(p => { p.Id = "SP-NEW"; p.Name = "Sản phẩm test"; p.Category = "Điện tử"; })))" />
+                    Click="@(() => Navigator.OpenAsync("product-add", new { Id = "SP-NEW", Name = "Sản phẩm test", Category = "Điện tử" }))" />
                 <RadzenButton Text="@Lang.T("HomePage.openSales")" ButtonStyle="ButtonStyle.Light"
                     Click="@(() => Navigator.OpenAsync("report-sales"))" />
             </div>

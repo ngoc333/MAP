@@ -4,6 +4,7 @@ using MAP.C.Contract.Navigation;
 using MAP.C.Contract.Menus;
 using MAP.C.Contract.Modules;
 using MAP.C.Contract.Models;
+using MAP.C.Contract.UI.Pages;
 
 namespace MAP.C.Runtime.Navigation;
 
@@ -33,7 +34,13 @@ public sealed class PageNavigator : IPageNavigator
             return;
         }
 
-        var paramPreview = parameters is null ? "null" : Truncate(JsonSerializer.Serialize(parameters), 200);
+        var pageParameters = PageParams.From(parameters, out var parameterException);
+        if (parameterException is not null)
+            _logger.LogError(parameterException, "Không thể chuyển tham số khi mở page {PageId}", pageId);
+
+        var paramPreview = parameterException is not null || parameters is null
+            ? "null"
+            : Truncate(JsonSerializer.Serialize(parameters), 200);
         _logger.LogInformation("Mở page {PageId}, params: {Params}", pageId, paramPreview);
 
         var menuItem = _menuService.FindById(pageId)
@@ -43,7 +50,7 @@ public sealed class PageNavigator : IPageNavigator
             ?? throw new InvalidOperationException($"Không thể load component: {menuItem.Component}");
 
         var fromPageId = _stack.Count > 0 ? _stack.Peek().PageId : null;
-        _stack.Push(new ActivePage(pageId, menuItem, type, parameters, fromPageId));
+        _stack.Push(new ActivePage(pageId, menuItem, type, pageParameters, fromPageId));
         Changed?.Invoke();
 
         _logger.LogInformation("Đã mở page {PageId} ({Type})", pageId, type.FullName);
