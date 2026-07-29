@@ -23,6 +23,7 @@ if (Test-Path $publishDesktop) { Remove-Item -Recurse -Force $publishDesktop }
 $moduleProjects = @(
     "Modules/MAP.M.Home/MAP.M.Home.csproj",
     "Modules/MAP.M.Customers/MAP.M.Customers.csproj",
+    "Modules/MAP.M.DatabaseApi/MAP.M.DatabaseApi.csproj",
     "Modules/MAP.M.Products/MAP.M.Products.csproj",
     "Modules/MAP.M.Reports/MAP.M.Reports.csproj"
 )

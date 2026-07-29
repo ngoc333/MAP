@@ -39,7 +39,6 @@ internal static class WpfServices
 
         var baseDir = AppContext.BaseDirectory;
 
-        services.AddSingleton<IMenuService>(new DesktopMenuService());
         services.AddSingleton<IModuleLoader>(
             sp => new DesktopModuleLoader(Path.Combine(baseDir, "modules"), langService));
         services.AddSingleton<IPageNavigator, PageNavigator>();
@@ -54,6 +53,8 @@ internal static class WpfServices
             BaseAddress = dbApiConfiguration.PostgreSqlBaseAddress,
             Timeout = TimeSpan.FromSeconds(10)
         }));
+        services.AddSingleton<IMenuService>(sp => new DesktopMenuService(
+            sp.GetRequiredService<IDbApiClient>()));
         services.AddSingleton(sp => new MainWindow(sp, rootComponentType));
 
         return services;

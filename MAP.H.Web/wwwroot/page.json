@@ -1,4 +1,7 @@
 {
+  "source": "db",
+  "dbName": "mes_edu",
+  "dbFunction": "mes.fn_get_map_menu",
   "menus": [
     {
       "id": "home",
@@ -81,20 +84,6 @@
           "icon": "pie_chart",
           "assembly": "MAP.M.Reports.dll",
           "component": "MAP.M.Reports.Pages.RevenueChart"
-        }
-      ]
-    },
-    {
-      "id": "database-api",
-      "title": "Database API",
-      "icon": "storage",
-      "children": [
-        {
-          "id": "database-api-test",
-          "title": "Kiểm tra API",
-          "icon": "api",
-          "assembly": "MAP.M.DatabaseApi.dll",
-          "component": "MAP.M.DatabaseApi.Pages.DatabaseApiTestPage"
         }
       ]
     }

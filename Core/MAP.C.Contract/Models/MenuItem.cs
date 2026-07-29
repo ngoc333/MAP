@@ -15,5 +15,8 @@ public class MenuItem
 
 public class PageConfig
 {
+    public string Source { get; set; } = "local";
+    public string? DbName { get; set; }
+    public string? DbFunction { get; set; }
     public List<MenuItem> Menus { get; set; } = new();
 }
