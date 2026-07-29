@@ -9,6 +9,8 @@ using MAP.C.Contract.Menus;
 using MAP.C.Contract.Modules;
 using MAP.C.Contract.UI.Headers;
 using MAP.C.Contract.Database;
+using MAP.C.Contract.Logging;
+using MAP.C.Wpf.Logging;
 using MAP.C.Runtime.Database;
 using MAP.C.Runtime.Navigation;
 using MAP.C.Runtime.UI.Headers;
@@ -35,12 +37,15 @@ internal static class WpfServices
         {
             logging.ClearProviders();
             logging.SetMinimumLevel(LogLevel.Information);
+            logging.Services.AddSingleton<FileLogStore>();
+            logging.Services.AddSingleton<ILoggerProvider, FileLoggerProvider>();
         });
 
         var baseDir = AppContext.BaseDirectory;
 
-        services.AddSingleton<IModuleLoader>(
-            sp => new DesktopModuleLoader(Path.Combine(baseDir, "modules"), langService));
+        services.AddSingleton<IModuleLoader>(sp => new DesktopModuleLoader(
+            Path.Combine(baseDir, "modules"), langService, sp.GetRequiredService<ILogger<DesktopModuleLoader>>()));
+        services.AddSingleton<ILogStore>(sp => sp.GetRequiredService<FileLogStore>());
         services.AddSingleton<IPageNavigator, PageNavigator>();
         services.AddSingleton<IPageHeaderState, PageHeaderState>();
         var dbApiConfiguration = DbApiConfiguration.Load();
@@ -54,7 +59,7 @@ internal static class WpfServices
             Timeout = TimeSpan.FromSeconds(10)
         }));
         services.AddSingleton<IMenuService>(sp => new DesktopMenuService(
-            sp.GetRequiredService<IDbApiClient>()));
+            sp.GetRequiredService<IDbApiClient>(), sp.GetRequiredService<ILogger<DesktopMenuService>>()));
         services.AddSingleton(sp => new MainWindow(sp, rootComponentType));
 
         return services;

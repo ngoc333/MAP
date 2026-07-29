@@ -1,6 +1,7 @@
 @implements IDisposable
 @inject IModuleLoader ModuleLoader
 @inject ILanguageService Lang
+@inject ILogger<PageContainer> Logger
 
 @if (_isLoading)
 {
@@ -31,6 +32,12 @@ else
     {
         ModuleLoader.OnLoadingChanged += OnLoadingChanged;
         Lang.LanguageChanged += OnLanguageChanged;
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (Type is not null)
+            Logger.LogInformation("Rendering page component. Component={Component}", Type.FullName);
     }
 
     private void OnLoadingChanged(bool isLoading)

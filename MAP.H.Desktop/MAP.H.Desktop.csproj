@@ -17,6 +17,7 @@
   <ItemGroup>
     <None Update="index.html" CopyToOutputDirectory="PreserveNewest" />
     <None Update="page.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\MAP.H.Web\wwwroot\js\app-log.js" Link="js\app-log.js" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <!-- Module discovery: all module projects under Modules/ -->

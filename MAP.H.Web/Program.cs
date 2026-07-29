@@ -6,12 +6,14 @@ using MAP.C.Contract.Menus;
 using MAP.C.Contract.Modules;
 using MAP.C.Contract.UI.Headers;
 using MAP.C.Contract.Database;
+using MAP.C.Contract.Logging;
 using MAP.C.Runtime.Navigation;
 using MAP.C.Runtime.UI.Headers;
 using MAP.C.Runtime.Database;
 using MAP.C.UI.Localization;
 using MAP.C.Wasm.Menus;
 using MAP.C.Wasm.Modules;
+using MAP.C.Wasm.Logging;
 using MAP.H.Web;
 using Radzen;
 
@@ -21,6 +23,11 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 builder.Services.AddScoped<IMenuService, MenuService>();
+builder.Services.AddSingleton<IndexedDbLogStore>();
+builder.Services.AddSingleton<ILogStore>(sp => sp.GetRequiredService<IndexedDbLogStore>());
+builder.Logging.ClearProviders();
+builder.Logging.SetMinimumLevel(LogLevel.Information);
+builder.Logging.Services.AddSingleton<ILoggerProvider, IndexedDbLoggerProvider>();
 
 var dbApiConfiguration = DbApiConfiguration.Load();
 builder.Services.AddSingleton<IDbApiClient>(_ => new DbApiClient(new HttpClient
@@ -45,4 +52,8 @@ builder.Services.AddScoped<IPageHeaderState, PageHeaderState>();
 
 builder.Services.AddRadzenComponents();
 
-await builder.Build().RunAsync();
+var host = builder.Build();
+host.Services.GetRequiredService<ILoggerFactory>().CreateLogger("AppStartup").LogInformation(
+    "Web application starting. SessionId={SessionId} BaseAddress={BaseAddress}",
+    DiagnosticContext.SessionId, builder.HostEnvironment.BaseAddress);
+await host.RunAsync();

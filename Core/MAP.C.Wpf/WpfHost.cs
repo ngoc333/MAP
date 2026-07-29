@@ -1,11 +1,13 @@
 using System.IO;
 using System.Text.Json;
+using System.Diagnostics;
 using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using MAP.C.Contract.Models;
 using MAP.C.Contract.Menus;
+using MAP.C.Contract.Logging;
 
 namespace MAP.C.Wpf;
 
@@ -16,18 +18,25 @@ public static class WpfHost
         ArgumentNullException.ThrowIfNull(application);
         ArgumentNullException.ThrowIfNull(rootComponentType);
 
+        var started = Stopwatch.GetTimestamp();
         var host = Host.CreateDefaultBuilder()
             .ConfigureServices(services => services.AddWpf(rootComponentType))
             .Build();
 
         var logger = host.Services.GetRequiredService<ILoggerFactory>().CreateLogger("AppStartup");
-        logger.LogInformation("Application starting");
+        logger.LogInformation("Application starting. SessionId={SessionId} BaseDirectory={BaseDirectory} CurrentDirectory={CurrentDirectory} ProcessId={ProcessId} Framework={Framework} OS={OS}", DiagnosticContext.SessionId, AppContext.BaseDirectory, Environment.CurrentDirectory, Environment.ProcessId, System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription, System.Runtime.InteropServices.RuntimeInformation.OSDescription);
 
         application.DispatcherUnhandledException += (_, e) =>
         {
             logger.LogError(e.Exception, "Unhandled DispatcherException");
             MessageBox.Show(e.Exception.ToString(), "MAP startup error", MessageBoxButton.OK, MessageBoxImage.Error);
             e.Handled = true;
+        };
+        AppDomain.CurrentDomain.UnhandledException += (_, e) => logger.LogCritical(e.ExceptionObject as Exception, "Unhandled AppDomain exception. IsTerminating={IsTerminating}", e.IsTerminating);
+        TaskScheduler.UnobservedTaskException += (_, e) =>
+        {
+            logger.LogError(e.Exception, "Unobserved task exception");
+            e.SetObserved();
         };
 
         application.Startup += async (_, _) =>
@@ -36,7 +45,7 @@ public static class WpfHost
             {
                 logger.LogInformation("Host starting");
                 await host.StartAsync();
-                logger.LogInformation("Host started");
+                logger.LogInformation("Host started. DurationMs={DurationMs}", Stopwatch.GetElapsedTime(started).TotalMilliseconds);
 
                 var menuService = host.Services.GetRequiredService<IMenuService>();
                 await menuService.LoadMenusAsync();
@@ -45,7 +54,7 @@ public static class WpfHost
                 window.Show();
                 window.Activate();
                 window.Focus();
-                logger.LogInformation("MainWindow shown");
+                logger.LogInformation("MainWindow shown. StartupDurationMs={DurationMs}", Stopwatch.GetElapsedTime(started).TotalMilliseconds);
             }
             catch (Exception ex)
             {
@@ -57,7 +66,7 @@ public static class WpfHost
 
         application.Exit += async (_, _) =>
         {
-            logger.LogInformation("Application shutting down");
+            logger.LogInformation("Application shutting down. SessionId={SessionId}", DiagnosticContext.SessionId);
             await host.StopAsync();
             host.Dispose();
             logger.LogInformation("Application stopped");
