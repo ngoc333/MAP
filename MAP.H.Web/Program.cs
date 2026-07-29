@@ -5,8 +5,10 @@ using MAP.C.Contract.Navigation;
 using MAP.C.Contract.Menus;
 using MAP.C.Contract.Modules;
 using MAP.C.Contract.UI.Headers;
+using MAP.C.Contract.Database;
 using MAP.C.Runtime.Navigation;
 using MAP.C.Runtime.UI.Headers;
+using MAP.C.Runtime.Database;
 using MAP.C.UI.Localization;
 using MAP.C.Wasm.Menus;
 using MAP.C.Wasm.Modules;
@@ -19,6 +21,17 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 builder.Services.AddScoped<IMenuService, MenuService>();
+
+var dbApiConfiguration = DbApiConfiguration.Load();
+builder.Services.AddSingleton<IDbApiClient>(_ => new DbApiClient(new HttpClient
+{
+    BaseAddress = dbApiConfiguration.OracleBaseAddress,
+    Timeout = TimeSpan.FromSeconds(10)
+}, new HttpClient
+{
+    BaseAddress = dbApiConfiguration.PostgreSqlBaseAddress,
+    Timeout = TimeSpan.FromSeconds(10)
+}));
 
 var loader = new EmbeddedResourceLoader();
 var langService = new JsonLanguageService(loader);

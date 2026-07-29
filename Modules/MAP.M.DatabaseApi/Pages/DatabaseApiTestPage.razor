@@ -1,0 +1,169 @@
+@using System.Text.Json
+@inherits BasePage
+@namespace MAP.M.DatabaseApi.Pages
+@inject IDbApiClient DbClient
+
+<div class="p-2 max-w-4xl">
+    <h2 class="text-2xl font-bold text-gray-800 mb-6">@Lang.T("DatabaseApiTest.title")</h2>
+
+    <RadzenCard class="p-5">
+        <RadzenStack Gap="1rem">
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem" Wrap="FlexWrap.Wrap">
+                <RadzenLabel Component="callType" Text="@Lang.T("DatabaseApiTest.callType")" Style="min-width: 130px;" />
+                <RadzenDropDown TValue="string"
+                                Name="callType"
+                                Data="@CallTypes"
+                                @bind-Value="_selectedCallType"
+                                Placeholder="@Lang.T("DatabaseApiTest.selectCallType")"
+                                Style="width: 300px;" />
+            </RadzenStack>
+
+            @if (_selectedCallType == Oracle)
+            {
+                <RadzenStack Gap="0.5rem">
+                    <RadzenLabel Component="oracleBody" Text="@Lang.T("DatabaseApiTest.oracleBody")" />
+                    <RadzenTextArea Name="oracleBody"
+                                    @bind-Value="_oracleBody"
+                                    Rows="8"
+                                    Placeholder='{ "dbName": "...", "packageName": "...", "procedureName": "...", "params": { } }'
+                                    Style="width: 100%; font-family: monospace;" />
+                </RadzenStack>
+            }
+            else if (_selectedCallType is PgFunction or PgProcedure)
+            {
+                <RadzenStack Gap="0.75rem">
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem" Wrap="FlexWrap.Wrap">
+                        <RadzenLabel Component="pgDbName" Text="@Lang.T("DatabaseApiTest.dbName")" Style="min-width: 130px;" />
+                        <RadzenTextBox Name="pgDbName" @bind-Value="_pgDbName" Placeholder="my_database" Style="width: 300px;" />
+                    </RadzenStack>
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem" Wrap="FlexWrap.Wrap">
+                        <RadzenLabel Component="pgCommandName" Text="@Lang.T("DatabaseApiTest.commandName")" Style="min-width: 130px;" />
+                        <RadzenTextBox Name="pgCommandName" @bind-Value="_pgCommandName" Placeholder="schema.fn_get_data" Style="width: 300px;" />
+                    </RadzenStack>
+                    <RadzenStack Gap="0.5rem">
+                        <RadzenLabel Component="pgParameters" Text="@Lang.T("DatabaseApiTest.parameters")" />
+                        <RadzenTextArea Name="pgParameters"
+                                        @bind-Value="_pgParameters"
+                                        Rows="5"
+                                        Placeholder='{ "p_id": 123 }'
+                                        Style="width: 100%; font-family: monospace;" />
+                    </RadzenStack>
+                </RadzenStack>
+            }
+
+            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.75rem" Wrap="FlexWrap.Wrap">
+                <RadzenButton Text="@Lang.T("DatabaseApiTest.send")"
+                              Icon="send"
+                              ButtonStyle="ButtonStyle.Primary"
+                              Click="@SendAsync"
+                              Disabled="@(_isLoading || string.IsNullOrWhiteSpace(_selectedCallType))" />
+                <RadzenButton Text="@Lang.T("DatabaseApiTest.clear")"
+                              Icon="clear"
+                              ButtonStyle="ButtonStyle.Light"
+                              Click="@ClearResult" />
+            </RadzenStack>
+
+            @if (_isLoading)
+            {
+                <RadzenText TextStyle="TextStyle.Subtitle2">@Lang.T("DatabaseApiTest.sending")</RadzenText>
+            }
+
+            @if (_error is not null)
+            {
+                <RadzenAlert AlertStyle="AlertStyle.Danger">
+                    <pre style="white-space: pre-wrap; word-break: break-word; margin: 0;">@_error</pre>
+                </RadzenAlert>
+            }
+
+            @if (_result is not null)
+            {
+                <RadzenAlert AlertStyle="AlertStyle.Success">
+                    <pre style="white-space: pre-wrap; word-break: break-word; margin: 0;">@_result</pre>
+                </RadzenAlert>
+            }
+        </RadzenStack>
+    </RadzenCard>
+</div>
+
+@code {
+    private const string Oracle = "Oracle";
+    private const string PgFunction = "PostgreSQL function";
+    private const string PgProcedure = "PostgreSQL procedure";
+
+    private static readonly string[] CallTypes = [Oracle, PgFunction, PgProcedure];
+
+    private string? _selectedCallType;
+    private string _oracleBody = string.Empty;
+    private string _pgDbName = string.Empty;
+    private string _pgCommandName = string.Empty;
+    private string _pgParameters = "{}";
+    private bool _isLoading;
+    private string? _result;
+    private string? _error;
+
+    protected override string HeaderTitleKey => "DatabaseApiTest.title";
+
+    private async Task SendAsync()
+    {
+        _isLoading = true;
+        _result = null;
+        _error = null;
+
+        try
+        {
+            var response = _selectedCallType switch
+            {
+                Oracle => await SendOracleAsync(),
+                PgFunction => await SendPostgreSqlFunctionAsync(),
+                PgProcedure => await SendPostgreSqlProcedureAsync(),
+                _ => throw new InvalidOperationException("Select an API call type.")
+            };
+
+            _result = JsonSerializer.Serialize(response, new JsonSerializerOptions { WriteIndented = true });
+        }
+        catch (Exception exception)
+        {
+            _error = exception.Message;
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task<JsonElement> SendOracleAsync()
+    {
+        using var document = JsonDocument.Parse(_oracleBody);
+        return await DbClient.CallOracleAsync(document.RootElement, CancellationToken.None);
+    }
+
+    private async Task<JsonElement> SendPostgreSqlFunctionAsync()
+    {
+        var parameters = ParsePostgreSqlParameters();
+        return await DbClient.CallPostgreSqlFunctionAsync(_pgDbName, _pgCommandName, parameters, CancellationToken.None);
+    }
+
+    private async Task<JsonElement> SendPostgreSqlProcedureAsync()
+    {
+        var parameters = ParsePostgreSqlParameters();
+        return await DbClient.CallPostgreSqlProcedureAsync(_pgDbName, _pgCommandName, parameters, CancellationToken.None);
+    }
+
+    private JsonElement ParsePostgreSqlParameters()
+    {
+        if (string.IsNullOrWhiteSpace(_pgDbName) || string.IsNullOrWhiteSpace(_pgCommandName))
+            throw new InvalidOperationException("Database name and command name are required.");
+
+        using var document = JsonDocument.Parse(_pgParameters);
+        if (document.RootElement.ValueKind != JsonValueKind.Object)
+            throw new InvalidOperationException("PostgreSQL parameters must be a JSON object.");
+
+        return document.RootElement.Clone();
+    }
+
+    private void ClearResult()
+    {
+        _result = null;
+        _error = null;
+    }
+}

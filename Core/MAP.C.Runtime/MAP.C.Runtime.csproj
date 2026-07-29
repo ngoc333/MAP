@@ -11,4 +11,8 @@
     <ProjectReference Include="..\MAP.C.Contract\MAP.C.Contract.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="Database\db-api.json" />
+  </ItemGroup>
+
 </Project>

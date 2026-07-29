@@ -1,0 +1,14 @@
+{
+  "DatabaseApiTest": {
+    "title": "Kiểm tra Database API",
+    "callType": "Loại gọi API",
+    "selectCallType": "Chọn loại gọi API",
+    "oracleBody": "JSON request Oracle",
+    "dbName": "Tên database",
+    "commandName": "Function/Procedure",
+    "parameters": "Tham số JSON",
+    "send": "Gửi yêu cầu",
+    "clear": "Xóa kết quả",
+    "sending": "Đang gửi yêu cầu..."
+  }
+}

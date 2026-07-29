@@ -1,4 +1,5 @@
 using System.IO;
+using System.Net.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Components.WebView.Wpf;
@@ -7,6 +8,8 @@ using MAP.C.Contract.Navigation;
 using MAP.C.Contract.Menus;
 using MAP.C.Contract.Modules;
 using MAP.C.Contract.UI.Headers;
+using MAP.C.Contract.Database;
+using MAP.C.Runtime.Database;
 using MAP.C.Runtime.Navigation;
 using MAP.C.Runtime.UI.Headers;
 using MAP.C.UI.Localization;
@@ -41,6 +44,16 @@ internal static class WpfServices
             sp => new DesktopModuleLoader(Path.Combine(baseDir, "modules"), langService));
         services.AddSingleton<IPageNavigator, PageNavigator>();
         services.AddSingleton<IPageHeaderState, PageHeaderState>();
+        var dbApiConfiguration = DbApiConfiguration.Load();
+        services.AddSingleton<IDbApiClient>(_ => new DbApiClient(new HttpClient
+        {
+            BaseAddress = dbApiConfiguration.OracleBaseAddress,
+            Timeout = TimeSpan.FromSeconds(10)
+        }, new HttpClient
+        {
+            BaseAddress = dbApiConfiguration.PostgreSqlBaseAddress,
+            Timeout = TimeSpan.FromSeconds(10)
+        }));
         services.AddSingleton(sp => new MainWindow(sp, rootComponentType));
 
         return services;

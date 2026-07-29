@@ -1,0 +1,14 @@
+{
+  "DatabaseApiTest": {
+    "title": "Database API Test",
+    "callType": "API call type",
+    "selectCallType": "Select an API call type",
+    "oracleBody": "Oracle request JSON",
+    "dbName": "Database name",
+    "commandName": "Function/Procedure",
+    "parameters": "JSON parameters",
+    "send": "Send request",
+    "clear": "Clear result",
+    "sending": "Sending request..."
+  }
+}
