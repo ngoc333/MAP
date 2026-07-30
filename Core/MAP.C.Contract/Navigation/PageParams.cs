@@ -1,6 +1,6 @@
 using System.Dynamic;
 
-namespace MAP.C.Contract.UI.Pages;
+namespace MAP.C.Contract.Navigation;
 
 /// <summary>
 /// A contract-level parameter bag passed between independently loaded pages.

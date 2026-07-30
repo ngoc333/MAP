@@ -11,4 +11,7 @@
   <Project Path="Modules/MAP.M.Customers/MAP.M.Customers.csproj" />
   <Project Path="Modules/MAP.M.Products/MAP.M.Products.csproj" />
   <Project Path="Modules/MAP.M.Reports/MAP.M.Reports.csproj" />
+  <Project Path="Modules/MAP.M.LogViewer/MAP.M.LogViewer.csproj" />
+  <Project Path="Modules/MAP.M.DatabaseApi/MAP.M.DatabaseApi.csproj" />
+  <Project Path="Tests/MAP.C.Runtime.Tests/MAP.C.Runtime.Tests.csproj" />
 </Solution>

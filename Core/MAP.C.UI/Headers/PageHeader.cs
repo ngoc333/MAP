@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Components;
 
-namespace MAP.C.Contract.UI.Headers;
+namespace MAP.C.UI.Headers;
 
 public sealed record PageHeader(
     HeaderKind Kind,

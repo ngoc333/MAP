@@ -1,9 +1,9 @@
 using MAP.C.Contract.Localization;
 using MAP.C.Contract.Navigation;
-using MAP.C.Contract.UI.Headers;
 using Microsoft.AspNetCore.Components;
+using MAP.C.UI.Headers;
 
-namespace MAP.C.Contract.UI.Pages;
+namespace MAP.C.UI.Pages;
 
 public abstract class BasePage : ComponentBase, IDisposable
 {

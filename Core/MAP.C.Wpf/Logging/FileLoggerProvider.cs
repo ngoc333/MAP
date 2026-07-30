@@ -3,12 +3,12 @@ using Microsoft.Extensions.Logging;
 
 namespace MAP.C.Wpf.Logging;
 
-public sealed class FileLoggerProvider(FileLogStore store) : ILoggerProvider
+public sealed class FileLoggerProvider(ILogStore store) : ILoggerProvider
 {
     public ILogger CreateLogger(string categoryName) => new FileLogger(categoryName, store);
     public void Dispose() { }
 
-    private sealed class FileLogger(string category, FileLogStore store) : ILogger
+    private sealed class FileLogger(string category, ILogStore store) : ILogger
     {
         public IDisposable? BeginScope<TState>(TState state) where TState : notnull => NullScope.Instance;
         public bool IsEnabled(LogLevel logLevel) => logLevel >= LogLevel.Information;
@@ -17,7 +17,7 @@ public sealed class FileLoggerProvider(FileLogStore store) : ILoggerProvider
             Func<TState, Exception?, string> formatter)
         {
             if (!IsEnabled(logLevel)) return;
-            store.Write(new LogEntry
+            _ = WriteAsync(new LogEntry
             {
                 Timestamp = DateTimeOffset.Now,
                 Level = logLevel.ToString(),
@@ -28,6 +28,12 @@ public sealed class FileLoggerProvider(FileLogStore store) : ILoggerProvider
                 SessionId = DiagnosticContext.SessionId,
                 OperationId = DiagnosticContext.OperationId
             });
+        }
+
+        private async Task WriteAsync(LogEntry entry)
+        {
+            try { await store.WriteAsync(entry); }
+            catch { }
         }
     }
 

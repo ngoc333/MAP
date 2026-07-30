@@ -2,7 +2,7 @@ using System.Globalization;
 using System.Reflection;
 using MAP.C.Contract.Localization;
 
-namespace MAP.C.UI.Localization;
+namespace MAP.C.Runtime.Localization;
 
 public sealed class JsonLanguageService : ILanguageService
 {

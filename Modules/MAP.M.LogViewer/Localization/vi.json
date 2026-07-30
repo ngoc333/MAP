@@ -1,0 +1,11 @@
+{
+  "LogViewer.title": "Nhật ký hệ thống",
+  "LogViewer.selectDay": "Chọn ngày",
+  "LogViewer.level": "Mức log",
+  "LogViewer.search": "Tìm message, category, session...",
+  "LogViewer.refresh": "Làm mới",
+  "LogViewer.clearDay": "Xóa ngày đang chọn",
+  "LogViewer.timestamp": "Thời gian",
+  "LogViewer.message": "Nội dung",
+  "LogViewer.detail": "Chi tiết"
+}

@@ -3,12 +3,12 @@ using Microsoft.Extensions.Logging;
 
 namespace MAP.C.Wasm.Logging;
 
-public sealed class IndexedDbLoggerProvider(IndexedDbLogStore store) : ILoggerProvider
+public sealed class IndexedDbLoggerProvider(ILogStore store) : ILoggerProvider
 {
     public ILogger CreateLogger(string categoryName) => new IndexedDbLogger(categoryName, store);
     public void Dispose() { }
 
-    private sealed class IndexedDbLogger(string category, IndexedDbLogStore store) : ILogger
+    private sealed class IndexedDbLogger(string category, ILogStore store) : ILogger
     {
         public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
         public bool IsEnabled(LogLevel logLevel) => logLevel >= LogLevel.Information;

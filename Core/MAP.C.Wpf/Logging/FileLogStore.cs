@@ -17,8 +17,9 @@ public sealed class FileLogStore : ILogStore
         DeleteExpiredFiles();
     }
 
-    public void Write(LogEntry entry)
+    public Task WriteAsync(LogEntry entry, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         lock (_writeLock)
         {
             Directory.CreateDirectory(_logDirectory);
@@ -26,6 +27,7 @@ public sealed class FileLogStore : ILogStore
             File.AppendAllText(path, JsonSerializer.Serialize(entry, JsonOptions) + Environment.NewLine);
             DeleteExpiredFiles();
         }
+        return Task.CompletedTask;
     }
 
     public async Task<IReadOnlyList<LogEntry>> GetAsync(DateOnly? day = null, CancellationToken cancellationToken = default)

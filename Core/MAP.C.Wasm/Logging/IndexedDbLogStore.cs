@@ -5,9 +5,9 @@ namespace MAP.C.Wasm.Logging;
 
 public sealed class IndexedDbLogStore(IJSRuntime js) : ILogStore
 {
-    public async Task WriteAsync(LogEntry entry)
+    public async Task WriteAsync(LogEntry entry, CancellationToken cancellationToken = default)
     {
-        await js.InvokeVoidAsync("mapLog.write", entry);
+        await js.InvokeVoidAsync("mapLog.write", cancellationToken, entry);
     }
 
     public async Task<IReadOnlyList<LogEntry>> GetAsync(DateOnly? day = null, CancellationToken cancellationToken = default)

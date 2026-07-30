@@ -8,22 +8,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <SupportedPlatform Include="browser" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.0.10" />
-    <PackageReference Include="Radzen.Blazor" Version="11.1.7" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" />
+    <PackageReference Include="Radzen.Blazor" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\MAP.C.Contract\MAP.C.Contract.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Include="Localization\vi.json" LogicalName="MAP.C.UI.Localization.vi.json" />
-    <EmbeddedResource Include="Localization\en.json" LogicalName="MAP.C.UI.Localization.en.json" />
-    <Content Remove="Localization\**" />
   </ItemGroup>
 
 </Project>

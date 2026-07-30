@@ -68,21 +68,7 @@ public class MenuService : IMenuService
 
     public MenuItem? FindById(string id)
     {
-        return FindInList(Menus, id);
-    }
-
-    private static MenuItem? FindInList(List<MenuItem> items, string id)
-    {
-        foreach (var item in items)
-        {
-            if (item.Id == id) return item;
-            if (item.Children is not null)
-            {
-                var found = FindInList(item.Children, id);
-                if (found is not null) return found;
-            }
-        }
-        return null;
+        return MenuTree.Find(Menus, id);
     }
 
     private static PageConfig GetFallbackMenus()

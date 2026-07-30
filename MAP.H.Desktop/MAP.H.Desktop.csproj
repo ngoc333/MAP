@@ -11,13 +11,21 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Radzen.Blazor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Core\MAP.C.Contract\MAP.C.Contract.csproj" />
+    <ProjectReference Include="..\Core\MAP.C.Runtime\MAP.C.Runtime.csproj" />
+    <ProjectReference Include="..\Core\MAP.C.UI\MAP.C.UI.csproj" />
     <ProjectReference Include="..\Core\MAP.C.Wpf\MAP.C.Wpf.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <None Update="index.html" CopyToOutputDirectory="PreserveNewest" />
-    <None Update="page.json" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="..\MAP.H.Web\wwwroot\js\app-log.js" Link="js\app-log.js" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\Shared\Config\page.json" Link="page.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Include="..\Shared\Config\db-api.json" Link="db-api.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Include="..\Shared\Scripts\app-log.js" Link="js\app-log.js" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
   <!-- Module discovery: all module projects under Modules/ -->
@@ -54,12 +62,23 @@
           DestinationFolder="$(_ModulesOut)" />
   </Target>
 
-  <Target Name="CopyTailwindCss" AfterTargets="Build">
-    <Copy
-      SourceFiles="..\MAP.H.Web\wwwroot\css\tailwind.css"
-      DestinationFolder="$(OutputPath)css"
-      SkipUnchangedFiles="true"
-      Condition="Exists('..\MAP.H.Web\wwwroot\css\tailwind.css')" />
+  <Target Name="EnsureTailwindCli" BeforeTargets="BuildTailwindCss">
+    <PropertyGroup>
+      <TailwindExe>$(MSBuildProjectDirectory)\..\tools\tailwindcss.exe</TailwindExe>
+      <TailwindUrl>https://github.com/tailwindlabs/tailwindcss/releases/download/v3.4.17/tailwindcss-windows-x64.exe</TailwindUrl>
+    </PropertyGroup>
+    <MakeDir Directories="$(MSBuildProjectDirectory)\..\tools" Condition="!Exists('$(MSBuildProjectDirectory)\..\tools')" />
+    <Exec Command="powershell -NoProfile -Command &quot;Invoke-WebRequest -Uri '$(TailwindUrl)' -OutFile '$(TailwindExe)' -UseBasicParsing&quot;" Condition="!Exists('$(TailwindExe)')" />
+  </Target>
+
+  <Target Name="BuildTailwindCss" BeforeTargets="BeforeBuild" DependsOnTargets="EnsureTailwindCli">
+    <MakeDir Directories="$(OutputPath)css" />
+    <Exec Command="$(TailwindExe) -i ..\Shared\Styles\tailwind-input.css -c ..\Shared\Styles\tailwind.config.js -o $(OutputPath)css\tailwind.css --minify" WorkingDirectory="$(MSBuildProjectDirectory)" />
+  </Target>
+
+  <Target Name="CopyTailwindCssToPublishOutput" AfterTargets="Publish" DependsOnTargets="BuildTailwindCss">
+    <MakeDir Directories="$(PublishDir)css" />
+    <Copy SourceFiles="$(OutputPath)css\tailwind.css" DestinationFolder="$(PublishDir)css" SkipUnchangedFiles="true" />
   </Target>
 
   <!-- Flatten wwwroot for BlazorWebView -->

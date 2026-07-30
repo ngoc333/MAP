@@ -1,4 +1,4 @@
-namespace MAP.C.Contract.UI.Headers;
+namespace MAP.C.UI.Headers;
 
 public interface IPageHeaderState
 {

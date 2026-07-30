@@ -7,15 +7,14 @@ using MAP.C.Contract.Localization;
 using MAP.C.Contract.Navigation;
 using MAP.C.Contract.Menus;
 using MAP.C.Contract.Modules;
-using MAP.C.Contract.UI.Headers;
 using MAP.C.Contract.Database;
 using MAP.C.Contract.Logging;
 using MAP.C.Wpf.Logging;
+using MAP.C.Wpf.Menus;
+using MAP.C.Wpf.Modules;
 using MAP.C.Runtime.Database;
 using MAP.C.Runtime.Navigation;
-using MAP.C.Runtime.UI.Headers;
-using MAP.C.UI.Localization;
-using Radzen;
+using MAP.C.Runtime.Localization;
 
 namespace MAP.C.Wpf;
 
@@ -25,14 +24,12 @@ internal static class WpfServices
     {
         services.AddWpfBlazorWebView();
 
-        var loader = new EmbeddedResourceLoader();
+        var loader = new ResourceLoader();
         var langService = new JsonLanguageService(loader);
         langService.InitializeAsync(typeof(JsonLanguageService).Assembly).GetAwaiter().GetResult();
 
+        services.AddSingleton<IResourceLoader>(loader);
         services.AddSingleton<ILanguageService>(langService);
-        services.AddSingleton<Radzen.ILocalizer, RadzenLocalizer>();
-
-        services.AddRadzenComponents();
         services.AddLogging(logging =>
         {
             logging.ClearProviders();
@@ -43,12 +40,11 @@ internal static class WpfServices
 
         var baseDir = AppContext.BaseDirectory;
 
-        services.AddSingleton<IModuleLoader>(sp => new DesktopModuleLoader(
-            Path.Combine(baseDir, "modules"), langService, sp.GetRequiredService<ILogger<DesktopModuleLoader>>()));
+        services.AddSingleton<IModuleLoader>(sp => new ModuleLoader(
+            Path.Combine(baseDir, "modules"), langService, sp.GetRequiredService<IResourceLoader>(), sp.GetRequiredService<ILogger<ModuleLoader>>()));
         services.AddSingleton<ILogStore>(sp => sp.GetRequiredService<FileLogStore>());
         services.AddSingleton<IPageNavigator, PageNavigator>();
-        services.AddSingleton<IPageHeaderState, PageHeaderState>();
-        var dbApiConfiguration = DbApiConfiguration.Load();
+        var dbApiConfiguration = DbApiConfiguration.LoadFromFile(Path.Combine(baseDir, "db-api.json"));
         services.AddSingleton<IDbApiClient>(_ => new DbApiClient(new HttpClient
         {
             BaseAddress = dbApiConfiguration.OracleBaseAddress,
@@ -58,8 +54,8 @@ internal static class WpfServices
             BaseAddress = dbApiConfiguration.PostgreSqlBaseAddress,
             Timeout = TimeSpan.FromSeconds(10)
         }));
-        services.AddSingleton<IMenuService>(sp => new DesktopMenuService(
-            sp.GetRequiredService<IDbApiClient>(), sp.GetRequiredService<ILogger<DesktopMenuService>>()));
+        services.AddSingleton<IMenuService>(sp => new MenuService(
+            sp.GetRequiredService<IDbApiClient>(), sp.GetRequiredService<ILogger<MenuService>>()));
         services.AddSingleton(sp => new MainWindow(sp, rootComponentType));
 
         return services;

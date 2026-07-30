@@ -1,11 +1,10 @@
 using System.Reflection;
 using System.Diagnostics;
-using MAP.C.Contract.Localization;
 using MAP.C.Contract.Models;
 using MAP.C.Contract.Modules;
-using MAP.C.UI.Localization;
 using Microsoft.AspNetCore.Components.WebAssembly.Services;
 using Microsoft.Extensions.Logging;
+using MAP.C.Contract.Localization;
 
 namespace MAP.C.Wasm.Modules;
 
@@ -13,6 +12,7 @@ public class ModuleLoader : IModuleLoader
 {
     private readonly LazyAssemblyLoader _assemblyLoader;
     private readonly ILanguageService _langService;
+    private readonly IResourceLoader _resourceLoader;
     private readonly ILogger<ModuleLoader> _logger;
     private readonly Dictionary<string, Assembly> _loadedAssemblies = new();
     private readonly Dictionary<string, Type> _cachedTypes = new();
@@ -20,10 +20,11 @@ public class ModuleLoader : IModuleLoader
     public event Action<bool>? OnLoadingChanged;
     public event Action<string>? OnError;
 
-    public ModuleLoader(LazyAssemblyLoader assemblyLoader, ILanguageService langService, ILogger<ModuleLoader> logger)
+    public ModuleLoader(LazyAssemblyLoader assemblyLoader, ILanguageService langService, IResourceLoader resourceLoader, ILogger<ModuleLoader> logger)
     {
         _assemblyLoader = assemblyLoader;
         _langService = langService;
+        _resourceLoader = resourceLoader;
         _logger = logger;
     }
 
@@ -89,8 +90,7 @@ public class ModuleLoader : IModuleLoader
 
     private async Task LoadModuleLocalizationAsync(Assembly assembly)
     {
-        var loader = new EmbeddedResourceLoader();
         var moduleName = assembly.GetName().Name!;
-        await loader.LoadModuleResourcesAsync(_langService, assembly, moduleName);
+        await _resourceLoader.LoadModuleResourcesAsync(_langService, assembly, moduleName);
     }
 }

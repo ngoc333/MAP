@@ -1,0 +1,11 @@
+{
+  "LogViewer.title": "System logs",
+  "LogViewer.selectDay": "Select day",
+  "LogViewer.level": "Log level",
+  "LogViewer.search": "Search message, category, session...",
+  "LogViewer.refresh": "Refresh",
+  "LogViewer.clearDay": "Clear selected day",
+  "LogViewer.timestamp": "Timestamp",
+  "LogViewer.message": "Message",
+  "LogViewer.detail": "Details"
+}

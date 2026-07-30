@@ -4,20 +4,33 @@ namespace MAP.C.Runtime.Database;
 
 public sealed class DbApiConfiguration
 {
-    private const string ResourceName = "MAP.C.Runtime.Database.db-api.json";
-
     public required Uri OracleBaseAddress { get; init; }
     public required Uri PostgreSqlBaseAddress { get; init; }
 
-    public static DbApiConfiguration Load()
+    public static DbApiConfiguration LoadFromFile(string path)
     {
-        var assembly = typeof(DbApiConfiguration).Assembly;
-        using var stream = assembly.GetManifestResourceStream(ResourceName)
-            ?? throw new InvalidOperationException($"Embedded resource '{ResourceName}' was not found.");
-        using var document = JsonDocument.Parse(stream);
+        using var stream = File.OpenRead(path);
+        return Load(stream);
+    }
 
-        var oracleBaseAddress = GetBaseAddress(document.RootElement, "OracleApiBaseUrl");
-        var postgreSqlBaseAddress = GetBaseAddress(document.RootElement, "PostgreSqlApiBaseUrl");
+    public static DbApiConfiguration Load(Stream stream)
+    {
+        using var document = JsonDocument.Parse(stream);
+        return Create(document.RootElement);
+    }
+
+    public static async Task<DbApiConfiguration> LoadAsync(
+        Stream stream,
+        CancellationToken cancellationToken = default)
+    {
+        using var document = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken);
+        return Create(document.RootElement);
+    }
+
+    private static DbApiConfiguration Create(JsonElement configuration)
+    {
+        var oracleBaseAddress = GetBaseAddress(configuration, "OracleApiBaseUrl");
+        var postgreSqlBaseAddress = GetBaseAddress(configuration, "PostgreSqlApiBaseUrl");
 
         return new DbApiConfiguration
         {

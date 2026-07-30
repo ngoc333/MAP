@@ -8,7 +8,7 @@ public static class SystemMenus
 
     public static void EnsureRegistered(PageConfig config)
     {
-        if (Find(config.Menus, LogViewerPageId) is not null) return;
+        if (MenuTree.Find(config.Menus, LogViewerPageId) is not null) return;
 
         var system = config.Menus.FirstOrDefault(x => x.Id == "system");
         if (system is null)
@@ -26,15 +26,5 @@ public static class SystemMenus
             Assembly = "MAP.M.LogViewer.dll",
             Component = "MAP.M.LogViewer.Pages.LogViewerPage"
         });
-    }
-
-    private static MenuItem? Find(IEnumerable<MenuItem> items, string id)
-    {
-        foreach (var item in items)
-        {
-            if (item.Id == id) return item;
-            if (item.Children is not null && Find(item.Children, id) is not null) return item;
-        }
-        return null;
     }
 }

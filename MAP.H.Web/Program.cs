@@ -4,12 +4,12 @@ using MAP.C.Contract.Localization;
 using MAP.C.Contract.Navigation;
 using MAP.C.Contract.Menus;
 using MAP.C.Contract.Modules;
-using MAP.C.Contract.UI.Headers;
 using MAP.C.Contract.Database;
 using MAP.C.Contract.Logging;
 using MAP.C.Runtime.Navigation;
-using MAP.C.Runtime.UI.Headers;
 using MAP.C.Runtime.Database;
+using MAP.C.Runtime.Localization;
+using MAP.C.UI.Headers;
 using MAP.C.UI.Localization;
 using MAP.C.Wasm.Menus;
 using MAP.C.Wasm.Modules;
@@ -22,6 +22,7 @@ builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
+var http = new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) };
 builder.Services.AddScoped<IMenuService, MenuService>();
 builder.Services.AddSingleton<IndexedDbLogStore>();
 builder.Services.AddSingleton<ILogStore>(sp => sp.GetRequiredService<IndexedDbLogStore>());
@@ -29,7 +30,8 @@ builder.Logging.ClearProviders();
 builder.Logging.SetMinimumLevel(LogLevel.Information);
 builder.Logging.Services.AddSingleton<ILoggerProvider, IndexedDbLoggerProvider>();
 
-var dbApiConfiguration = DbApiConfiguration.Load();
+await using var dbApiConfigurationStream = await http.GetStreamAsync("db-api.json");
+var dbApiConfiguration = await DbApiConfiguration.LoadAsync(dbApiConfigurationStream);
 builder.Services.AddSingleton<IDbApiClient>(_ => new DbApiClient(new HttpClient
 {
     BaseAddress = dbApiConfiguration.OracleBaseAddress,
@@ -40,9 +42,10 @@ builder.Services.AddSingleton<IDbApiClient>(_ => new DbApiClient(new HttpClient
     Timeout = TimeSpan.FromSeconds(10)
 }));
 
-var loader = new EmbeddedResourceLoader();
+var loader = new ResourceLoader();
 var langService = new JsonLanguageService(loader);
 await langService.InitializeAsync(typeof(JsonLanguageService).Assembly);
+builder.Services.AddSingleton<IResourceLoader>(loader);
 builder.Services.AddSingleton<ILanguageService>(langService);
 builder.Services.AddSingleton<Radzen.ILocalizer, RadzenLocalizer>();
 

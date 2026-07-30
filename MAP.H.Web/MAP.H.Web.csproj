@@ -9,9 +9,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.10" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.10" PrivateAssets="all" />
-    <PackageReference Include="Radzen.Blazor" Version="11.1.7" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" PrivateAssets="all" />
+    <PackageReference Include="Radzen.Blazor" />
   </ItemGroup>
 
   <!-- Platform references (cố định) -->
@@ -24,18 +24,48 @@
 
   <ItemGroup>
     <ModuleProject Include="$(MSBuildProjectDirectory)\..\Modules\*\*.csproj" />
-    <PageAssembly Include="Modules\*.dll" />
+    <ProjectReference Include="@(ModuleProject)" />
+    <BlazorWebAssemblyLazyLoad Include="@(ModuleProject->'%(Filename).dll')" />
+    <None Include="..\Shared\Config\page.json" Link="wwwroot\page.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Include="..\Shared\Config\db-api.json" Link="wwwroot\db-api.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\Shared\Scripts\app-log.js" Link="wwwroot\js\app-log.js" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Reference Include="@(PageAssembly->'%(Filename)')">
-      <HintPath>%(PageAssembly.Identity)</HintPath>
-    </Reference>
-  </ItemGroup>
+  <Target Name="UseSharedConfigurationStaticWebAssets" AfterTargets="ResolveStaticWebAssetsInputs">
+    <ItemGroup>
+      <!-- Linked files live outside wwwroot, so define their physical content root explicitly. -->
+      <_SharedConfigurationAsset Include="$(MSBuildProjectDirectory)\..\Shared\Config\page.json">
+        <RelativePath>page.json</RelativePath>
+      </_SharedConfigurationAsset>
+      <_SharedConfigurationAsset Include="$(MSBuildProjectDirectory)\..\Shared\Config\db-api.json">
+        <RelativePath>db-api.json</RelativePath>
+      </_SharedConfigurationAsset>
+    </ItemGroup>
 
-  <ItemGroup Condition="@(PageAssembly->Count()) &gt; 0">
-    <BlazorWebAssemblyLazyLoad Include="@(PageAssembly->'%(Filename)')" />
-  </ItemGroup>
+    <DefineStaticWebAssets CandidateAssets="@(_SharedConfigurationAsset)"
+                           SourceId="$(PackageId)"
+                           SourceType="Computed"
+                           AssetKind="All"
+                           AssetMode="All"
+                           AssetRole="Primary"
+                           CopyToOutputDirectory="PreserveNewest"
+                           CopyToPublishDirectory="PreserveNewest"
+                           ContentRoot="$(MSBuildProjectDirectory)\..\Shared\Config\"
+                           BasePath="$(StaticWebAssetBasePath)">
+      <Output TaskParameter="Assets" ItemName="_SharedConfigurationStaticWebAsset" />
+    </DefineStaticWebAssets>
+
+    <DefineStaticWebAssetEndpoints CandidateAssets="@(_SharedConfigurationStaticWebAsset)"
+                                   ExistingEndpoints="@(StaticWebAssetEndpoint)"
+                                   ContentTypeMappings="@(StaticWebAssetContentTypeMapping)">
+      <Output TaskParameter="Endpoints" ItemName="_SharedConfigurationStaticWebAssetEndpoint" />
+    </DefineStaticWebAssetEndpoints>
+
+    <ItemGroup>
+      <StaticWebAsset Include="@(_SharedConfigurationStaticWebAsset)" />
+      <StaticWebAssetEndpoint Include="@(_SharedConfigurationStaticWebAssetEndpoint)" />
+    </ItemGroup>
+  </Target>
 
   <Target Name="BuildAndSyncModules" BeforeTargets="ResolveReferences">
     <MSBuild Projects="@(ModuleProject)"
@@ -56,7 +86,8 @@
     <Copy SourceFiles="@(_ModuleAssembly)" DestinationFolder="$(WebModulesDir)" />
     <Copy SourceFiles="@(_ModuleAssembly->'%(RootDir)%(Directory)%(Filename).pdb')"
           DestinationFolder="$(WebModulesDir)"
-          SkipUnchangedFiles="true" />
+           SkipUnchangedFiles="true" />
+
   </Target>
 
   <Target Name="EnsureTailwindCli" BeforeTargets="BuildTailwindCss">
@@ -72,7 +103,7 @@
 
   <Target Name="BuildTailwindCss" BeforeTargets="BeforeBuild" DependsOnTargets="EnsureTailwindCli">
     <Exec
-      Command="..\tools\tailwindcss.exe -i Styles\tailwind-input.css -o wwwroot\css\tailwind.css --minify"
+       Command="..\tools\tailwindcss.exe -i ..\Shared\Styles\tailwind-input.css -c ..\Shared\Styles\tailwind.config.js -o wwwroot\css\tailwind.css --minify"
       WorkingDirectory="$(MSBuildProjectDirectory)" />
   </Target>
 

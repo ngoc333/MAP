@@ -5,7 +5,6 @@ using MAP.C.Contract.Navigation;
 using MAP.C.Contract.Menus;
 using MAP.C.Contract.Modules;
 using MAP.C.Contract.Models;
-using MAP.C.Contract.UI.Pages;
 using MAP.C.Contract.Logging;
 
 namespace MAP.C.Runtime.Navigation;

@@ -8,18 +8,18 @@ using MAP.C.Runtime.Database;
 using MAP.C.Runtime.Menus;
 using Microsoft.Extensions.Logging;
 
-namespace MAP.C.Wpf;
+namespace MAP.C.Wpf.Menus;
 
-public class DesktopMenuService : IMenuService
+public sealed class MenuService : IMenuService
 {
     private readonly IDbApiClient _dbClient;
-    private readonly ILogger<DesktopMenuService> _logger;
+    private readonly ILogger<MenuService> _logger;
     private PageConfig? _config;
 
     public List<MenuItem> Menus => _config?.Menus ?? new();
     public event Action? OnMenusLoaded;
 
-    public DesktopMenuService(IDbApiClient dbClient, ILogger<DesktopMenuService> logger)
+    public MenuService(IDbApiClient dbClient, ILogger<MenuService> logger)
     {
         _dbClient = dbClient;
         _logger = logger;
@@ -29,7 +29,7 @@ public class DesktopMenuService : IMenuService
     {
         var started = Stopwatch.GetTimestamp();
         var path = Path.Combine(AppContext.BaseDirectory, "page.json");
-        _logger.LogInformation("Loading desktop menu. Path={Path} Exists={Exists}", path, File.Exists(path));
+        _logger.LogInformation("Loading WPF menu. Path={Path} Exists={Exists}", path, File.Exists(path));
         using var stream = File.OpenRead(path);
         _config = JsonSerializer.Deserialize<PageConfig>(stream,
             new JsonSerializerOptions(JsonSerializerDefaults.Web))
@@ -51,32 +51,10 @@ public class DesktopMenuService : IMenuService
         }
 
         SystemMenus.EnsureRegistered(_config);
-        _logger.LogInformation("Desktop menu ready. MenuCount={MenuCount} DurationMs={DurationMs}", _config.Menus.Count, Stopwatch.GetElapsedTime(started).TotalMilliseconds);
+        _logger.LogInformation("WPF menu ready. MenuCount={MenuCount} DurationMs={DurationMs}", _config.Menus.Count, Stopwatch.GetElapsedTime(started).TotalMilliseconds);
 
         OnMenusLoaded?.Invoke();
     }
 
-    public MenuItem? FindById(string id)
-    {
-        foreach (var menu in Menus)
-        {
-            if (menu.Id == id) return menu;
-            if (menu.Children is not null)
-            {
-                var found = FindInList(menu.Children, id);
-                if (found is not null) return found;
-            }
-        }
-        return null;
-    }
-
-    private static MenuItem? FindInList(IEnumerable<MenuItem> items, string id)
-    {
-        foreach (var item in items)
-        {
-            if (item.Id == id) return item;
-            if (item.Children is not null && FindInList(item.Children, id) is { } found) return found;
-        }
-        return null;
-    }
+    public MenuItem? FindById(string id) => MenuTree.Find(Menus, id);
 }

@@ -20,18 +20,12 @@ Write-Host "[2/4] Publishing Desktop (win-x64, self-contained)..." -ForegroundCo
 
 if (Test-Path $publishDesktop) { Remove-Item -Recurse -Force $publishDesktop }
 
-$moduleProjects = @(
-    "Modules/MAP.M.Home/MAP.M.Home.csproj",
-    "Modules/MAP.M.Customers/MAP.M.Customers.csproj",
-    "Modules/MAP.M.DatabaseApi/MAP.M.DatabaseApi.csproj",
-    "Modules/MAP.M.Products/MAP.M.Products.csproj",
-    "Modules/MAP.M.Reports/MAP.M.Reports.csproj"
-)
-foreach ($m in $moduleProjects) {
-    $proj = Join-Path $root $m
+$moduleProjects = @(Get-ChildItem (Join-Path $root "Modules") -Filter "*.csproj" -Recurse -File | Sort-Object FullName)
+foreach ($moduleProject in $moduleProjects) {
+    $proj = $moduleProject.FullName
     dotnet restore $proj -r win-x64 --nologo -v q
     if ($LASTEXITCODE -ne 0) {
-        Write-Host "ERROR: Restore $m with win-x64 failed" -ForegroundColor Red
+        Write-Host "ERROR: Restore $($moduleProject.Name) with win-x64 failed" -ForegroundColor Red
         exit 1
     }
 }

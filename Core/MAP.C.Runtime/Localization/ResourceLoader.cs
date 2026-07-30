@@ -1,9 +1,9 @@
 using System.Reflection;
 using System.Text.Json;
 
-namespace MAP.C.UI.Localization;
+namespace MAP.C.Runtime.Localization;
 
-public sealed class EmbeddedResourceLoader : MAP.C.Contract.Localization.IResourceLoader
+public sealed class ResourceLoader : MAP.C.Contract.Localization.IResourceLoader
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
     {

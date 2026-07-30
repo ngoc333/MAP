@@ -24,6 +24,8 @@
     </RadzenPanelMenu>
 </aside>
 
+@implements IDisposable
+
 @code {
     [Parameter] public EventCallback<MenuItem> OnMenuSelected { get; set; }
 
@@ -45,8 +47,8 @@
 
     protected override void OnInitialized()
     {
-        MenuService.OnMenusLoaded += () => InvokeAsync(StateHasChanged);
-        Lang.LanguageChanged += () => InvokeAsync(StateHasChanged);
+        MenuService.OnMenusLoaded += OnStateChanged;
+        Lang.LanguageChanged += OnStateChanged;
     }
 
     private string GetMenuTitle(MenuItem menu)
@@ -60,5 +62,13 @@
     {
         if (!item.IsPage) return;
         await OnMenuSelected.InvokeAsync(item);
+    }
+
+    private void OnStateChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        MenuService.OnMenusLoaded -= OnStateChanged;
+        Lang.LanguageChanged -= OnStateChanged;
     }
 }

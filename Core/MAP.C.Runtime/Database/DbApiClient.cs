@@ -51,6 +51,16 @@ public sealed class DbApiClient(HttpClient oracleHttp, HttpClient postgreSqlHttp
                 response.StatusCode);
         }
 
-        return JsonSerializer.Deserialize<JsonElement>(body);
+        if (string.IsNullOrWhiteSpace(body))
+            throw new InvalidOperationException("Database API returned an empty response.");
+
+        try
+        {
+            return JsonSerializer.Deserialize<JsonElement>(body);
+        }
+        catch (JsonException exception)
+        {
+            throw new InvalidOperationException("Database API returned invalid JSON.", exception);
+        }
     }
 }

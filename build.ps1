@@ -24,9 +24,6 @@ if ($LASTEXITCODE -ne 0) { Write-Host "ERROR: Restore failed" -ForegroundColor R
 # 3. Build
 Write-Host "[3/3] Building projects..." -ForegroundColor Cyan
 
-$ok = 0
-$fail = 0
-
 function Build-And-Copy {
     param([string]$csproj, [string]$label, [string]$dest)
 
@@ -34,12 +31,11 @@ function Build-And-Copy {
     $name = (Get-Item $csproj).BaseName
 
     Write-Host "  $label" -ForegroundColor Yellow -NoNewline
-    dotnet build $csproj -c Release --nologo -v q 2>&1 | Out-Null
+    dotnet build $csproj -c Release --nologo -v q
 
     if ($LASTEXITCODE -ne 0) {
         Write-Host "  FAILED" -ForegroundColor Red
-        $script:fail++
-        return
+        throw "Build failed: $label"
     }
 
     # Tìm DLL trong bin/Release/<TFM>/
@@ -57,10 +53,8 @@ function Build-And-Copy {
 
     if ($found) {
         Write-Host "  OK" -ForegroundColor Green
-        $script:ok++
     } else {
-        Write-Host "  WARN (DLL not found)" -ForegroundColor Yellow
-        $script:ok++
+        throw "Build succeeded but '$name.dll' was not found for $label."
     }
 }
 
@@ -119,6 +113,12 @@ Get-ChildItem $publishModules -Filter "*.dll" -File | ForEach-Object {
     Test-ModuleLocalization $_.FullName
 }
 Copy-Item (Join-Path $publishModules "*.dll") $webModulesDir -Force
+
+$expectedCoreDlls = $cores | ForEach-Object { "$($_.Label).dll" }
+$missingCoreDlls = $expectedCoreDlls | Where-Object { -not (Test-Path (Join-Path $publishCore $_)) }
+if ($missingCoreDlls) {
+    throw "Missing core DLL(s): $($missingCoreDlls -join ', ')"
+}
 
 # Summary
 Write-Host ""

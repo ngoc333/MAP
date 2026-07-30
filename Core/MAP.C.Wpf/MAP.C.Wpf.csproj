@@ -9,14 +9,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Wpf" Version="10.0.80" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.10" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Wpf" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\MAP.C.Contract\MAP.C.Contract.csproj" />
     <ProjectReference Include="..\MAP.C.Runtime\MAP.C.Runtime.csproj" />
-    <ProjectReference Include="..\MAP.C.UI\MAP.C.UI.csproj" />
   </ItemGroup>
 
 </Project>

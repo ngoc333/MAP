@@ -7,9 +7,4 @@
     <RootNamespace>MAP.C.Contract</RootNamespace>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.0.10" />
-  </ItemGroup>
-
 </Project>
-

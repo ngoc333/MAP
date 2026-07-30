@@ -13,14 +13,18 @@ namespace MAP.C.Wpf;
 
 public static class WpfHost
 {
-    public static void Run(Application application, Type rootComponentType)
+    public static void Run(Application application, Type rootComponentType, Action<IServiceCollection>? configureUi = null)
     {
         ArgumentNullException.ThrowIfNull(application);
         ArgumentNullException.ThrowIfNull(rootComponentType);
 
         var started = Stopwatch.GetTimestamp();
         var host = Host.CreateDefaultBuilder()
-            .ConfigureServices(services => services.AddWpf(rootComponentType))
+            .ConfigureServices(services =>
+            {
+                services.AddWpf(rootComponentType);
+                configureUi?.Invoke(services);
+            })
             .Build();
 
         var logger = host.Services.GetRequiredService<ILoggerFactory>().CreateLogger("AppStartup");

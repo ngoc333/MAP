@@ -4,26 +4,28 @@ using System.Diagnostics;
 using MAP.C.Contract.Localization;
 using MAP.C.Contract.Models;
 using MAP.C.Contract.Modules;
-using MAP.C.UI.Localization;
+using MAP.C.Runtime.Localization;
 using Microsoft.Extensions.Logging;
 
-namespace MAP.C.Wpf;
+namespace MAP.C.Wpf.Modules;
 
-public class DesktopModuleLoader : IModuleLoader
+public sealed class ModuleLoader : IModuleLoader
 {
     private readonly string _modulesRoot;
     private readonly ILanguageService? _langService;
-    private readonly ILogger<DesktopModuleLoader> _logger;
+    private readonly IResourceLoader _resourceLoader;
+    private readonly ILogger<ModuleLoader> _logger;
     private readonly Dictionary<string, Assembly> _loadedAssemblies = new();
     private readonly Dictionary<string, Type> _cachedTypes = new();
 
     public event Action<bool>? OnLoadingChanged;
     public event Action<string>? OnError;
 
-    public DesktopModuleLoader(string modulesRoot, ILanguageService? langService, ILogger<DesktopModuleLoader> logger)
+    public ModuleLoader(string modulesRoot, ILanguageService? langService, IResourceLoader resourceLoader, ILogger<ModuleLoader> logger)
     {
         _modulesRoot = modulesRoot;
         _langService = langService;
+        _resourceLoader = resourceLoader;
         _logger = logger;
     }
 
@@ -44,7 +46,7 @@ public class DesktopModuleLoader : IModuleLoader
             if (!_loadedAssemblies.ContainsKey(menuItem.Assembly!))
             {
                 var path = Path.Combine(_modulesRoot, menuItem.Assembly!);
-                _logger.LogInformation("Loading desktop module. Assembly={Assembly} Path={Path} Exists={Exists}", menuItem.Assembly, path, File.Exists(path));
+                _logger.LogInformation("Loading WPF module. Assembly={Assembly} Path={Path} Exists={Exists}", menuItem.Assembly, path, File.Exists(path));
                 var assembly = Assembly.LoadFrom(path);
                 _loadedAssemblies[menuItem.Assembly!] = assembly;
                 LoadModuleLocalization(assembly);
@@ -54,7 +56,7 @@ public class DesktopModuleLoader : IModuleLoader
             if (type is not null)
             {
                 _cachedTypes[cacheKey] = type;
-                _logger.LogInformation("Desktop module loaded. Assembly={Assembly} Component={Component} DurationMs={DurationMs}", menuItem.Assembly, menuItem.Component, Stopwatch.GetElapsedTime(started).TotalMilliseconds);
+                _logger.LogInformation("WPF module loaded. Assembly={Assembly} Component={Component} DurationMs={DurationMs}", menuItem.Assembly, menuItem.Component, Stopwatch.GetElapsedTime(started).TotalMilliseconds);
             }
             else
                 _logger.LogError("Component was not found. Assembly={Assembly} Component={Component}", menuItem.Assembly, menuItem.Component);
@@ -63,7 +65,7 @@ public class DesktopModuleLoader : IModuleLoader
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Desktop module load failed. Assembly={Assembly} Component={Component} DurationMs={DurationMs}", menuItem.Assembly, menuItem.Component, Stopwatch.GetElapsedTime(started).TotalMilliseconds);
+            _logger.LogError(ex, "WPF module load failed. Assembly={Assembly} Component={Component} DurationMs={DurationMs}", menuItem.Assembly, menuItem.Component, Stopwatch.GetElapsedTime(started).TotalMilliseconds);
             OnError?.Invoke($"Failed to load module '{menuItem.Assembly}': {ex.Message}");
             return Task.FromResult<Type?>(null);
         }
@@ -82,8 +84,7 @@ public class DesktopModuleLoader : IModuleLoader
     private void LoadModuleLocalization(Assembly assembly)
     {
         if (_langService is null) return;
-        var loader = new EmbeddedResourceLoader();
         var moduleName = assembly.GetName().Name!;
-        loader.LoadModuleResourcesAsync(_langService, assembly, moduleName).GetAwaiter().GetResult();
+        _resourceLoader.LoadModuleResourcesAsync(_langService, assembly, moduleName).GetAwaiter().GetResult();
     }
 }
