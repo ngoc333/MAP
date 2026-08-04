@@ -65,7 +65,7 @@ window.mapLog = (() => {
     shortcutHandler = event => {
       if (event.ctrlKey && event.shiftKey && event.key.toLowerCase() === "l") {
         event.preventDefault();
-        dotNetReference.invokeMethodAsync("OpenLogViewerAsync");
+        dotNetReference.invokeMethodAsync("OpenSystemLogsAsync");
       }
     };
     window.addEventListener("keydown", shortcutHandler);

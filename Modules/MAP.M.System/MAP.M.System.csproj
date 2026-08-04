@@ -13,8 +13,8 @@
     <ProjectReference Include="..\..\Core\MAP.C.UI\MAP.C.UI.csproj" PrivateAssets="all" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Localization\vi.json" LogicalName="MAP.M.LogViewer.Localization.vi.json" />
-    <EmbeddedResource Include="Localization\en.json" LogicalName="MAP.M.LogViewer.Localization.en.json" />
+    <EmbeddedResource Include="Localization\vi.json" LogicalName="MAP.M.System.Localization.vi.json" />
+    <EmbeddedResource Include="Localization\en.json" LogicalName="MAP.M.System.Localization.en.json" />
     <Content Remove="Localization\**" />
   </ItemGroup>
 </Project>

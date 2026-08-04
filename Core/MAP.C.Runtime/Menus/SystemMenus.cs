@@ -4,11 +4,11 @@ namespace MAP.C.Runtime.Menus;
 
 public static class SystemMenus
 {
-    public const string LogViewerPageId = "system-log-viewer";
+    public const string SystemLogsPageId = "system-logs";
 
     public static void EnsureRegistered(PageConfig config)
     {
-        if (MenuTree.Find(config.Menus, LogViewerPageId) is not null) return;
+        if (MenuTree.Find(config.Menus, SystemLogsPageId) is not null) return;
 
         var system = config.Menus.FirstOrDefault(x => x.Id == "system");
         if (system is null)
@@ -20,11 +20,11 @@ public static class SystemMenus
         system.Children ??= new List<MenuItem>();
         system.Children.Add(new MenuItem
         {
-            Id = LogViewerPageId,
+            Id = SystemLogsPageId,
             Title = "Nhật ký",
             Icon = "article",
-            Assembly = "MAP.M.LogViewer.dll",
-            Component = "MAP.M.LogViewer.Pages.LogViewerPage"
+            Assembly = "MAP.M.System.dll",
+            Component = "MAP.M.System.Pages.SystemLogsPage"
         });
     }
 }

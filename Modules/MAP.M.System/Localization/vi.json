@@ -1,0 +1,13 @@
+{
+  "SystemLogs": {
+    "title": "Nhật ký hệ thống",
+    "selectDay": "Chọn ngày",
+    "level": "Mức log",
+    "search": "Tìm message, category, session...",
+    "refresh": "Làm mới",
+    "clearDay": "Xóa ngày đang chọn",
+    "timestamp": "Thời gian",
+    "message": "Nội dung",
+    "total": "dòng"
+  }
+}

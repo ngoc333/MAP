@@ -1,0 +1,13 @@
+{
+  "SystemLogs": {
+    "title": "System logs",
+    "selectDay": "Select day",
+    "level": "Log level",
+    "search": "Search message, category, session...",
+    "refresh": "Refresh",
+    "clearDay": "Clear selected day",
+    "timestamp": "Timestamp",
+    "message": "Message",
+    "total": "logs"
+  }
+}

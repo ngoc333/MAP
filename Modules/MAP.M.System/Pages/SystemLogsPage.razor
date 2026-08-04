@@ -1,0 +1,139 @@
+@inherits BasePage
+@namespace MAP.M.System.Pages
+@inject ILogStore LogStore
+
+<div class="flex flex-col h-full">
+    <div class="shrink-0">
+        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem" Wrap="FlexWrap.Wrap">
+            <RadzenDropDown TValue="DateOnly?" Data="_days" @bind-Value="_selectedDay" Placeholder="@Lang.T("SystemLogs.selectDay")" Style="width: 180px;" />
+            <RadzenDropDown TValue="string" Data="Levels" @bind-Value="_level" Placeholder="@Lang.T("SystemLogs.level")" Style="width: 150px;" />
+            <RadzenTextBox @bind-Value="_search" Placeholder="@Lang.T("SystemLogs.search")" Style="width: min(360px, 100%);" />
+            <RadzenButton Text="@Lang.T("SystemLogs.refresh")" Icon="refresh" Click="LoadAsync" />
+            <RadzenButton Text="@Lang.T("SystemLogs.clearDay")" Icon="delete" ButtonStyle="ButtonStyle.Danger" Click="ClearAsync" Disabled="@(_selectedDay is null)" />
+        </RadzenStack>
+    </div>
+
+    <RadzenDataGrid @ref="_grid" Data="FilteredEntries" TItem="LogEntry" AllowSorting="true" AllowGrouping="true" Render="OnRender" Height="100%">
+        <GroupHeaderTemplate Context="group">
+            @{
+                var sid = (string?)group.Data.Key ?? "—";
+                var shortId = sid.Length >= 8 ? sid[..8] : sid;
+                var entries = ((IEnumerable<LogEntry>?)group.Data.Items)?.ToList() ?? [];
+                var (first, last, info, warn, error, critical) = GetGroupStats(entries);
+                var span = last - first;
+            }
+            <div title="@sid" class="flex items-center gap-2 py-1.5 px-2 text-sm bg-gray-50 border-b border-gray-200 hover:bg-gray-100">
+                <span class="font-mono text-xs font-bold text-gray-700 bg-gray-200 rounded px-1.5 py-0.5">@shortId</span>
+                <span class="text-gray-300">|</span>
+                <span class="text-gray-500 text-xs font-mono">
+                    @first.ToString("HH:mm:ss") → @last.ToString("HH:mm:ss")
+                    <span class="text-gray-400 ml-1">(@span.TotalMinutes.ToString("F0")m)</span>
+                </span>
+                <span class="text-gray-300">|</span>
+                <span class="text-gray-600 font-medium">@entries.Count @Lang.T("SystemLogs.total")</span>
+                @if (info > 0) { <span class="text-blue-600 text-xs font-mono">I:@info</span> }
+                @if (warn > 0) { <span class="text-yellow-600 text-xs font-mono">W:@warn</span> }
+                @if (error > 0) { <span class="text-red-600 text-xs font-mono">E:@error</span> }
+                @if (critical > 0) { <span class="text-red-800 text-xs font-bold font-mono">C:@critical</span> }
+            </div>
+        </GroupHeaderTemplate>
+        <Columns>
+            <RadzenDataGridColumn TItem="LogEntry" Property="SessionId" Groupable="true" Visible="false" />
+            <RadzenDataGridColumn TItem="LogEntry" Property="Timestamp" Title="@Lang.T("SystemLogs.timestamp")" Width="190px" FormatString="{0:yyyy-MM-dd HH:mm:ss.fff}" />
+            <RadzenDataGridColumn TItem="LogEntry" Property="Level" Title="@Lang.T("SystemLogs.level")" Width="110px" />
+            <RadzenDataGridColumn TItem="LogEntry" Property="Category" Title="Category" Width="230px" />
+            <RadzenDataGridColumn TItem="LogEntry" Title="@Lang.T("SystemLogs.message")">
+                <Template Context="entry">
+                    <div class="flex flex-col gap-1">
+                        <span>@entry.Message</span>
+                        @if (!string.IsNullOrEmpty(entry.Exception))
+                        {
+                            <pre class="text-red-600 whitespace-pre-wrap text-xs m-0">@entry.Exception</pre>
+                        }
+                        @if (!string.IsNullOrEmpty(entry.OperationId))
+                        {
+                            <div class="text-gray-400 text-xs">
+                                <span>OperationId: @entry.OperationId</span>
+                            </div>
+                        }
+                    </div>
+                </Template>
+            </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
+</div>
+
+@code {
+    private static readonly string[] Levels = ["", "Information", "Warning", "Error", "Critical"];
+    private IReadOnlyList<DateOnly> _days = [];
+    private IReadOnlyList<LogEntry> _entries = [];
+    private DateOnly? _selectedDay;
+    private string _level = string.Empty;
+    private string _search = string.Empty;
+    private RadzenDataGrid<LogEntry> _grid = default!;
+
+    protected override string HeaderTitleKey => "SystemLogs.title";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+    }
+
+    void OnRender(DataGridRenderEventArgs<LogEntry> args)
+    {
+        if (args is { FirstRender: true, Grid.Groups: not null } groups)
+        {
+            groups.Grid.Groups.Add(new GroupDescriptor { Property = "SessionId", SortOrder = SortOrder.Ascending });
+            StateHasChanged();
+        }
+    }
+
+    private IEnumerable<LogEntry> FilteredEntries => _entries.Where(entry =>
+        (string.IsNullOrEmpty(_level) || entry.Level == _level) &&
+        (string.IsNullOrWhiteSpace(_search) || Contains(entry.Message, _search) || Contains(entry.Category, _search) || Contains(entry.SessionId, _search) || Contains(entry.OperationId, _search)));
+
+    private static (DateTimeOffset First, DateTimeOffset Last, int Info, int Warn, int Error, int Critical) GetGroupStats(IEnumerable<LogEntry> entries)
+    {
+        var list = entries as IReadOnlyList<LogEntry> ?? entries.ToList();
+        if (list.Count == 0)
+            return (DateTimeOffset.MinValue, DateTimeOffset.MinValue, 0, 0, 0, 0);
+
+        var first = list[0].Timestamp;
+        var last = list[0].Timestamp;
+        var info = 0;
+        var warn = 0;
+        var error = 0;
+        var critical = 0;
+
+        foreach (var entry in list)
+        {
+            if (entry.Timestamp < first) first = entry.Timestamp;
+            if (entry.Timestamp > last) last = entry.Timestamp;
+            switch (entry.Level)
+            {
+                case "Information": info++; break;
+                case "Warning": warn++; break;
+                case "Error": error++; break;
+                case "Critical": critical++; break;
+            }
+        }
+
+        return (first, last, info, warn, error, critical);
+    }
+
+    private async Task LoadAsync()
+    {
+        _days = await LogStore.GetDaysAsync();
+        _selectedDay ??= _days.FirstOrDefault();
+        _entries = await LogStore.GetAsync(_selectedDay);
+    }
+
+    private async Task ClearAsync()
+    {
+        if (_selectedDay is null) return;
+        await LogStore.ClearAsync(_selectedDay);
+        await LoadAsync();
+    }
+
+    private static bool Contains(string? value, string query) => value?.Contains(query, StringComparison.OrdinalIgnoreCase) == true;
+}

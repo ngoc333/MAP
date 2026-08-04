@@ -29,7 +29,7 @@ public sealed class RuntimeTests
     }
 
     [Fact]
-    public void SystemMenus_RegistersLogViewerOnlyOnce()
+    public void SystemMenus_RegistersSystemLogsOnlyOnce()
     {
         var config = new PageConfig();
 
@@ -37,8 +37,8 @@ public sealed class RuntimeTests
         SystemMenus.EnsureRegistered(config);
 
         var system = Assert.Single(config.Menus);
-        var logViewer = Assert.Single(system.Children!);
-        Assert.Equal(SystemMenus.LogViewerPageId, logViewer.Id);
+        var systemLogs = Assert.Single(system.Children!);
+        Assert.Equal(SystemMenus.SystemLogsPageId, systemLogs.Id);
     }
 
     [Fact]
