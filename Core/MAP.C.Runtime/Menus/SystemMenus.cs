@@ -5,11 +5,10 @@ namespace MAP.C.Runtime.Menus;
 public static class SystemMenus
 {
     public const string SystemLogsPageId = "system-logs";
+    public const string SystemConfigPageId = "system-config";
 
     public static void EnsureRegistered(PageConfig config)
     {
-        if (MenuTree.Find(config.Menus, SystemLogsPageId) is not null) return;
-
         var system = config.Menus.FirstOrDefault(x => x.Id == "system");
         if (system is null)
         {
@@ -18,13 +17,29 @@ public static class SystemMenus
         }
 
         system.Children ??= new List<MenuItem>();
-        system.Children.Add(new MenuItem
+
+        if (MenuTree.Find(config.Menus, SystemConfigPageId) is null)
         {
-            Id = SystemLogsPageId,
-            Title = "Nhật ký",
-            Icon = "article",
-            Assembly = "MAP.M.System.dll",
-            Component = "MAP.M.System.Pages.SystemLogsPage"
-        });
+            system.Children.Add(new MenuItem
+            {
+                Id = SystemConfigPageId,
+                Title = "Cấu hình",
+                Icon = "settings",
+                Assembly = "MAP.M.System.dll",
+                Component = "MAP.M.System.Pages.AppConfigPage"
+            });
+        }
+
+        if (MenuTree.Find(config.Menus, SystemLogsPageId) is null)
+        {
+            system.Children.Add(new MenuItem
+            {
+                Id = SystemLogsPageId,
+                Title = "Nhật ký",
+                Icon = "article",
+                Assembly = "MAP.M.System.dll",
+                Component = "MAP.M.System.Pages.SystemLogsPage"
+            });
+        }
     }
 }

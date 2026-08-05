@@ -9,9 +9,11 @@ using MAP.C.Contract.Menus;
 using MAP.C.Contract.Modules;
 using MAP.C.Contract.Database;
 using MAP.C.Contract.Logging;
+using MAP.C.Contract.Config;
 using MAP.C.Wpf.Logging;
 using MAP.C.Wpf.Menus;
 using MAP.C.Wpf.Modules;
+using MAP.C.Wpf.Config;
 using MAP.C.Runtime.Database;
 using MAP.C.Runtime.Navigation;
 using MAP.C.Runtime.Localization;
@@ -44,6 +46,8 @@ internal static class WpfServices
             Path.Combine(baseDir, "modules"), langService, sp.GetRequiredService<IResourceLoader>(), sp.GetRequiredService<ILogger<ModuleLoader>>()));
         services.AddSingleton<ILogStore>(sp => sp.GetRequiredService<FileLogStore>());
         services.AddSingleton<IPageNavigator, PageNavigator>();
+        services.AddSingleton<IAppConfigService>(_ => new AppConfigService(
+            Path.Combine(baseDir, "app-config.json")));
         var dbApiConfiguration = DbApiConfiguration.LoadFromFile(Path.Combine(baseDir, "db-api.json"));
         services.AddSingleton<IDbApiClient>(_ => new DbApiClient(new HttpClient
         {

@@ -9,5 +9,25 @@
     "timestamp": "Timestamp",
     "message": "Message",
     "total": "logs"
+  },
+  "AppConfig": {
+    "title": "System Configuration",
+    "tabSetting": "Settings",
+    "tabInfor": "Information",
+    "fullscreen": "Fullscreen",
+    "hideTaskbar": "Overflow taskbar",
+    "display": "Display",
+    "showMenu": "Show menu",
+    "appTitle": "Application title",
+    "defaultLanguage": "Default language",
+    "defaultPage": "Default page",
+    "save": "Save configuration",
+    "machineName": "Machine name",
+    "ipAddress": "IP address",
+    "osVersion": "Operating system",
+    "dotNetVersion": ".NET version",
+    "userName": "Username",
+    "saveSuccess": "Configuration saved successfully",
+    "restartRequired": "Please restart the application to apply the new configuration"
   }
 }

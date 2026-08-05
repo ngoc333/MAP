@@ -5,6 +5,8 @@ using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using MAP.C.Contract.Config;
+using MAP.C.Contract.Localization;
 using MAP.C.Contract.Models;
 using MAP.C.Contract.Menus;
 using MAP.C.Contract.Logging;
@@ -54,7 +56,39 @@ public static class WpfHost
                 var menuService = host.Services.GetRequiredService<IMenuService>();
                 await menuService.LoadMenusAsync();
 
+                var configService = host.Services.GetRequiredService<IAppConfigService>();
+                var config = configService.Current;
+
                 var window = host.Services.GetRequiredService<MainWindow>();
+
+                if (config != null)
+                {
+                    if (config.Fullscreen)
+                    {
+                        DisplayHelper.FullscreenOnDisplay(window, config.DisplayIndex, config.HideTaskbar);
+                    }
+                    else if (config.DisplayIndex > 0)
+                    {
+                        var displays = configService.GetDisplays();
+                        if (config.DisplayIndex < displays.Count)
+                            DisplayHelper.PositionOnDisplay(window, config.DisplayIndex);
+                    }
+                    else
+                    {
+                        window.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(config.DefaultLanguage))
+                    {
+                        var langService = host.Services.GetRequiredService<ILanguageService>();
+                        langService.SetLanguage(config.DefaultLanguage);
+                    }
+                }
+                else
+                {
+                    window.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+                }
+
                 window.Show();
                 window.Activate();
                 window.Focus();

@@ -9,5 +9,25 @@
     "timestamp": "Thời gian",
     "message": "Nội dung",
     "total": "dòng"
+  },
+  "AppConfig": {
+    "title": "Cấu hình hệ thống",
+    "tabSetting": "Cài đặt",
+    "tabInfor": "Thông tin",
+    "fullscreen": "Toàn màn hình",
+    "hideTaskbar": "Tràn thanh tác vụ",
+    "display": "Màn hình",
+    "showMenu": "Hiển thị menu",
+    "appTitle": "Tên chương trình",
+    "defaultLanguage": "Ngôn ngữ mặc định",
+    "defaultPage": "Trang mặc định",
+    "save": "Lưu cấu hình",
+    "machineName": "Tên máy",
+    "ipAddress": "Địa chỉ IP",
+    "osVersion": "Hệ điều hành",
+    "dotNetVersion": "Phiên bản .NET",
+    "userName": "Người dùng",
+    "saveSuccess": "Đã lưu cấu hình thành công",
+    "restartRequired": "Vui lòng tắt và mở lại chương trình để áp dụng cấu hình mới"
   }
 }

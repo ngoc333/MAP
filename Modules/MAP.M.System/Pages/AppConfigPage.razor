@@ -1,0 +1,147 @@
+@inherits BasePage
+@namespace MAP.M.System.Pages
+@inject IAppConfigService ConfigService
+@inject IMenuService MenuService
+@inject DialogService DialogService
+
+<div class="flex flex-col h-full">
+    <RadzenCard class="p-5 max-w-xl">
+        <RadzenTabs>
+            <Tabs>
+                <RadzenTabsItem Text="@Lang.T("AppConfig.tabSetting")">
+                    <div class="p-2">
+                        <RadzenStack Gap="1rem">
+                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem" Wrap="FlexWrap.Wrap">
+                                <RadzenLabel Component="appTitle" Text="@Lang.T("AppConfig.appTitle")" Style="min-width: 150px;" />
+                                <RadzenTextBox Name="appTitle" @bind-Value="_model.AppTitle" Style="width: 100%;" />
+                            </RadzenStack>
+
+                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem" Wrap="FlexWrap.Wrap">
+                                <RadzenLabel Component="fullscreen" Text="@Lang.T("AppConfig.fullscreen")" Style="min-width: 150px;" />
+                                <RadzenSwitch @bind-Value="_model.Fullscreen" />
+                            </RadzenStack>
+
+                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem" Wrap="FlexWrap.Wrap">
+                                <RadzenLabel Component="hideTaskbar" Text="@Lang.T("AppConfig.hideTaskbar")" Style="min-width: 150px;" />
+                                <RadzenSwitch @bind-Value="_model.HideTaskbar" />
+                            </RadzenStack>
+
+                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem" Wrap="FlexWrap.Wrap">
+                                <RadzenLabel Component="display" Text="@Lang.T("AppConfig.display")" Style="min-width: 150px;" />
+                                <RadzenDropDown TValue="int" Data="_displays" TextProperty="Name" ValueProperty="Index"
+                                                @bind-Value="_model.DisplayIndex" Style="width: 100%;" />
+                            </RadzenStack>
+
+                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem" Wrap="FlexWrap.Wrap">
+                                <RadzenLabel Component="showMenu" Text="@Lang.T("AppConfig.showMenu")" Style="min-width: 150px;" />
+                                <RadzenSwitch @bind-Value="_model.ShowMenu" />
+                            </RadzenStack>
+
+                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem" Wrap="FlexWrap.Wrap">
+                                <RadzenLabel Component="defaultLanguage" Text="@Lang.T("AppConfig.defaultLanguage")" Style="min-width: 150px;" />
+                                <RadzenDropDown TValue="string" Data="_languages" TextProperty="Name" ValueProperty="Code"
+                                                @bind-Value="_model.DefaultLanguage" Style="width: 100%;" />
+                            </RadzenStack>
+
+                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem" Wrap="FlexWrap.Wrap">
+                                <RadzenLabel Component="defaultPage" Text="@Lang.T("AppConfig.defaultPage")" Style="min-width: 150px;" />
+                                <RadzenDropDown TValue="string" Data="_pages" TextProperty="Text" ValueProperty="Id"
+                                                @bind-Value="_model.DefaultPageId" Style="width: 100%;" />
+                            </RadzenStack>
+
+                            <RadzenButton Text="@Lang.T("AppConfig.save")" Icon="save" ButtonStyle="ButtonStyle.Primary"
+                                          Click="OnSaveAsync" />
+                        </RadzenStack>
+                    </div>
+                </RadzenTabsItem>
+
+                <RadzenTabsItem Text="@Lang.T("AppConfig.tabInfor")">
+                    <div class="p-2">
+                        <RadzenStack Gap="1rem">
+                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem" Wrap="FlexWrap.Wrap">
+                                <RadzenLabel Text="@Lang.T("AppConfig.machineName")" Style="min-width: 150px;" />
+                                <RadzenTextBox Value="@_systemInfo.MachineName" ReadOnly="true" Style="width: 100%;" />
+                            </RadzenStack>
+                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem" Wrap="FlexWrap.Wrap">
+                                <RadzenLabel Text="@Lang.T("AppConfig.ipAddress")" Style="min-width: 150px;" />
+                                <RadzenTextBox Value="@_systemInfo.IpAddress" ReadOnly="true" Style="width: 100%;" />
+                            </RadzenStack>
+                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem" Wrap="FlexWrap.Wrap">
+                                <RadzenLabel Text="@Lang.T("AppConfig.osVersion")" Style="min-width: 150px;" />
+                                <RadzenTextBox Value="@_systemInfo.OsVersion" ReadOnly="true" Style="width: 100%;" />
+                            </RadzenStack>
+                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem" Wrap="FlexWrap.Wrap">
+                                <RadzenLabel Text="@Lang.T("AppConfig.dotNetVersion")" Style="min-width: 150px;" />
+                                <RadzenTextBox Value="@_systemInfo.DotNetVersion" ReadOnly="true" Style="width: 100%;" />
+                            </RadzenStack>
+                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem" Wrap="FlexWrap.Wrap">
+                                <RadzenLabel Text="@Lang.T("AppConfig.userName")" Style="min-width: 150px;" />
+                                <RadzenTextBox Value="@_systemInfo.UserName" ReadOnly="true" Style="width: 100%;" />
+                            </RadzenStack>
+                        </RadzenStack>
+                    </div>
+                </RadzenTabsItem>
+            </Tabs>
+        </RadzenTabs>
+    </RadzenCard>
+</div>
+
+@code {
+    private AppConfig _model = new();
+    private SystemInfo _systemInfo = new();
+    private bool _wasExisting;
+    private IReadOnlyList<DisplayInfo> _displays = Array.Empty<DisplayInfo>();
+    private IReadOnlyList<LanguageInfo> _languages = Array.Empty<LanguageInfo>();
+    private IReadOnlyList<PageOption> _pages = Array.Empty<PageOption>();
+
+    protected override string HeaderTitleKey => "AppConfig.title";
+
+    protected override async Task OnInitializedAsync()
+    {
+        _wasExisting = ConfigService.Exists;
+        _model = ConfigService.Current ?? new AppConfig();
+        _systemInfo = ConfigService.GetSystemInfo();
+        _displays = ConfigService.GetDisplays();
+        _languages = Lang.AvailableLanguages;
+        _pages = GetPageOptions();
+        RefreshHeader();
+    }
+
+    private IReadOnlyList<PageOption> GetPageOptions()
+    {
+        var pages = new List<PageOption>();
+        CollectPages(MenuService.Menus, pages);
+        return pages;
+    }
+
+    private static void CollectPages(List<MenuItem> menus, List<PageOption> result, string prefix = "")
+    {
+        foreach (var menu in menus)
+        {
+            var label = string.IsNullOrEmpty(prefix) ? menu.Title : $"{prefix} / {menu.Title}";
+            if (menu.IsPage)
+                result.Add(new PageOption(menu.Id, label));
+            if (menu.HasChildren)
+                CollectPages(menu.Children!, result, label);
+        }
+    }
+
+    private async Task OnSaveAsync()
+    {
+        await ConfigService.SaveAsync(_model);
+
+        var message = Lang.T("AppConfig.saveSuccess") + "\n" + Lang.T("AppConfig.restartRequired");
+
+        if (!_wasExisting)
+        {
+            await DialogService.Alert(message, Lang.T("AppConfig.title"));
+            ConfigService.RestartApp();
+        }
+        else
+        {
+            await DialogService.Alert(message, Lang.T("AppConfig.title"));
+        }
+    }
+
+    private record PageOption(string Id, string Text);
+}
