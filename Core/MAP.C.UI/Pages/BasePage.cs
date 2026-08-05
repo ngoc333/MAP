@@ -1,3 +1,4 @@
+using MAP.C.Contract.Config;
 using MAP.C.Contract.Localization;
 using MAP.C.Contract.Navigation;
 using Microsoft.AspNetCore.Components;
@@ -15,6 +16,9 @@ public abstract class BasePage : ComponentBase, IDisposable
 
     [Inject]
     protected ILanguageService Lang { get; private set; } = default!;
+
+    [Inject]
+    protected IUiStateService UiState { get; private set; } = default!;
 
     protected object? PageParameters => Navigator.Current?.RawParameters;
 
@@ -54,6 +58,14 @@ public abstract class BasePage : ComponentBase, IDisposable
         RefreshHeader();
         InvokeAsync(StateHasChanged);
     }
+
+    protected bool IsMenuVisible => UiState.ShowMenu;
+    protected bool IsHeaderVisible => UiState.ShowHeader;
+
+    protected void SetMenuVisible(bool visible) => UiState.SetMenu(visible);
+    protected void SetHeaderVisible(bool visible) => UiState.SetHeader(visible);
+    protected void ToggleMenu() => UiState.ToggleMenu();
+    protected void ToggleHeader() => UiState.ToggleHeader();
 
     public void Dispose()
     {

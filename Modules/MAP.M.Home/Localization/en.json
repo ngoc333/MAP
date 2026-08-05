@@ -17,7 +17,16 @@
     "openCustomerList": "Open Customer List",
     "openCustomerDetail": "Open Customer Detail (with params)",
     "openProductAdd": "Open Add Product (with params)",
-    "openSales": "Open Sales Report"
+    "openSales": "Open Sales Report",
+    "toggleDemo": "Toggle Menu & Header Demo",
+    "toggleDemoDesc": "Use the buttons below or keyboard shortcuts Ctrl+B (menu), Ctrl+H (header)",
+    "hideMenu": "Hide menu",
+    "showMenu": "Show menu",
+    "hideHeader": "Hide header",
+    "showHeader": "Show header",
+    "hideAll": "Hide all (fullscreen)",
+    "showAll": "Show all",
+    "currentState": "Current state"
   },
   "DashboardPage": {
     "headerTitle": "Dashboard",

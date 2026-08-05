@@ -29,6 +29,7 @@
     <None Include="..\Shared\Config\page.json" Link="wwwroot\page.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <None Include="..\Shared\Config\db-api.json" Link="wwwroot\db-api.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <None Include="..\Shared\Scripts\app-log.js" Link="wwwroot\js\app-log.js" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Include="..\Shared\Scripts\app-config.js" Link="wwwroot\js\app-config.js" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
   <Target Name="UseSharedConfigurationStaticWebAssets" AfterTargets="ResolveStaticWebAssetsInputs">
@@ -71,6 +72,9 @@
     <ItemGroup>
       <_SharedScriptAsset Include="$(MSBuildProjectDirectory)\..\Shared\Scripts\app-log.js">
         <RelativePath>js/app-log.js</RelativePath>
+      </_SharedScriptAsset>
+      <_SharedScriptAsset Include="$(MSBuildProjectDirectory)\..\Shared\Scripts\app-config.js">
+        <RelativePath>js/app-config.js</RelativePath>
       </_SharedScriptAsset>
     </ItemGroup>
 

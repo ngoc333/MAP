@@ -1,8 +1,14 @@
+@using MAP.C.Contract.Config
 @inject IPageHeaderState HeaderState
 @inject ILanguageService Lang
 
 <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 shadow-sm flex-shrink-0">
     <div class="flex items-center gap-3">
+        @if (UiState is not null)
+        {
+            <RadzenButton Icon="menu" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
+                Click="@(() => UiState.ToggleMenu())" title="@Lang.T("layout.toggleMenu", "Toggle menu")" />
+        }
         @NavigationControls
         <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -25,4 +31,5 @@
 
 @code {
     [Parameter] public RenderFragment? NavigationControls { get; set; }
+    [Parameter] public IUiStateService? UiState { get; set; }
 }

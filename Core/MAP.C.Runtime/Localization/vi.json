@@ -17,7 +17,9 @@
     "loading": "Đang tải module...",
     "selectMenu": "Chọn một menu để bắt đầu",
     "admin": "Admin",
-    "back": "Quay lại"
+    "back": "Quay lại",
+    "toggleMenu": "Ẩn/hiện menu",
+    "toggleHeader": "Ẩn/hiện header"
   },
   "notFound": {
     "title": "Không tìm thấy",

@@ -3,6 +3,7 @@ window.mapLog = (() => {
   const storeName = "logs";
   const retentionMs = 30 * 24 * 60 * 60 * 1000;
   let shortcutHandler;
+  let uiShortcutHandler;
 
   if (typeof indexedDB === "undefined") {
     console.error("[mapLog] IndexedDB is not available in this context");
@@ -86,6 +87,21 @@ window.mapLog = (() => {
     window.addEventListener("keydown", shortcutHandler);
   }
 
+  function registerUiShortcuts(dotNetReference) {
+    if (uiShortcutHandler) window.removeEventListener("keydown", uiShortcutHandler);
+    uiShortcutHandler = event => {
+      if (event.ctrlKey && !event.shiftKey && event.key.toLowerCase() === "b") {
+        event.preventDefault();
+        dotNetReference.invokeMethodAsync("ToggleMenu");
+      }
+      if (event.ctrlKey && !event.shiftKey && event.key.toLowerCase() === "h") {
+        event.preventDefault();
+        dotNetReference.invokeMethodAsync("ToggleHeader");
+      }
+    };
+    window.addEventListener("keydown", uiShortcutHandler);
+  }
+
   function earlyError(message, exception) {
     write({ timestamp: new Date().toISOString(), level: "Error", category: "JavaScript", eventName: "UnhandledError", message: String(message), exception: exception ? String(exception) : null }).catch(() => {});
   }
@@ -103,5 +119,5 @@ window.mapLog = (() => {
   write({ timestamp: new Date().toISOString(), level: "Information", category: "JavaScript", eventName: "HostPageLoaded", message: "Host page loaded" })
     .then(() => console.log("[mapLog] HostPageLoaded entry written"))
     .catch(e => console.error("[mapLog] initial write failed:", e));
-  return { write, get, days, clear, registerShortcut };
+  return { write, get, days, clear, registerShortcut, registerUiShortcuts };
 })();

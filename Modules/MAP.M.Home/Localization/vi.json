@@ -17,7 +17,16 @@
     "openCustomerList": "Mở DS Khách hàng",
     "openCustomerDetail": "Mở Chi tiết KH (có param)",
     "openProductAdd": "Mở SP (có param)",
-    "openSales": "Mở Doanh số"
+    "openSales": "Mở Doanh số",
+    "toggleDemo": "Demo ẩn/hiện Menu & Header",
+    "toggleDemoDesc": "Sử dụng các nút bên dưới hoặc phím tắt Ctrl+B (menu), Ctrl+H (header)",
+    "hideMenu": "Ẩn menu",
+    "showMenu": "Hiện menu",
+    "hideHeader": "Ẩn header",
+    "showHeader": "Hiện header",
+    "hideAll": "Ẩn tất cả (fullscreen)",
+    "showAll": "Hiện tất cả",
+    "currentState": "Trạng thái hiện tại"
   },
   "DashboardPage": {
     "headerTitle": "Dashboard",

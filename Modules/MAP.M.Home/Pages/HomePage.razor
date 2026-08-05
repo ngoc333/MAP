@@ -48,6 +48,32 @@
                     Click="@(() => Navigator.OpenAsync("report-sales"))" />
             </div>
         </div>
+
+        <div class="mt-6 border-t pt-4">
+            <h4 class="font-semibold text-gray-700 mb-3">@Lang.T("HomePage.toggleDemo")</h4>
+            <p class="text-sm text-gray-500 mb-3">@Lang.T("HomePage.toggleDemoDesc")</p>
+            <div class="flex flex-wrap gap-3 mb-3">
+                <RadzenButton Text="@(IsMenuVisible ? Lang.T("HomePage.hideMenu") : Lang.T("HomePage.showMenu"))"
+                    Icon="@(IsMenuVisible ? "visibility_off" : "visibility")"
+                    ButtonStyle="@(IsMenuVisible ? ButtonStyle.Warning : ButtonStyle.Success)"
+                    Click="@(() => ToggleMenu())" />
+                <RadzenButton Text="@(IsHeaderVisible ? Lang.T("HomePage.hideHeader") : Lang.T("HomePage.showHeader"))"
+                    Icon="@(IsHeaderVisible ? "visibility_off" : "visibility")"
+                    ButtonStyle="@(IsHeaderVisible ? ButtonStyle.Warning : ButtonStyle.Success)"
+                    Click="@(() => ToggleHeader())" />
+            </div>
+            <div class="flex flex-wrap gap-3">
+                <RadzenButton Text="@Lang.T("HomePage.hideAll")" Icon="fullscreen_exit" ButtonStyle="ButtonStyle.Danger"
+                    Click="@(() => { SetMenuVisible(false); SetHeaderVisible(false); })" />
+                <RadzenButton Text="@Lang.T("HomePage.showAll")" Icon="fullscreen" ButtonStyle="ButtonStyle.Info"
+                    Click="@(() => { SetMenuVisible(true); SetHeaderVisible(true); })" />
+            </div>
+            <div class="mt-3 text-sm text-gray-500">
+                @Lang.T("HomePage.currentState"):
+                <span class="font-medium text-gray-700">Menu: @(IsMenuVisible ? "ON" : "OFF")</span> |
+                <span class="font-medium text-gray-700">Header: @(IsHeaderVisible ? "ON" : "OFF")</span>
+            </div>
+        </div>
     </RadzenCard>
 </div>
 

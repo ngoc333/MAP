@@ -17,7 +17,9 @@
     "loading": "Loading module...",
     "selectMenu": "Select a menu to get started",
     "admin": "Admin",
-    "back": "Back"
+    "back": "Back",
+    "toggleMenu": "Toggle menu",
+    "toggleHeader": "Toggle header"
   },
   "notFound": {
     "title": "Not Found",

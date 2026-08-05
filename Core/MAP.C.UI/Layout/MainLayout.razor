@@ -7,12 +7,16 @@
 @inject ILanguageService Lang
 @inject IJSRuntime Js
 @inject IAppConfigService ConfigService
+@inject IUiStateService UiState
 
 <div class="flex flex-col h-screen w-screen overflow-hidden">
-    <AppHeader NavigationControls="NavigationControls" />
+    @if (UiState.ShowHeader)
+    {
+        <AppHeader NavigationControls="NavigationControls" UiState="UiState" />
+    }
 
     <div class="flex flex-1 overflow-hidden">
-        @if (ConfigService.Current?.ShowMenu != false)
+        @if (UiState.ShowMenu)
         {
             <AppMenu OnMenuSelected="OnMenuSelected" />
         }
@@ -35,7 +39,9 @@
 @code {
     private Action? _navigatorChanged;
     private Action? _headerChanged;
+    private Action? _uiStateChanged;
     private DotNetObjectReference<MainLayout>? _shortcutReference;
+    private DotNetObjectReference<MainLayout>? _uiShortcutReference;
 
     protected override async Task OnInitializedAsync()
     {
@@ -43,6 +49,8 @@
         Navigator.Changed += _navigatorChanged;
         _headerChanged = () => InvokeAsync(StateHasChanged);
         HeaderState.Changed += _headerChanged;
+        _uiStateChanged = () => InvokeAsync(StateHasChanged);
+        UiState.Changed += _uiStateChanged;
         Lang.LanguageChanged += OnLanguageChanged;
         await MenuService.LoadMenusAsync();
 
@@ -86,10 +94,26 @@
         if (!firstRender) return;
         _shortcutReference = DotNetObjectReference.Create(this);
         await Js.InvokeVoidAsync("mapLog.registerShortcut", _shortcutReference);
+        _uiShortcutReference = DotNetObjectReference.Create(this);
+        await Js.InvokeVoidAsync("mapLog.registerUiShortcuts", _uiShortcutReference);
     }
 
     [JSInvokable]
     public Task OpenSystemLogsAsync() => Navigator.OpenAsync("system-logs");
+
+    [JSInvokable]
+    public Task ToggleMenu()
+    {
+        UiState.ToggleMenu();
+        return Task.CompletedTask;
+    }
+
+    [JSInvokable]
+    public Task ToggleHeader()
+    {
+        UiState.ToggleHeader();
+        return Task.CompletedTask;
+    }
 
     public void Dispose()
     {
@@ -97,7 +121,10 @@
             Navigator.Changed -= _navigatorChanged;
         if (_headerChanged is not null)
             HeaderState.Changed -= _headerChanged;
+        if (_uiStateChanged is not null)
+            UiState.Changed -= _uiStateChanged;
         Lang.LanguageChanged -= OnLanguageChanged;
         _shortcutReference?.Dispose();
+        _uiShortcutReference?.Dispose();
     }
 }

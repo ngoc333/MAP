@@ -16,6 +16,7 @@ using MAP.C.Wpf.Modules;
 using MAP.C.Wpf.Config;
 using MAP.C.Runtime.Database;
 using MAP.C.Runtime.Navigation;
+using MAP.C.Runtime.Config;
 using MAP.C.Runtime.Localization;
 
 namespace MAP.C.Wpf;
@@ -48,6 +49,7 @@ internal static class WpfServices
         services.AddSingleton<IPageNavigator, PageNavigator>();
         services.AddSingleton<IAppConfigService>(_ => new AppConfigService(
             Path.Combine(baseDir, "app-config.json")));
+        services.AddSingleton<IPlatformCapabilities, PlatformCapabilities>();
         var dbApiConfiguration = DbApiConfiguration.LoadFromFile(Path.Combine(baseDir, "db-api.json"));
         services.AddSingleton<IDbApiClient>(_ => new DbApiClient(new HttpClient
         {
@@ -58,7 +60,8 @@ internal static class WpfServices
             BaseAddress = dbApiConfiguration.PostgreSqlBaseAddress,
             Timeout = TimeSpan.FromSeconds(10)
         }));
-        services.AddSingleton<IMenuService>(sp => new MenuService(
+        services.AddSingleton<IUiStateService, UiStateService>();
+services.AddSingleton<IMenuService>(sp => new MenuService(
             sp.GetRequiredService<IDbApiClient>(), sp.GetRequiredService<IAppConfigService>(), sp.GetRequiredService<ILogger<MenuService>>()));
         services.AddSingleton(sp => new MainWindow(sp, rootComponentType));
 
