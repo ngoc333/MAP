@@ -1,132 +1,80 @@
 $ErrorActionPreference = "Stop"
 $root = $PSScriptRoot
-$publishRoot = Join-Path $root "publish"
-$publishDesktop = Join-Path $publishRoot "desktop"
-$publishWeb = Join-Path $publishRoot "web"
-$publishWebExe = Join-Path $publishRoot "web-exe"
+$serverPath = "\\172.30.10.8\WebService\LGMES_LIVE_6_Service\DeployAssembly\FormAssembly\MAP-App"
+$publishDesktop = Join-Path $root "publish\desktop"
 
 Write-Host "=== MAP Deploy ===" -ForegroundColor Cyan
 Write-Host ""
 
-# 1. Build
-Write-Host "[1/4] Running build..." -ForegroundColor Cyan
-$buildScript = Join-Path $root "build.ps1"
-& $buildScript
+# 1. Build all (desktop + web)
+Write-Host "[1/3] Running build-all..." -ForegroundColor Cyan
+$buildAllScript = Join-Path $root "build-all.ps1"
+& $buildAllScript
 if ($LASTEXITCODE -ne 0) { exit 1 }
 
-# 2. Publish Desktop
+# 2. Build Run-App (AutoDownload)
 Write-Host ""
-Write-Host "[2/4] Publishing Desktop (win-x64, self-contained)..." -ForegroundColor Cyan
+Write-Host "[2/3] Building Run-App (AutoDownload)..." -ForegroundColor Cyan
 
-if (Test-Path $publishDesktop) { Remove-Item -Recurse -Force $publishDesktop }
+$runAppCsproj = Join-Path $root "Run-App\Run-App.csproj"
+dotnet build $runAppCsproj -c Release --nologo -v q
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "ERROR: Run-App build failed" -ForegroundColor Red
+    exit 1
+}
 
-$moduleProjects = @(Get-ChildItem (Join-Path $root "Modules") -Filter "*.csproj" -Recurse -File | Sort-Object FullName)
-foreach ($moduleProject in $moduleProjects) {
-    $proj = $moduleProject.FullName
-    dotnet restore $proj -r win-x64 --nologo -v q
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "ERROR: Restore $($moduleProject.Name) with win-x64 failed" -ForegroundColor Red
-        exit 1
+Write-Host "  OK" -ForegroundColor Green
+
+# 3. Deploy to server
+Write-Host ""
+Write-Host "[3/3] Deploying to server..." -ForegroundColor Cyan
+Write-Host "  Target: $serverPath" -ForegroundColor DarkGray
+
+# Ensure server path exists
+if (-not (Test-Path $serverPath)) {
+    New-Item -ItemType Directory -Force -Path $serverPath | Out-Null
+}
+
+# Copy Run-App.exe to server root
+$runAppExe = Join-Path $root "Run-App\bin\Release\net48\Run-App.exe"
+$runAppConfig = Join-Path $root "Run-App\bin\Release\net48\Run-App.exe.config"
+if (Test-Path $runAppExe) {
+    Copy-Item $runAppExe $serverPath -Force
+    if (Test-Path $runAppConfig) {
+        Copy-Item $runAppConfig $serverPath -Force
     }
+    Write-Host "  Run-App.exe deployed" -ForegroundColor Green
+} else {
+    Write-Host "  WARNING: Run-App.exe not found at $runAppExe" -ForegroundColor Yellow
 }
 
-$desktopCsproj = Join-Path (Join-Path $root "MAP.H.Desktop") "MAP.H.Desktop.csproj"
-dotnet publish $desktopCsproj -c Release -r win-x64 --self-contained true -o $publishDesktop --nologo -v q
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "ERROR: Desktop publish failed" -ForegroundColor Red
-    exit 1
+# Copy desktop files to server\desktop
+$serverDesktop = Join-Path $serverPath "desktop"
+if (Test-Path $publishDesktop) {
+    if (-not (Test-Path $serverDesktop)) {
+        New-Item -ItemType Directory -Force -Path $serverDesktop | Out-Null
+    }
+
+    $fileCount = (Get-ChildItem $publishDesktop -Recurse -File).Count
+    Write-Host "  Copying $fileCount files to desktop..." -ForegroundColor DarkGray
+
+    $robocopyArgs = @($publishDesktop, $serverDesktop, "/MIR", "/NJH", "/NJS", "/NDL", "/NP", "/NFL", "/NC", "/NS")
+    $result = & robocopy @robocopyArgs
+    $exitCode = $LASTEXITCODE
+
+    # Robocopy: 0=no change, 1=copied ok, 2=extra files removed, 4+=errors
+    if ($exitCode -le 2) {
+        Write-Host "  Desktop files deployed" -ForegroundColor Green
+    } else {
+        Write-Host "  WARNING: Robocopy exit code $exitCode" -ForegroundColor Yellow
+    }
+} else {
+    Write-Host "  WARNING: Desktop publish folder not found" -ForegroundColor Yellow
 }
-
-$tailwindCss = Join-Path (Join-Path (Join-Path (Join-Path $root "MAP.H.Web") "wwwroot") "css") "tailwind.css"
-if (Test-Path $tailwindCss) {
-    $destCss = Join-Path $publishDesktop "css"
-    if (-not (Test-Path $destCss)) { New-Item -ItemType Directory -Force -Path $destCss | Out-Null }
-    Copy-Item $tailwindCss $destCss -Force
-}
-
-Get-ChildItem $publishDesktop -Filter "*.pdb" -Recurse | Remove-Item -Force
-
-Write-Host "  OK" -ForegroundColor Green
-$desktopSize = [math]::Round(((Get-ChildItem $publishDesktop -Recurse -File | Measure-Object Length -Sum).Sum / 1MB), 1)
-Write-Host "  Size: ${desktopSize} MB" -ForegroundColor DarkGray
-
-# 3. Publish Web
-Write-Host ""
-Write-Host "[3/4] Publishing Web (Blazor WASM)..." -ForegroundColor Cyan
-
-if (Test-Path $publishWeb) { Remove-Item -Recurse -Force $publishWeb }
-
-$webCsproj = Join-Path (Join-Path $root "MAP.H.Web") "MAP.H.Web.csproj"
-dotnet publish $webCsproj -c Release -o $publishWeb --nologo -v q
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "ERROR: Web publish failed" -ForegroundColor Red
-    exit 1
-}
-
-Get-ChildItem $publishWeb -Filter "*.pdb" -Recurse | Remove-Item -Force
-
-Write-Host "  OK" -ForegroundColor Green
-$webSize = [math]::Round(((Get-ChildItem $publishWeb -Recurse -File | Measure-Object Length -Sum).Sum / 1MB), 1)
-Write-Host "  Size: ${webSize} MB" -ForegroundColor DarkGray
-
-# 4. Publish Web .exe (self-contained, like CORE.Web)
-Write-Host ""
-Write-Host "[4/4] Publishing Web as self-contained .exe..." -ForegroundColor Cyan
-
-if (Test-Path $publishWebExe) { Remove-Item -Recurse -Force $publishWebExe }
-
-$hostCsproj = Join-Path (Join-Path $root "MAP.H.Web.Host") "MAP.H.Web.Host.csproj"
-
-# Restore Host for win-x64
-dotnet restore $hostCsproj -r win-x64 --nologo -v q
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "ERROR: Host restore failed" -ForegroundColor Red
-    exit 1
-}
-
-# Publish Host self-contained
-dotnet publish $hostCsproj -c Release -r win-x64 --self-contained true -o $publishWebExe --nologo -v q
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "ERROR: Web .exe publish failed" -ForegroundColor Red
-    exit 1
-}
-
-# Copy Blazor WASM assets into wwwroot
-$wwwrootDest = Join-Path $publishWebExe "wwwroot"
-if (Test-Path $wwwrootDest) { Remove-Item -Recurse -Force $wwwrootDest }
-New-Item -ItemType Directory -Force -Path $wwwrootDest | Out-Null
-
-# Blazor WASM publish output has static assets in wwwroot subfolder
-$webWwwroot = Join-Path $publishWeb "wwwroot"
-$webSource = if (Test-Path $webWwwroot) { $webWwwroot } else { $publishWeb }
-Copy-Item (Join-Path $webSource "*") $wwwrootDest -Recurse -Force
-
-# Verify index.html exists
-$indexHtml = Join-Path $wwwrootDest "index.html"
-if (-not (Test-Path $indexHtml)) {
-    Write-Host "ERROR: index.html not found in wwwroot after copy" -ForegroundColor Red
-    exit 1
-}
-
-Get-ChildItem $publishWebExe -Filter "*.pdb" -Recurse | Remove-Item -Force
-
-$webExeName = (Get-Item $hostCsproj).BaseName + ".exe"
-$webExeSize = [math]::Round(((Get-Item (Join-Path $publishWebExe $webExeName)).Length / 1MB), 1)
-Write-Host "  OK" -ForegroundColor Green
-Write-Host "  $webExeName (${webExeSize} MB)" -ForegroundColor DarkGray
 
 # Summary
 Write-Host ""
 Write-Host "=== DEPLOY COMPLETE ===" -ForegroundColor Green
-Write-Host ""
-
-Write-Host "  Desktop  : $publishDesktop" -ForegroundColor White
-Write-Host "    MAP.H.Desktop.exe  (${desktopSize} MB, self-contained)" -ForegroundColor DarkGray
-Write-Host ""
-
-Write-Host "  Web      : $publishWeb" -ForegroundColor White
-Write-Host "    index.html  (${webSize} MB, Blazor WASM)" -ForegroundColor DarkGray
-Write-Host ""
-
-Write-Host "  Web .exe : $publishWebExe" -ForegroundColor White
-Write-Host "    $webExeName  (${webExeSize} MB, click-to-run)" -ForegroundColor DarkGray
+Write-Host "  Server: $serverPath" -ForegroundColor White
+Write-Host "  Run-App.exe: $serverPath\Run-App.exe" -ForegroundColor DarkGray
+Write-Host "  Desktop: $serverDesktop" -ForegroundColor DarkGray
