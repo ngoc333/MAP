@@ -1,5 +1,4 @@
 {
-  "source": "db",
   "dbName": "mes_edu",
   "dbFunction": "mes.fn_get_map_menu",
   "menus": [

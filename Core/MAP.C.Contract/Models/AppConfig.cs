@@ -9,4 +9,5 @@ public class AppConfig
     public string AppTitle { get; set; } = "MAP";
     public string DefaultLanguage { get; set; } = "vi";
     public string DefaultPageId { get; set; } = "home-dashboard";
+    public string MenuSource { get; set; } = "db";
 }

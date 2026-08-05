@@ -1,6 +1,7 @@
 using System.IO;
 using System.Text.Json;
 using System.Diagnostics;
+using MAP.C.Contract.Config;
 using MAP.C.Contract.Database;
 using MAP.C.Contract.Models;
 using MAP.C.Contract.Menus;
@@ -13,15 +14,17 @@ namespace MAP.C.Wpf.Menus;
 public sealed class MenuService : IMenuService
 {
     private readonly IDbApiClient _dbClient;
+    private readonly IAppConfigService _configService;
     private readonly ILogger<MenuService> _logger;
     private PageConfig? _config;
 
     public List<MenuItem> Menus => _config?.Menus ?? new();
     public event Action? OnMenusLoaded;
 
-    public MenuService(IDbApiClient dbClient, ILogger<MenuService> logger)
+    public MenuService(IDbApiClient dbClient, IAppConfigService configService, ILogger<MenuService> logger)
     {
         _dbClient = dbClient;
+        _configService = configService;
         _logger = logger;
     }
 
@@ -35,7 +38,8 @@ public sealed class MenuService : IMenuService
             new JsonSerializerOptions(JsonSerializerDefaults.Web))
             ?? throw new InvalidOperationException("Menu configuration could not be loaded.");
 
-        if (string.Equals(_config.Source, "db", StringComparison.OrdinalIgnoreCase))
+        var source = _configService.Current?.MenuSource ?? _config.Source;
+        if (string.Equals(source, "db", StringComparison.OrdinalIgnoreCase))
         {
             try
             {

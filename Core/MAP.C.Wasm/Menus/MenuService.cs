@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using System.Diagnostics;
+using MAP.C.Contract.Config;
 using MAP.C.Contract.Database;
 using MAP.C.Contract.Models;
 using MAP.C.Contract.Menus;
@@ -13,6 +14,7 @@ public class MenuService : IMenuService
 {
     private readonly HttpClient _http;
     private readonly IDbApiClient _dbClient;
+    private readonly IAppConfigService? _configService;
     private readonly ILogger<MenuService> _logger;
     private PageConfig? _config;
 
@@ -20,10 +22,11 @@ public class MenuService : IMenuService
 
     public event Action? OnMenusLoaded;
 
-    public MenuService(HttpClient http, IDbApiClient dbClient, ILogger<MenuService> logger)
+    public MenuService(HttpClient http, IDbApiClient dbClient, IAppConfigService? configService, ILogger<MenuService> logger)
     {
         _http = http;
         _dbClient = dbClient;
+        _configService = configService;
         _logger = logger;
     }
 
@@ -45,7 +48,8 @@ public class MenuService : IMenuService
             return;
         }
 
-        if (string.Equals(_config.Source, "db", StringComparison.OrdinalIgnoreCase))
+        var source = _configService?.Current?.MenuSource ?? _config.Source;
+        if (string.Equals(source, "db", StringComparison.OrdinalIgnoreCase))
         {
             try
             {
