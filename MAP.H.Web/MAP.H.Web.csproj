@@ -28,7 +28,7 @@
     <BlazorWebAssemblyLazyLoad Include="@(ModuleProject->'%(Filename).dll')" />
     <None Include="..\Shared\Config\page.json" Link="wwwroot\page.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <None Include="..\Shared\Config\db-api.json" Link="wwwroot\db-api.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
-    <Content Include="..\Shared\Scripts\app-log.js" Link="wwwroot\js\app-log.js" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Include="..\Shared\Scripts\app-log.js" Link="wwwroot\js\app-log.js" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
   <Target Name="UseSharedConfigurationStaticWebAssets" AfterTargets="ResolveStaticWebAssetsInputs">
@@ -64,6 +64,38 @@
     <ItemGroup>
       <StaticWebAsset Include="@(_SharedConfigurationStaticWebAsset)" />
       <StaticWebAssetEndpoint Include="@(_SharedConfigurationStaticWebAssetEndpoint)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="UseSharedScriptsStaticWebAssets" AfterTargets="ResolveStaticWebAssetsInputs">
+    <ItemGroup>
+      <_SharedScriptAsset Include="$(MSBuildProjectDirectory)\..\Shared\Scripts\app-log.js">
+        <RelativePath>js/app-log.js</RelativePath>
+      </_SharedScriptAsset>
+    </ItemGroup>
+
+    <DefineStaticWebAssets CandidateAssets="@(_SharedScriptAsset)"
+                           SourceId="$(PackageId)"
+                           SourceType="Computed"
+                           AssetKind="All"
+                           AssetMode="All"
+                           AssetRole="Primary"
+                           CopyToOutputDirectory="PreserveNewest"
+                           CopyToPublishDirectory="PreserveNewest"
+                           ContentRoot="$(MSBuildProjectDirectory)\..\Shared\Scripts\"
+                           BasePath="$(StaticWebAssetBasePath)">
+      <Output TaskParameter="Assets" ItemName="_SharedScriptStaticWebAsset" />
+    </DefineStaticWebAssets>
+
+    <DefineStaticWebAssetEndpoints CandidateAssets="@(_SharedScriptStaticWebAsset)"
+                                   ExistingEndpoints="@(StaticWebAssetEndpoint)"
+                                   ContentTypeMappings="@(StaticWebAssetContentTypeMapping)">
+      <Output TaskParameter="Endpoints" ItemName="_SharedScriptStaticWebAssetEndpoint" />
+    </DefineStaticWebAssetEndpoints>
+
+    <ItemGroup>
+      <StaticWebAsset Include="@(_SharedScriptStaticWebAsset)" />
+      <StaticWebAssetEndpoint Include="@(_SharedScriptStaticWebAssetEndpoint)" />
     </ItemGroup>
   </Target>
 

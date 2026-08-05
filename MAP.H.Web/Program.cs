@@ -24,11 +24,14 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 var http = new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) };
 builder.Services.AddScoped<IMenuService, MenuService>();
-builder.Services.AddSingleton<IndexedDbLogStore>();
+builder.Services.AddLogging(logging =>
+{
+    logging.ClearProviders();
+    logging.SetMinimumLevel(LogLevel.Information);
+    logging.Services.AddSingleton<IndexedDbLogStore>();
+    logging.Services.AddSingleton<ILoggerProvider, IndexedDbLoggerProvider>();
+});
 builder.Services.AddSingleton<ILogStore>(sp => sp.GetRequiredService<IndexedDbLogStore>());
-builder.Logging.ClearProviders();
-builder.Logging.SetMinimumLevel(LogLevel.Information);
-builder.Logging.Services.AddSingleton<ILoggerProvider, IndexedDbLoggerProvider>();
 
 await using var dbApiConfigurationStream = await http.GetStreamAsync("db-api.json");
 var dbApiConfiguration = await DbApiConfiguration.LoadAsync(dbApiConfigurationStream);

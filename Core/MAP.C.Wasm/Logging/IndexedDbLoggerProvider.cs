@@ -33,7 +33,7 @@ public sealed class IndexedDbLoggerProvider(ILogStore store) : ILoggerProvider
         private async Task WriteAsync(LogEntry entry)
         {
             try { await store.WriteAsync(entry); }
-            catch { /* Logging must never terminate application flow. */ }
+            catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"[IndexedDbLogStore] Write failed: {ex}"); }
         }
     }
 }

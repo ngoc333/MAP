@@ -4,6 +4,12 @@ window.mapLog = (() => {
   const retentionMs = 30 * 24 * 60 * 60 * 1000;
   let shortcutHandler;
 
+  if (typeof indexedDB === "undefined") {
+    console.error("[mapLog] IndexedDB is not available in this context");
+    const noop = () => Promise.resolve();
+    return { write: noop, get: () => Promise.resolve([]), days: () => Promise.resolve([]), clear: noop, registerShortcut: () => {} };
+  }
+
   function open() {
     return new Promise((resolve, reject) => {
       const request = indexedDB.open(databaseName, 1);
@@ -13,23 +19,32 @@ window.mapLog = (() => {
         store.createIndex("timestamp", "timestamp");
       };
       request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
+      request.onerror = () => {
+        console.error("[mapLog] Failed to open database:", request.error);
+        reject(request.error);
+      };
     });
   }
 
   async function write(entry) {
     const db = await open();
-    const timestamp = entry.timestamp || new Date().toISOString();
-    const transaction = db.transaction(storeName, "readwrite");
-    const store = transaction.objectStore(storeName);
-    store.add({ ...entry, timestamp, day: timestamp.slice(0, 10) });
-    const expired = IDBKeyRange.upperBound(new Date(Date.now() - retentionMs).toISOString(), true);
-    store.index("timestamp").openCursor(expired).onsuccess = event => {
-      const cursor = event.target.result;
-      if (cursor) { cursor.delete(); cursor.continue(); }
-    };
-    await complete(transaction);
-    db.close();
+    try {
+      const timestamp = entry.timestamp || new Date().toISOString();
+      const transaction = db.transaction(storeName, "readwrite");
+      const store = transaction.objectStore(storeName);
+      store.add({ ...entry, timestamp, day: timestamp.slice(0, 10) });
+      const expired = IDBKeyRange.upperBound(new Date(Date.now() - retentionMs).toISOString(), true);
+      store.index("timestamp").openCursor(expired).onsuccess = event => {
+        const cursor = event.target.result;
+        if (cursor) { cursor.delete(); cursor.continue(); }
+      };
+      await complete(transaction);
+    } catch (e) {
+      console.error("[mapLog] write failed:", e);
+      throw e;
+    } finally {
+      db.close();
+    }
   }
 
   async function get(day) {
@@ -85,6 +100,8 @@ window.mapLog = (() => {
 
   window.addEventListener("error", event => earlyError(event.message, event.error));
   window.addEventListener("unhandledrejection", event => earlyError("Unhandled promise rejection", event.reason));
-  write({ timestamp: new Date().toISOString(), level: "Information", category: "JavaScript", eventName: "HostPageLoaded", message: "Host page loaded" }).catch(() => {});
+  write({ timestamp: new Date().toISOString(), level: "Information", category: "JavaScript", eventName: "HostPageLoaded", message: "Host page loaded" })
+    .then(() => console.log("[mapLog] HostPageLoaded entry written"))
+    .catch(e => console.error("[mapLog] initial write failed:", e));
   return { write, get, days, clear, registerShortcut };
 })();
