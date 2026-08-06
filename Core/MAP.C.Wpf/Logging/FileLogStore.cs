@@ -25,7 +25,6 @@ public sealed class FileLogStore : ILogStore
             Directory.CreateDirectory(_logDirectory);
             var path = Path.Combine(_logDirectory, $"{entry.Timestamp:yyyy-MM-dd}.log");
             File.AppendAllText(path, JsonSerializer.Serialize(entry, JsonOptions) + Environment.NewLine);
-            DeleteExpiredFiles();
         }
         return Task.CompletedTask;
     }

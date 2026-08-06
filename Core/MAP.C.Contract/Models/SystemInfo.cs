@@ -32,7 +32,8 @@ public sealed class SystemInfo
                     return ip.ToString();
             }
         }
-        catch { }
+        catch (SocketException) { }
+        catch (Exception) { }
         return "Unknown";
     }
 }

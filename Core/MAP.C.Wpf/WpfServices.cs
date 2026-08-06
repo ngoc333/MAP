@@ -61,7 +61,7 @@ internal static class WpfServices
             Timeout = TimeSpan.FromSeconds(10)
         }));
         services.AddSingleton<IUiStateService, UiStateService>();
-services.AddSingleton<IMenuService>(sp => new MenuService(
+        services.AddSingleton<IMenuService>(sp => new MenuService(
             sp.GetRequiredService<IDbApiClient>(), sp.GetRequiredService<IAppConfigService>(), sp.GetRequiredService<ILogger<MenuService>>()));
         services.AddSingleton(sp => new MainWindow(sp, rootComponentType));
 

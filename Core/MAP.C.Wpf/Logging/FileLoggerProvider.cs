@@ -33,7 +33,7 @@ public sealed class FileLoggerProvider(ILogStore store) : ILoggerProvider
         private async Task WriteAsync(LogEntry entry)
         {
             try { await store.WriteAsync(entry); }
-            catch { }
+            catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"[FileLogger] Write failed: {ex.Message}"); }
         }
     }
 

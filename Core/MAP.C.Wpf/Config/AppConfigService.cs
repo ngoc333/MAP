@@ -76,11 +76,19 @@ public sealed class AppConfigService : IAppConfigService
         var processPath = Environment.ProcessPath;
         if (!string.IsNullOrEmpty(processPath))
         {
-            Process.Start(new ProcessStartInfo
+            try
             {
-                FileName = processPath,
-                UseShellExecute = true
-            });
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = processPath,
+                    UseShellExecute = true
+                });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to restart:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
         }
         Application.Current.Shutdown();
     }
