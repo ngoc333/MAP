@@ -1,11 +1,10 @@
 :root {
-	--rz-text-font-family:
-		"Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
+	--rz-text-font-family: "Inter", "Segoe UI", sans-serif;
 }
 
 html,
 body {
-	font-family: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
+	font-family: "Inter", "Segoe UI", sans-serif;
 }
 
 h1:focus {
