@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MAP</title>
     <base href="/" />
-    <link href="_content/Radzen.Blazor/css/software.css" rel="stylesheet" />
+    <link href="_content/Radzen.Blazor/css/material.css" rel="stylesheet" />
+    <link href="css/roboto.css" rel="stylesheet" />
     <link rel="stylesheet" href="css/tailwind.css" />
     <style>
       #blazor-error-ui {
@@ -21,7 +22,7 @@
         padding: 12px;
         background: #f44336;
         color: #fff;
-        font-family: "Segoe UI", system-ui, sans-serif;
+        font-family: "Roboto", "Segoe UI", system-ui, sans-serif;
         z-index: 9999;
       }
 
@@ -32,7 +33,7 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        font-family: "Segoe UI", system-ui, sans-serif;
+        font-family: "Roboto", "Segoe UI", system-ui, sans-serif;
         color: #555;
         background: #fafafa;
         z-index: 100;
@@ -48,8 +49,12 @@
         animation: bounce 0.6s infinite alternate;
       }
 
-      #splash .dot:nth-child(2) { animation-delay: 0.2s; }
-      #splash .dot:nth-child(3) { animation-delay: 0.4s; }
+      #splash .dot:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+      #splash .dot:nth-child(3) {
+        animation-delay: 0.4s;
+      }
 
       #splash .error-msg {
         margin-top: 24px;
@@ -58,10 +63,15 @@
         display: none;
       }
 
-      #splash .error-msg.show { display: block; }
+      #splash .error-msg.show {
+        display: block;
+      }
 
       @keyframes bounce {
-        to { transform: translateY(-8px); opacity: 0.3; }
+        to {
+          transform: translateY(-8px);
+          opacity: 0.3;
+        }
       }
     </style>
   </head>
@@ -70,7 +80,8 @@
     <div id="app">
       <div id="splash">
         <div style="display: flex">
-          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+          <span class="dot"></span><span class="dot"></span
+          ><span class="dot"></span>
         </div>
         <div class="error-msg" id="blazor-load-error"></div>
       </div>

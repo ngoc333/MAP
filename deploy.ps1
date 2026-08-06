@@ -1,20 +1,23 @@
 $ErrorActionPreference = "Stop"
 $root = $PSScriptRoot
 $serverPath = "\\172.30.10.8\WebService\LGMES_LIVE_6_Service\DeployAssembly\FormAssembly\MAP-App"
+$publishCore = Join-Path $root "publish\core"
+$publishModules = Join-Path $root "publish\modules"
 $publishDesktop = Join-Path $root "publish\desktop"
+$publishWeb = Join-Path $root "publish\web"
 
 Write-Host "=== MAP Deploy ===" -ForegroundColor Cyan
 Write-Host ""
 
-# 1. Build all (desktop + web)
-Write-Host "[1/3] Running build-all..." -ForegroundColor Cyan
-$buildAllScript = Join-Path $root "build-all.ps1"
-& $buildAllScript
+# 1. Build (incremental)
+Write-Host "[1/4] Running build..." -ForegroundColor Cyan
+$buildScript = Join-Path $root "build.ps1"
+& $buildScript
 if ($LASTEXITCODE -ne 0) { exit 1 }
 
 # 2. Build Run-App (AutoDownload)
 Write-Host ""
-Write-Host "[2/3] Building Run-App (AutoDownload)..." -ForegroundColor Cyan
+Write-Host "[2/4] Building Run-App (AutoDownload)..." -ForegroundColor Cyan
 
 $runAppCsproj = Join-Path $root "Run-App\Run-App.csproj"
 dotnet build $runAppCsproj -c Release --nologo -v q
@@ -25,12 +28,11 @@ if ($LASTEXITCODE -ne 0) {
 
 Write-Host "  OK" -ForegroundColor Green
 
-# 3. Deploy to server
+# 3. Deploy desktop to server
 Write-Host ""
-Write-Host "[3/3] Deploying to server..." -ForegroundColor Cyan
+Write-Host "[3/4] Deploying desktop to server..." -ForegroundColor Cyan
 Write-Host "  Target: $serverPath" -ForegroundColor DarkGray
 
-# Ensure server path exists
 if (-not (Test-Path $serverPath)) {
     New-Item -ItemType Directory -Force -Path $serverPath | Out-Null
 }
@@ -48,28 +50,105 @@ if (Test-Path $runAppExe) {
     Write-Host "  WARNING: Run-App.exe not found at $runAppExe" -ForegroundColor Yellow
 }
 
-# Copy desktop files to server\desktop
-$serverDesktop = Join-Path $serverPath "desktop"
-if (Test-Path $publishDesktop) {
-    if (-not (Test-Path $serverDesktop)) {
-        New-Item -ItemType Directory -Force -Path $serverDesktop | Out-Null
+# Copy core DLLs
+$serverCore = Join-Path $serverPath "core"
+if (Test-Path $publishCore) {
+    if (-not (Test-Path $serverCore)) {
+        New-Item -ItemType Directory -Force -Path $serverCore | Out-Null
     }
-
-    $fileCount = (Get-ChildItem $publishDesktop -Recurse -File).Count
-    Write-Host "  Copying $fileCount files to desktop..." -ForegroundColor DarkGray
-
-    $robocopyArgs = @($publishDesktop, $serverDesktop, "/MIR", "/NJH", "/NJS", "/NDL", "/NP", "/NFL", "/NC", "/NS")
-    $result = & robocopy @robocopyArgs
-    $exitCode = $LASTEXITCODE
-
-    # Robocopy: 0=no change, 1=copied ok, 2=extra files removed, 4+=errors
-    if ($exitCode -le 2) {
-        Write-Host "  Desktop files deployed" -ForegroundColor Green
-    } else {
-        Write-Host "  WARNING: Robocopy exit code $exitCode" -ForegroundColor Yellow
-    }
+    $fileCount = (Get-ChildItem $publishCore -Filter "*.dll" -File).Count
+    Write-Host "  Copying $fileCount core DLLs..." -ForegroundColor DarkGray
+    Copy-Item (Join-Path $publishCore "*.dll") $serverCore -Force
+    Write-Host "  Core deployed" -ForegroundColor Green
 } else {
-    Write-Host "  WARNING: Desktop publish folder not found" -ForegroundColor Yellow
+    Write-Host "  WARNING: Core publish folder not found" -ForegroundColor Yellow
+}
+
+# Copy module DLLs
+$serverModules = Join-Path $serverPath "modules"
+if (Test-Path $publishModules) {
+    if (-not (Test-Path $serverModules)) {
+        New-Item -ItemType Directory -Force -Path $serverModules | Out-Null
+    }
+    $fileCount = (Get-ChildItem $publishModules -Filter "*.dll" -File).Count
+    Write-Host "  Copying $fileCount module DLLs..." -ForegroundColor DarkGray
+    Copy-Item (Join-Path $publishModules "*.dll") $serverModules -Force
+    Write-Host "  Modules deployed" -ForegroundColor Green
+} else {
+    Write-Host "  WARNING: Modules publish folder not found" -ForegroundColor Yellow
+}
+
+# Publish Desktop app (index.html, css, js, fonts, _content, _framework...)
+Write-Host "  Publishing Desktop static files..." -ForegroundColor DarkGray
+$desktopCsproj = Join-Path (Join-Path $root "MAP.H.Desktop") "MAP.H.Desktop.csproj"
+dotnet publish $desktopCsproj -c Release -o $publishDesktop --nologo -v q
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "ERROR: Desktop publish failed" -ForegroundColor Red
+    exit 1
+}
+
+# Copy static files to server (index.html, css, js, fonts, _content, _framework)
+$staticItems = @("index.html", "css", "js", "fonts", "_content", "_framework")
+foreach ($item in $staticItems) {
+    $src = Join-Path $publishDesktop $item
+    if (Test-Path $src) {
+        $dest = Join-Path $serverPath $item
+        if (Test-Path $src -PathType Container) {
+            if (Test-Path $dest) { Remove-Item -Recurse -Force $dest }
+            Copy-Item $src $dest -Recurse -Force
+        } else {
+            Copy-Item $src $dest -Force
+        }
+        Write-Host "  $item deployed" -ForegroundColor Green
+    }
+}
+Write-Host "  Desktop static files deployed" -ForegroundColor Green
+
+# 4. Deploy Web to IIS
+Write-Host ""
+Write-Host "[4/4] Deploying Web to IIS..." -ForegroundColor Cyan
+
+$webCsproj = Join-Path (Join-Path $root "MAP.H.Web") "MAP.H.Web.csproj"
+dotnet publish $webCsproj -c Release -o $publishWeb --nologo -v q
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "ERROR: Web publish failed" -ForegroundColor Red
+    exit 1
+}
+
+Get-ChildItem $publishWeb -Filter "*.pdb" -Recurse | Remove-Item -Force
+
+$webDest = "MAP"
+$webComputerName = "https://172.30.10.124:8172/msdeploy.axd"
+$webUserName = "administrator"
+$webPassword = 'C@#4I!S#c$1xY9!'
+
+Write-Host "  Source: $publishWeb" -ForegroundColor DarkGray
+Write-Host "  Dest: $webDest @ 172.30.10.124" -ForegroundColor DarkGray
+
+$msdeployExe = "C:\Program Files\IIS\Microsoft Web Deploy V3\msdeploy.exe"
+$msdeployArgs = "-verb:sync -source:contentPath=$publishWeb -dest:contentPath=$webDest,computerName=$webComputerName,userName=$webUserName,password=$webPassword,authType=basic -allowUntrusted"
+
+$psi = New-Object System.Diagnostics.ProcessStartInfo
+$psi.FileName = $msdeployExe
+$psi.Arguments = $msdeployArgs
+$psi.UseShellExecute = $false
+$psi.RedirectStandardOutput = $true
+$psi.RedirectStandardError = $true
+
+$proc = [System.Diagnostics.Process]::Start($psi)
+$stdout = $proc.StandardOutput.ReadToEnd()
+$stderr = $proc.StandardError.ReadToEnd()
+$proc.WaitForExit()
+$exitCode = $proc.ExitCode
+
+if ($stdout) { Write-Host $stdout }
+if ($stderr) { Write-Host $stderr -ForegroundColor Red }
+
+if ($exitCode -eq 0) {
+    Write-Host "  Web deployed" -ForegroundColor Green
+} else {
+    Write-Host "  ERROR: Web deploy failed (exit code $exitCode)" -ForegroundColor Red
+    exit 1
 }
 
 # Summary
@@ -77,4 +156,6 @@ Write-Host ""
 Write-Host "=== DEPLOY COMPLETE ===" -ForegroundColor Green
 Write-Host "  Server: $serverPath" -ForegroundColor White
 Write-Host "  Run-App.exe: $serverPath\Run-App.exe" -ForegroundColor DarkGray
-Write-Host "  Desktop: $serverDesktop" -ForegroundColor DarkGray
+Write-Host "  Core: $serverCore" -ForegroundColor DarkGray
+Write-Host "  Modules: $serverModules" -ForegroundColor DarkGray
+Write-Host "  Web: $webDest @ 172.30.10.124" -ForegroundColor DarkGray

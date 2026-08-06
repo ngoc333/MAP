@@ -11,7 +11,25 @@ Write-Host ""
 # 1. Clean & prepare
 Write-Host "[1/3] Preparing output directories..." -ForegroundColor Cyan
 @($publishCore, $publishModules) | ForEach-Object {
-    if (Test-Path $_) { Remove-Item -Recurse -Force $_ }
+    if (Test-Path $_) {
+        # Retry up to 3 times in case files are temporarily locked (e.g. by IIS or a previous PS session)
+        $retries = 0
+        $deleted = $false
+        while (-not $deleted -and $retries -lt 3) {
+            try {
+                Remove-Item -Recurse -Force $_ -ErrorAction Stop
+                $deleted = $true
+            } catch {
+                $retries++
+                if ($retries -lt 3) {
+                    Write-Host "  Retry $retries/3: cleanup failed ($($_.Exception.Message)), waiting..." -ForegroundColor Yellow
+                    Start-Sleep -Seconds 2
+                } else {
+                    Write-Host "  WARNING: Could not clean $_ - files may be locked. Continuing anyway." -ForegroundColor Yellow
+                }
+            }
+        }
+    }
     New-Item -ItemType Directory -Force -Path $_ | Out-Null
 }
 
@@ -62,7 +80,11 @@ function Test-ModuleLocalization {
     param([string]$dll)
 
     try {
-        $assembly = [System.Reflection.Assembly]::LoadFrom((Resolve-Path $dll))
+        # Read the DLL as raw bytes and load from memory to avoid locking the file.
+        # Assembly.Load(byte[]) reads the file once and releases the handle immediately.
+        $dllPath = Resolve-Path $dll
+        $bytes = [System.IO.File]::ReadAllBytes($dllPath)
+        $assembly = [System.Reflection.Assembly]::Load($bytes)
         $prefix = "$($assembly.GetName().Name).Localization"
         $resources = $assembly.GetManifestResourceNames()
         $missing = @("$prefix.vi.json", "$prefix.en.json") | Where-Object { $_ -notin $resources }

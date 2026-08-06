@@ -1,17 +1,24 @@
 <Solution>
-  <Project Path="Core/MAP.C.Contract/MAP.C.Contract.csproj" />
-  <Project Path="Core/MAP.C.Runtime/MAP.C.Runtime.csproj" />
-  <Project Path="Core/MAP.C.UI/MAP.C.UI.csproj" />
-  <Project Path="Core/MAP.C.Wasm/MAP.C.Wasm.csproj" />
-  <Project Path="Core/MAP.C.Wpf/MAP.C.Wpf.csproj" />
+  <Project Path="MAP.H.Desktop/MAP.H.Desktop.csproj" />
   <Project Path="MAP.H.Web/MAP.H.Web.csproj" />
   <Project Path="MAP.H.Web.Host/MAP.H.Web.Host.csproj" />
-  <Project Path="MAP.H.Desktop/MAP.H.Desktop.csproj" />
-  <Project Path="Modules/MAP.M.Home/MAP.M.Home.csproj" />
-  <Project Path="Modules/MAP.M.Customers/MAP.M.Customers.csproj" />
-  <Project Path="Modules/MAP.M.Products/MAP.M.Products.csproj" />
-  <Project Path="Modules/MAP.M.Reports/MAP.M.Reports.csproj" />
-  <Project Path="Modules/MAP.M.System/MAP.M.System.csproj" />
-  <Project Path="Modules/MAP.M.DatabaseApi/MAP.M.DatabaseApi.csproj" />
-  <Project Path="Tests/MAP.C.Runtime.Tests/MAP.C.Runtime.Tests.csproj" />
+  <Folder Name="/Core/">
+    <Project Path="Core/MAP.C.Contract/MAP.C.Contract.csproj" />
+    <Project Path="Core/MAP.C.Runtime/MAP.C.Runtime.csproj" />
+    <Project Path="Core/MAP.C.UI/MAP.C.UI.csproj" />
+    <Project Path="Core/MAP.C.Wasm/MAP.C.Wasm.csproj" />
+    <Project Path="Core/MAP.C.Wpf/MAP.C.Wpf.csproj" />
+  </Folder>
+  <Folder Name="/Modules/">
+    <Project Path="Modules/MAP.M.Customers/MAP.M.Customers.csproj" />
+    <Project Path="Modules/MAP.M.DatabaseApi/MAP.M.DatabaseApi.csproj" />
+    <Project Path="Modules/MAP.M.Home/MAP.M.Home.csproj" />
+    <Project Path="Modules/MAP.M.Products/MAP.M.Products.csproj" />
+    <Project Path="Modules/MAP.M.Reports/MAP.M.Reports.csproj" />
+    <Project Path="Modules/MAP.M.System/MAP.M.System.csproj" />
+  </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="Tests/MAP.C.Runtime.Tests/MAP.C.Runtime.Tests.csproj" />
+  </Folder>
+  <Project Path="Run-App/Run-App.csproj" />
 </Solution>
