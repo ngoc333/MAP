@@ -88,13 +88,18 @@ public sealed class AppConfigService : IAppConfigService
 
     public void RestartApp()
     {
+        _ = RestartAsync();
+    }
+
+    private async Task RestartAsync()
+    {
         try
         {
-            _js.InvokeVoidAsync("location.reload");
+            await _js.InvokeVoidAsync("location.reload");
         }
-        catch (JSException ex)
+        catch (Exception ex)
         {
-            _logger.LogError(ex, "JS interop failed during restart");
+            _logger.LogError(ex, "Failed to restart web application");
         }
     }
 }

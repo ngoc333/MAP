@@ -24,7 +24,7 @@
         <main class="flex-1 overflow-auto bg-gray-50 p-6">
             @if (Navigator.Current is { } active)
             {
-                <PageContainer Type="active.ComponentType" @key="@active.PageId" />
+                <PageContainer Type="active.ComponentType" @key="active" />
             }
             else
             {

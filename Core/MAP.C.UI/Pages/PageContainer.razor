@@ -71,7 +71,6 @@ else
     private string _sessionId = DiagnosticContext.SessionId;
     private string? _operationId => DiagnosticContext.OperationId;
 
-    [Inject] private NavigationManager Navigation { get; set; } = default!;
     [Inject] private IPageNavigator Navigator { get; set; } = default!;
 
     protected override void OnInitialized()
@@ -82,9 +81,6 @@ else
 
     protected override void OnParametersSet()
     {
-        // Reset error boundary when type changes
-        _errorBoundary?.Recover();
-
         if (Type is not null)
             Logger.LogInformation("Rendering page component. Component={Component}", Type.FullName);
     }
@@ -105,10 +101,7 @@ else
         _errorBoundary?.Recover();
     }
 
-    private void OnBack()
-    {
-        Navigator.BackAsync();
-    }
+    private Task OnBack() => Navigator.BackAsync();
 
     public void Dispose()
     {

@@ -1,6 +1,50 @@
 # deploy-helpers.ps1
 # Shared helper functions for deploy scripts.
 
+function Get-RequiredDeploySetting {
+    <#
+    .SYNOPSIS
+        Reads a required deploy setting from environment variable or .env file.
+    .DESCRIPTION
+        Priority: environment variable > .env file.
+        Exits with code 1 if the setting is missing.
+        Never prints password values.
+    #>
+    param(
+        [Parameter(Mandatory)]
+        [string]$Name
+    )
+
+    # 1. Check environment variable first
+    $envValue = [Environment]::GetEnvironmentVariable($Name, "Process")
+    if (-not [string]::IsNullOrWhiteSpace($envValue)) {
+        return $envValue
+    }
+
+    # 2. Read from .env file
+    $envFile = Join-Path $PSScriptRoot ".env"
+    if (Test-Path $envFile) {
+        $lines = Get-Content $envFile -ErrorAction SilentlyContinue
+        foreach ($line in $lines) {
+            $line = $line.Trim()
+            if ($line.StartsWith("#") -or [string]::IsNullOrWhiteSpace($line)) { continue }
+
+            if ($line -match "^$([regex]::Escape($Name))\s*=\s*(.+)$") {
+                $value = $Matches[1].Trim().Trim('"').Trim("'")
+                if (-not [string]::IsNullOrWhiteSpace($value) -and $value -ne "your_value_here") {
+                    return $value
+                }
+            }
+        }
+    }
+
+    # 3. Setting not found — exit with clear message
+    Write-Host "ERROR: Required deploy setting '$Name' is not set." -ForegroundColor Red
+    Write-Host "  Option 1: Set environment variable `$env:$Name" -ForegroundColor Yellow
+    Write-Host "  Option 2: Create .env file from .env.example and set $Name=<value>" -ForegroundColor Yellow
+    exit 1
+}
+
 function Get-DeployPassword {
     <#
     .SYNOPSIS
@@ -10,37 +54,7 @@ function Get-DeployPassword {
         Never prints the password value.
     #>
 
-    # 1. Check environment variable first
-    $envPwd = [Environment]::GetEnvironmentVariable("MAP_WEB_DEPLOY_PASSWORD", "Process")
-    if (-not [string]::IsNullOrWhiteSpace($envPwd)) {
-        return $envPwd
-    }
-
-    # 2. Read from .env file
-    $envFile = Join-Path $PSScriptRoot ".env"
-    if (-not (Test-Path $envFile)) {
-        Write-Host "ERROR: Password not found." -ForegroundColor Red
-        Write-Host "  Option 1: Set environment variable `$env:MAP_WEB_DEPLOY_PASSWORD" -ForegroundColor Yellow
-        Write-Host "  Option 2: Create .env file from .env.example with your password" -ForegroundColor Yellow
-        exit 1
-    }
-
-    $lines = Get-Content $envFile -ErrorAction SilentlyContinue
-    foreach ($line in $lines) {
-        $line = $line.Trim()
-        if ($line.StartsWith("#") -or [string]::IsNullOrWhiteSpace($line)) { continue }
-
-        if ($line -match "^MAP_WEB_DEPLOY_PASSWORD\s*=\s*(.+)$") {
-            $passwordValue = $Matches[1].Trim().Trim('"').Trim("'")
-            if (-not [string]::IsNullOrWhiteSpace($passwordValue) -and $passwordValue -ne "your_password_here") {
-                return $passwordValue
-            }
-        }
-    }
-
-    Write-Host "ERROR: MAP_WEB_DEPLOY_PASSWORD not set in .env file." -ForegroundColor Red
-    Write-Host "  Edit .env and set MAP_WEB_DEPLOY_PASSWORD=<your_password>" -ForegroundColor Yellow
-    exit 1
+    return Get-RequiredDeploySetting "MAP_WEB_DEPLOY_PASSWORD"
 }
 
 function Invoke-MsDeploy {

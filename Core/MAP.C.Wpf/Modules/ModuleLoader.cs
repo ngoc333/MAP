@@ -38,8 +38,7 @@ public sealed class ModuleLoader : IModuleLoader
             throw new ArgumentException("MenuItem.Component is null or empty.", nameof(menuItem));
 
         var started = Stopwatch.GetTimestamp();
-        // Use combined key to avoid conflicts when two assemblies have same component name
-        var cacheKey = $"{menuItem.Assembly}|{menuItem.Component}";
+        var cacheKey = CreateCacheKey(menuItem.Assembly, menuItem.Component);
 
         if (_cachedTypes.TryGetValue(cacheKey, out var cachedType))
         {
@@ -92,11 +91,15 @@ public sealed class ModuleLoader : IModuleLoader
         }
     }
 
-    public Type? GetCachedType(string componentName)
+    public Type? GetCachedType(string assemblyName, string componentName)
     {
-        _cachedTypes.TryGetValue(componentName, out var type);
+        var cacheKey = CreateCacheKey(assemblyName, componentName);
+        _cachedTypes.TryGetValue(cacheKey, out var type);
         return type;
     }
+
+    private static string CreateCacheKey(string assemblyName, string componentName)
+        => $"{assemblyName}|{componentName}";
 
     private async Task LoadModuleLocalizationAsync(Assembly assembly)
     {

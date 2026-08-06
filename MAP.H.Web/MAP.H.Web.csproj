@@ -104,11 +104,6 @@
 
   <Target Name="BuildAndSyncModules" BeforeTargets="ResolveReferences">
     <MSBuild Projects="@(ModuleProject)"
-             Targets="Build"
-             Properties="Configuration=$(Configuration)"
-             BuildInParallel="true" />
-
-    <MSBuild Projects="@(ModuleProject)"
              Targets="GetTargetPath"
              Properties="Configuration=$(Configuration)"
              BuildInParallel="true">
@@ -116,9 +111,7 @@
     </MSBuild>
 
     <MakeDir Directories="$(WebModulesDir)" />
-    <Delete Files="$(WebModulesDir)*.dll" />
-    <Delete Files="$(WebModulesDir)*.pdb" />
-    <Copy SourceFiles="@(_ModuleAssembly)" DestinationFolder="$(WebModulesDir)" />
+    <Copy SourceFiles="@(_ModuleAssembly)" DestinationFolder="$(WebModulesDir)" SkipUnchangedFiles="true" />
     <Copy SourceFiles="@(_ModuleAssembly->'%(RootDir)%(Directory)%(Filename).pdb')"
           DestinationFolder="$(WebModulesDir)"
            SkipUnchangedFiles="true" />

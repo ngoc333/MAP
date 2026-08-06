@@ -108,29 +108,35 @@ public sealed class AppConfigService : IAppConfigService
     public void RestartApp()
     {
         var processPath = Environment.ProcessPath;
-        if (!string.IsNullOrEmpty(processPath))
+        if (string.IsNullOrEmpty(processPath))
         {
-            try
-            {
-                var newProcess = Process.Start(new ProcessStartInfo
-                {
-                    FileName = processPath,
-                    UseShellExecute = true
-                });
+            System.Diagnostics.Debug.WriteLine("[AppConfigService] Cannot restart: ProcessPath is null or empty.");
+            MessageBox.Show("Không thể khởi động lại: không tìm thấy đường dẫn executable.", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+            return;
+        }
 
-                if (newProcess is not null)
-                {
-                    Application.Current.Shutdown();
-                    return;
-                }
-            }
-            catch (Exception ex)
+        try
+        {
+            var newProcess = Process.Start(new ProcessStartInfo
             {
-                MessageBox.Show($"Failed to restart:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                FileName = processPath,
+                UseShellExecute = true
+            });
+
+            if (newProcess is null)
+            {
+                System.Diagnostics.Debug.WriteLine("[AppConfigService] Process.Start returned null.");
+                MessageBox.Show("Không thể khởi động lại: process mới không được tạo.", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
+
+            Application.Current.Shutdown();
         }
-        Application.Current.Shutdown();
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[AppConfigService] Restart failed: {ex}");
+            MessageBox.Show($"Failed to restart:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
     }
 
     [DllImport("user32.dll")]

@@ -1,6 +1,4 @@
-using System.Text.Json;
 using System.Diagnostics;
-using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using MAP.C.Contract.Navigation;
 using MAP.C.Contract.Menus;
@@ -10,7 +8,7 @@ using MAP.C.Contract.Logging;
 
 namespace MAP.C.Runtime.Navigation;
 
-public sealed partial class PageNavigator : IPageNavigator
+public sealed class PageNavigator : IPageNavigator
 {
     private readonly IMenuService _menuService;
     private readonly IModuleLoader _moduleLoader;
@@ -38,18 +36,21 @@ public sealed partial class PageNavigator : IPageNavigator
 
         try
         {
-            // Check if already on same page
-            if (_stack.Count > 0 && _stack.Peek().PageId == pageId)
+            // Check if already on same page with no new parameters — skip silently
+            if (_stack.Count > 0 && _stack.Peek().PageId == pageId && parameters is null)
             {
-                // If no new parameters, skip silently
-                if (parameters is null)
-                {
-                    _logger.LogInformation("Skipping page {PageId} — already current, no new parameters", pageId);
-                    return;
-                }
-                // If has new parameters, replace current page instead of silently skipping
-                _logger.LogInformation("Re-opening page {PageId} with new parameters", pageId);
-                _stack.Pop();
+                _logger.LogInformation("Skipping page {PageId} — already current, no new parameters", pageId);
+                return;
+            }
+
+            // Determine if this is a replace-same-page operation
+            // Preserve FromPageId from the old page when replacing
+            bool isReplace = _stack.Count > 0 && _stack.Peek().PageId == pageId;
+            if (isReplace)
+            {
+                // Keep the old page's FromPageId so navigation history is preserved
+                fromPageId = _stack.Peek().FromPageId;
+                _logger.LogInformation("Re-opening page {PageId} with new parameters, preserving FromPageId={FromPageId}", pageId, fromPageId);
             }
 
             var pageParameters = PageParams.From(parameters, out var parameterException);
@@ -59,13 +60,19 @@ public sealed partial class PageNavigator : IPageNavigator
             var paramPreview = CreateParameterPreview(parameters);
             _logger.LogInformation("Opening page. NavigationId={NavigationId} PageId={PageId} Params={Params}", navigationId, pageId, paramPreview);
 
+            // Prepare everything before modifying the stack
             var menuItem = _menuService.FindById(pageId)
                 ?? throw new InvalidOperationException($"Page not found: {pageId}");
 
             var type = await _moduleLoader.LoadComponentAsync(menuItem)
                 ?? throw new InvalidOperationException($"Failed to load component: {menuItem.Component}");
 
-            // Only push to stack after successful load
+            // All preparation succeeded — now safely modify the stack
+            if (isReplace)
+            {
+                _stack.Pop();
+            }
+
             _stack.Push(new ActivePage(pageId, menuItem, type, pageParameters, fromPageId));
 
             // Notify UI subscribers — subscriber errors must not break navigation
@@ -125,26 +132,20 @@ public sealed partial class PageNavigator : IPageNavigator
 
         try
         {
-            var json = JsonSerializer.Serialize(parameters, new JsonSerializerOptions
-            {
-                WriteIndented = false
-            });
+            // Only log type name and property names — never log values to avoid leaking sensitive data
+            var type = parameters.GetType();
+            var properties = type.GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)
+                .Select(p => p.Name)
+                .ToArray();
 
-            // Mask sensitive properties (password, token, secret, key)
-            json = SensitivePropertyRegex().Replace(json, m =>
-            {
-                var prefix = m.Groups[1].Value; // property name and colon
-                return $"{prefix}\"***\"";
-            });
+            if (properties.Length == 0)
+                return $"Type={type.Name} Properties=[]";
 
-            return json.Length <= 200 ? json : string.Concat(json.AsSpan(0, 200), "...");
+            return $"Type={type.Name} Properties=[{string.Join(",", properties)}]";
         }
         catch
         {
             return parameters.GetType().FullName ?? "unknown";
         }
     }
-
-    [GeneratedRegex("\"((?:password|token|secret|key)[^\"]*?)\"\\s*:\\s*\"[^\"]*\"", RegexOptions.IgnoreCase | RegexOptions.Compiled)]
-    private static partial Regex SensitivePropertyRegex();
 }
