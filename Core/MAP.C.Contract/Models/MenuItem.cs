@@ -4,6 +4,7 @@ public class MenuItem
 {
     public string Id { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;
+    public string? TitleKey { get; set; }
     public string Icon { get; set; } = string.Empty;
     public string? Assembly { get; set; }
     public string? Component { get; set; }

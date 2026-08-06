@@ -1,6 +1,18 @@
 $ErrorActionPreference = "Stop"
 $root = $PSScriptRoot
+
+# Load helpers
+. (Join-Path $root "deploy-helpers.ps1")
+
+# Hardcoded deploy configuration (non-sensitive)
 $serverPath = "\\172.30.10.8\WebService\LGMES_LIVE_6_Service\DeployAssembly\FormAssembly\MAP-App"
+$webComputerName = "https://172.30.10.124:8172/msdeploy.axd"
+$webDest = "MAP"
+$webUserName = "administrator"
+
+# Read password from .env or environment variable
+$webPassword = Get-DeployPassword
+
 $publishCore = Join-Path $root "publish\core"
 $publishModules = Join-Path $root "publish\modules"
 $publishDesktop = Join-Path $root "publish\desktop"
@@ -13,7 +25,10 @@ Write-Host ""
 Write-Host "[1/4] Running build..." -ForegroundColor Cyan
 $buildScript = Join-Path $root "build.ps1"
 & $buildScript
-if ($LASTEXITCODE -ne 0) { exit 1 }
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "ERROR: Build failed" -ForegroundColor Red
+    exit 1
+}
 
 # 2. Build Run-App (AutoDownload)
 Write-Host ""
@@ -117,39 +132,13 @@ if ($LASTEXITCODE -ne 0) {
 
 Get-ChildItem $publishWeb -Filter "*.pdb" -Recurse | Remove-Item -Force
 
-$webDest = "MAP"
-$webComputerName = "https://172.30.10.124:8172/msdeploy.axd"
-$webUserName = "administrator"
-$webPassword = 'C@#4I!S#c$1xY9!'
-
 Write-Host "  Source: $publishWeb" -ForegroundColor DarkGray
-Write-Host "  Dest: $webDest @ 172.30.10.124" -ForegroundColor DarkGray
+Write-Host "  Dest: $webDest @ (remote server)" -ForegroundColor DarkGray
 
 $msdeployExe = "C:\Program Files\IIS\Microsoft Web Deploy V3\msdeploy.exe"
 $msdeployArgs = "-verb:sync -source:contentPath=$publishWeb -dest:contentPath=$webDest,computerName=$webComputerName,userName=$webUserName,password=$webPassword,authType=basic -allowUntrusted"
 
-$psi = New-Object System.Diagnostics.ProcessStartInfo
-$psi.FileName = $msdeployExe
-$psi.Arguments = $msdeployArgs
-$psi.UseShellExecute = $false
-$psi.RedirectStandardOutput = $true
-$psi.RedirectStandardError = $true
-
-$proc = [System.Diagnostics.Process]::Start($psi)
-$stdout = $proc.StandardOutput.ReadToEnd()
-$stderr = $proc.StandardError.ReadToEnd()
-$proc.WaitForExit()
-$exitCode = $proc.ExitCode
-
-if ($stdout) { Write-Host $stdout }
-if ($stderr) { Write-Host $stderr -ForegroundColor Red }
-
-if ($exitCode -eq 0) {
-    Write-Host "  Web deployed" -ForegroundColor Green
-} else {
-    Write-Host "  ERROR: Web deploy failed (exit code $exitCode)" -ForegroundColor Red
-    exit 1
-}
+Invoke-MsDeploy -MsDeployExe $msdeployExe -Arguments $msdeployArgs -Description "Web deploy"
 
 # Summary
 Write-Host ""
@@ -158,4 +147,4 @@ Write-Host "  Server: $serverPath" -ForegroundColor White
 Write-Host "  Run-App.exe: $serverPath\Run-App.exe" -ForegroundColor DarkGray
 Write-Host "  Core: $serverCore" -ForegroundColor DarkGray
 Write-Host "  Modules: $serverModules" -ForegroundColor DarkGray
-Write-Host "  Web: $webDest @ 172.30.10.124" -ForegroundColor DarkGray
+Write-Host "  Web: $webDest @ (remote server)" -ForegroundColor DarkGray

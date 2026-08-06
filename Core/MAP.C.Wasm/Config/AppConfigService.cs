@@ -28,7 +28,6 @@ public sealed class AppConfigService : IAppConfigService
     public async Task LoadAsync()
     {
         if (_loaded) return;
-        _loaded = true;
 
         try
         {
@@ -44,21 +43,40 @@ public sealed class AppConfigService : IAppConfigService
                 _current = new AppConfig();
                 var defaultJson = JsonSerializer.Serialize(_current, _jsonOptions);
                 await _js.InvokeVoidAsync("mapConfig.set", defaultJson);
+                _existsInStorage = true;
             }
+
+            // Only mark as loaded after successful load
+            _loaded = true;
+        }
+        catch (JSException ex)
+        {
+            _logger.LogError(ex, "JS interop failed during config load");
+            _current ??= new AppConfig();
+            // Don't set _loaded = true so we can retry
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to load app config");
             _current ??= new AppConfig();
+            // Don't set _loaded = true so we can retry
         }
     }
 
     public async Task SaveAsync(AppConfig config)
     {
-        var json = JsonSerializer.Serialize(config, _jsonOptions);
-        await _js.InvokeVoidAsync("mapConfig.set", json);
-        _current = config;
-        _existsInStorage = true;
+        try
+        {
+            var json = JsonSerializer.Serialize(config, _jsonOptions);
+            await _js.InvokeVoidAsync("mapConfig.set", json);
+            _current = config;
+            _existsInStorage = true;
+        }
+        catch (JSException ex)
+        {
+            _logger.LogError(ex, "JS interop failed during config save");
+            throw;
+        }
     }
 
     public SystemInfo GetSystemInfo() => new();
@@ -70,6 +88,13 @@ public sealed class AppConfigService : IAppConfigService
 
     public void RestartApp()
     {
-        _ = _js.InvokeVoidAsync("location.reload");
+        try
+        {
+            _js.InvokeVoidAsync("location.reload");
+        }
+        catch (JSException ex)
+        {
+            _logger.LogError(ex, "JS interop failed during restart");
+        }
     }
 }

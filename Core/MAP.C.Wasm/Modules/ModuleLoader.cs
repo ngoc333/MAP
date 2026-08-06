@@ -30,11 +30,15 @@ public class ModuleLoader : IModuleLoader
 
     public async Task<Type?> LoadComponentAsync(MenuItem menuItem)
     {
-        var started = Stopwatch.GetTimestamp();
-        if (string.IsNullOrEmpty(menuItem.Assembly) || string.IsNullOrEmpty(menuItem.Component))
-            return null;
+        // Validate input
+        if (string.IsNullOrWhiteSpace(menuItem.Assembly))
+            throw new ArgumentException("MenuItem.Assembly is null or empty.", nameof(menuItem));
+        if (string.IsNullOrWhiteSpace(menuItem.Component))
+            throw new ArgumentException("MenuItem.Component is null or empty.", nameof(menuItem));
 
-        var cacheKey = menuItem.Component;
+        var started = Stopwatch.GetTimestamp();
+        // Use combined key to avoid conflicts when two assemblies have same component name
+        var cacheKey = $"{menuItem.Assembly}|{menuItem.Component}";
 
         if (_cachedTypes.TryGetValue(cacheKey, out var cachedType))
         {
@@ -50,31 +54,37 @@ public class ModuleLoader : IModuleLoader
             {
                 _logger.LogInformation("Lazy loading web module. Assembly={Assembly}", menuItem.Assembly);
                 var assemblies = (await _assemblyLoader.LoadAssembliesAsync(new[] { menuItem.Assembly })).ToList();
-                if (assemblies.Count > 0)
+
+                if (assemblies.Count == 0)
                 {
-                    _loadedAssemblies[menuItem.Assembly] = assemblies[0];
-                    await LoadModuleLocalizationAsync(assemblies[0]);
+                    throw new InvalidOperationException(
+                        $"LoadAssembliesAsync returned empty list for assembly '{menuItem.Assembly}'.");
                 }
+
+                _loadedAssemblies[menuItem.Assembly] = assemblies[0];
+                await LoadModuleLocalizationAsync(assemblies[0]);
             }
 
             var assembly = _loadedAssemblies[menuItem.Assembly];
             var type = assembly.GetType(menuItem.Component);
 
-            if (type is not null)
+            if (type is null)
             {
-                _cachedTypes[cacheKey] = type;
-                _logger.LogInformation("Web module loaded. Assembly={Assembly} Component={Component} DurationMs={DurationMs}", menuItem.Assembly, menuItem.Component, Stopwatch.GetElapsedTime(started).TotalMilliseconds);
-                return type;
+                throw new InvalidOperationException(
+                    $"Component '{menuItem.Component}' not found in assembly '{menuItem.Assembly}'.");
             }
 
-            OnError?.Invoke($"Không tìm thấy component '{menuItem.Component}' trong assembly '{menuItem.Assembly}'");
-            return null;
+            _cachedTypes[cacheKey] = type;
+            _logger.LogInformation("Web module loaded. Assembly={Assembly} Component={Component} DurationMs={DurationMs}",
+                menuItem.Assembly, menuItem.Component, Stopwatch.GetElapsedTime(started).TotalMilliseconds);
+            return type;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Web module load failed. Assembly={Assembly} Component={Component} DurationMs={DurationMs}", menuItem.Assembly, menuItem.Component, Stopwatch.GetElapsedTime(started).TotalMilliseconds);
+            _logger.LogError(ex, "Web module load failed. Assembly={Assembly} Component={Component} DurationMs={DurationMs}",
+                menuItem.Assembly, menuItem.Component, Stopwatch.GetElapsedTime(started).TotalMilliseconds);
             OnError?.Invoke($"Lỗi tải module '{menuItem.Assembly}': {ex.Message}");
-            return null;
+            throw; // Re-throw to preserve original exception
         }
         finally
         {

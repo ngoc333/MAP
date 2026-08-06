@@ -29,6 +29,8 @@
     <None Update="css\inter.css" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <None Update="css\app.css" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <None Include="..\Shared\Fonts\Inter\*.woff2" Link="fonts\inter\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <!-- Tailwind CSS is pre-built, commit changes via build-css.ps1 -->
+    <None Include="..\MAP.H.Web\wwwroot\css\tailwind.css" Link="css\tailwind.css" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
   <!-- Module discovery: all module projects under Modules/ -->
@@ -63,25 +65,6 @@
     </PropertyGroup>
     <Copy SourceFiles="@(_ModuleAssembly)"
           DestinationFolder="$(_ModulesOut)" />
-  </Target>
-
-  <Target Name="EnsureTailwindCli" BeforeTargets="BuildTailwindCss">
-    <PropertyGroup>
-      <TailwindExe>$(MSBuildProjectDirectory)\..\tools\tailwindcss.exe</TailwindExe>
-      <TailwindUrl>https://github.com/tailwindlabs/tailwindcss/releases/download/v3.4.17/tailwindcss-windows-x64.exe</TailwindUrl>
-    </PropertyGroup>
-    <MakeDir Directories="$(MSBuildProjectDirectory)\..\tools" Condition="!Exists('$(MSBuildProjectDirectory)\..\tools')" />
-    <Exec Command="powershell -NoProfile -Command &quot;Invoke-WebRequest -Uri '$(TailwindUrl)' -OutFile '$(TailwindExe)' -UseBasicParsing&quot;" Condition="!Exists('$(TailwindExe)')" />
-  </Target>
-
-  <Target Name="BuildTailwindCss" BeforeTargets="BeforeBuild" DependsOnTargets="EnsureTailwindCli">
-    <MakeDir Directories="$(OutputPath)css" />
-    <Exec Command="$(TailwindExe) -i ..\Shared\Styles\tailwind-input.css -c ..\Shared\Styles\tailwind.config.js -o $(OutputPath)css\tailwind.css --minify" WorkingDirectory="$(MSBuildProjectDirectory)" />
-  </Target>
-
-  <Target Name="CopyTailwindCssToPublishOutput" AfterTargets="Publish" DependsOnTargets="BuildTailwindCss">
-    <MakeDir Directories="$(PublishDir)css" />
-    <Copy SourceFiles="$(OutputPath)css\tailwind.css" DestinationFolder="$(PublishDir)css" SkipUnchangedFiles="true" />
   </Target>
 
   <!-- Flatten wwwroot for BlazorWebView -->

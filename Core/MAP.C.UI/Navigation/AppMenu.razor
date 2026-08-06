@@ -29,22 +29,6 @@
 @code {
     [Parameter] public EventCallback<MenuItem> OnMenuSelected { get; set; }
 
-    private static readonly Dictionary<string, string> MenuKeys = new()
-    {
-        ["home"] = "menu.home",
-        ["home-dashboard"] = "menu.dashboard",
-        ["home-welcome"] = "menu.welcome",
-        ["products"] = "menu.products",
-        ["product-list"] = "menu.productList",
-        ["product-add"] = "menu.productAdd",
-        ["customers"] = "menu.customers",
-        ["customer-list"] = "menu.customerList",
-        ["customer-detail"] = "menu.customerDetail",
-        ["reports"] = "menu.reports",
-        ["report-sales"] = "menu.sales",
-        ["report-revenue"] = "menu.revenueChart",
-    };
-
     protected override void OnInitialized()
     {
         MenuService.OnMenusLoaded += OnStateChanged;
@@ -53,8 +37,9 @@
 
     private string GetMenuTitle(MenuItem menu)
     {
-        if (MenuKeys.TryGetValue(menu.Id, out var key))
-            return Lang.T(key, menu.Title);
+        // Use TitleKey if available for localization
+        if (!string.IsNullOrEmpty(menu.TitleKey))
+            return Lang.T(menu.TitleKey, menu.Title);
         return menu.Title;
     }
 

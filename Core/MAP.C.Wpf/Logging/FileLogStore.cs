@@ -13,18 +13,32 @@ public sealed class FileLogStore : ILogStore
 
     public FileLogStore()
     {
-        Directory.CreateDirectory(_logDirectory);
-        DeleteExpiredFiles();
+        try
+        {
+            Directory.CreateDirectory(_logDirectory);
+            DeleteExpiredFiles();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[FileLogStore] Failed to initialize log directory: {ex.Message}");
+        }
     }
 
     public Task WriteAsync(LogEntry entry, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        lock (_writeLock)
+        try
         {
-            Directory.CreateDirectory(_logDirectory);
-            var path = Path.Combine(_logDirectory, $"{entry.Timestamp:yyyy-MM-dd}.log");
-            File.AppendAllText(path, JsonSerializer.Serialize(entry, JsonOptions) + Environment.NewLine);
+            lock (_writeLock)
+            {
+                Directory.CreateDirectory(_logDirectory);
+                var path = Path.Combine(_logDirectory, $"{entry.Timestamp:yyyy-MM-dd}.log");
+                File.AppendAllText(path, JsonSerializer.Serialize(entry, JsonOptions) + Environment.NewLine);
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[FileLogStore] Write failed: {ex.Message}");
         }
         return Task.CompletedTask;
     }
@@ -37,16 +51,25 @@ public sealed class FileLogStore : ILogStore
         {
             var path = Path.Combine(_logDirectory, $"{item:yyyy-MM-dd}.log");
             if (!File.Exists(path)) continue;
-            var lines = await File.ReadAllLinesAsync(path, cancellationToken);
-            foreach (var line in lines)
+
+            var malformedCount = 0;
+            using var reader = new StreamReader(path);
+            string? line;
+            while ((line = await reader.ReadLineAsync(cancellationToken)) is not null)
             {
                 try
                 {
                     var entry = JsonSerializer.Deserialize<LogEntry>(line, JsonOptions);
                     if (entry is not null) entries.Add(entry);
                 }
-                catch (JsonException) { }
+                catch (JsonException)
+                {
+                    malformedCount++;
+                }
             }
+
+            if (malformedCount > 0)
+                System.Diagnostics.Debug.WriteLine($"[FileLogStore] Skipped {malformedCount} malformed log lines in {path}");
         }
         return entries.OrderByDescending(x => x.Timestamp).ToList();
     }
@@ -66,19 +89,49 @@ public sealed class FileLogStore : ILogStore
 
     public Task ClearAsync(DateOnly? day = null, CancellationToken cancellationToken = default)
     {
-        if (day is not null)
+        try
         {
-            var path = Path.Combine(_logDirectory, $"{day:yyyy-MM-dd}.log");
-            if (File.Exists(path)) File.Delete(path);
+            if (day is not null)
+            {
+                var path = Path.Combine(_logDirectory, $"{day:yyyy-MM-dd}.log");
+                if (File.Exists(path)) File.Delete(path);
+            }
+            else
+            {
+                // Clear all log files
+                if (Directory.Exists(_logDirectory))
+                {
+                    foreach (var file in Directory.EnumerateFiles(_logDirectory, "????-??-??.log"))
+                    {
+                        File.Delete(file);
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[FileLogStore] Clear failed: {ex.Message}");
         }
         return Task.CompletedTask;
     }
 
     private void DeleteExpiredFiles()
     {
+        if (!Directory.Exists(_logDirectory)) return;
+
+        var cutoff = DateOnly.FromDateTime(DateTime.Today.AddDays(-RetentionDays));
         var files = Directory.EnumerateFiles(_logDirectory, "????-??-??.log")
-            .OrderByDescending(File.GetCreationTimeUtc)
-            .Skip(RetentionDays);
-        foreach (var file in files) File.Delete(file);
+            .Select(f => new
+            {
+                Path = f,
+                Day = DateOnly.TryParseExact(Path.GetFileNameWithoutExtension(f), "yyyy-MM-dd", out var d) ? d : (DateOnly?)null
+            })
+            .Where(x => x.Day.HasValue && x.Day.Value < cutoff);
+
+        foreach (var file in files)
+        {
+            try { File.Delete(file.Path); }
+            catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"[FileLogStore] Failed to delete expired log: {ex.Message}"); }
+        }
     }
 }

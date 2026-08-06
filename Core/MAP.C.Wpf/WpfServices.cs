@@ -27,12 +27,16 @@ internal static class WpfServices
     {
         services.AddWpfBlazorWebView();
 
-        var loader = new ResourceLoader();
-        var langService = new JsonLanguageService(loader);
-        langService.InitializeAsync(typeof(JsonLanguageService).Assembly).GetAwaiter().GetResult();
+        var baseDir = AppContext.BaseDirectory;
 
-        services.AddSingleton<IResourceLoader>(loader);
-        services.AddSingleton<ILanguageService>(langService);
+        // Register services (no I/O here)
+        services.AddSingleton<IResourceLoader, ResourceLoader>();
+        services.AddSingleton<ILanguageService>(sp =>
+        {
+            var loader = sp.GetRequiredService<IResourceLoader>();
+            var lang = new JsonLanguageService(loader);
+            return lang;
+        });
         services.AddLogging(logging =>
         {
             logging.ClearProviders();
@@ -41,28 +45,44 @@ internal static class WpfServices
             logging.Services.AddSingleton<ILoggerProvider, FileLoggerProvider>();
         });
 
-        var baseDir = AppContext.BaseDirectory;
-
         services.AddSingleton<IModuleLoader>(sp => new ModuleLoader(
-            Path.Combine(baseDir, "modules"), langService, sp.GetRequiredService<IResourceLoader>(), sp.GetRequiredService<ILogger<ModuleLoader>>()));
+            Path.Combine(baseDir, "modules"),
+            sp.GetRequiredService<ILanguageService>(),
+            sp.GetRequiredService<IResourceLoader>(),
+            sp.GetRequiredService<ILogger<ModuleLoader>>()));
         services.AddSingleton<ILogStore>(sp => sp.GetRequiredService<FileLogStore>());
         services.AddSingleton<IPageNavigator, PageNavigator>();
         services.AddSingleton<IAppConfigService>(_ => new AppConfigService(
             Path.Combine(baseDir, "app-config.json")));
         services.AddSingleton<IPlatformCapabilities, PlatformCapabilities>();
-        var dbApiConfiguration = DbApiConfiguration.LoadFromFile(Path.Combine(baseDir, "db-api.json"));
-        services.AddSingleton<IDbApiClient>(_ => new DbApiClient(new HttpClient
+        services.AddSingleton<IDbApiClient>(sp =>
         {
-            BaseAddress = dbApiConfiguration.OracleBaseAddress,
-            Timeout = TimeSpan.FromSeconds(10)
-        }, new HttpClient
-        {
-            BaseAddress = dbApiConfiguration.PostgreSqlBaseAddress,
-            Timeout = TimeSpan.FromSeconds(10)
-        }));
+            var logger = sp.GetRequiredService<ILoggerFactory>().CreateLogger("DbApiConfig");
+            var configPath = Path.Combine(baseDir, "db-api.json");
+            try
+            {
+                var config = DbApiConfiguration.LoadFromFile(configPath);
+                return new DbApiClient(new HttpClient
+                {
+                    BaseAddress = config.OracleBaseAddress,
+                    Timeout = TimeSpan.FromSeconds(10)
+                }, new HttpClient
+                {
+                    BaseAddress = config.PostgreSqlBaseAddress,
+                    Timeout = TimeSpan.FromSeconds(10)
+                });
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to load db-api.json. Path={Path}", configPath);
+                throw;
+            }
+        });
         services.AddSingleton<IUiStateService, UiStateService>();
         services.AddSingleton<IMenuService>(sp => new MenuService(
-            sp.GetRequiredService<IDbApiClient>(), sp.GetRequiredService<IAppConfigService>(), sp.GetRequiredService<ILogger<MenuService>>()));
+            sp.GetRequiredService<IDbApiClient>(),
+            sp.GetRequiredService<IAppConfigService>(),
+            sp.GetRequiredService<ILogger<MenuService>>()));
         services.AddSingleton(sp => new MainWindow(sp, rootComponentType));
 
         return services;

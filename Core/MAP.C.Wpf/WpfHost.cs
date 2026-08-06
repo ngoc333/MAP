@@ -10,6 +10,7 @@ using MAP.C.Contract.Localization;
 using MAP.C.Contract.Models;
 using MAP.C.Contract.Menus;
 using MAP.C.Contract.Logging;
+using MAP.C.Runtime.Localization;
 
 namespace MAP.C.Wpf;
 
@@ -30,15 +31,20 @@ public static class WpfHost
             .Build();
 
         var logger = host.Services.GetRequiredService<ILoggerFactory>().CreateLogger("AppStartup");
-        logger.LogInformation("Application starting. SessionId={SessionId} BaseDirectory={BaseDirectory} CurrentDirectory={CurrentDirectory} ProcessId={ProcessId} Framework={Framework} OS={OS}", DiagnosticContext.SessionId, AppContext.BaseDirectory, Environment.CurrentDirectory, Environment.ProcessId, System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription, System.Runtime.InteropServices.RuntimeInformation.OSDescription);
+        logger.LogInformation("Application starting. SessionId={SessionId} BaseDirectory={BaseDirectory} CurrentDirectory={CurrentDirectory} ProcessId={ProcessId} Framework={Framework} OS={OS}",
+            DiagnosticContext.SessionId, AppContext.BaseDirectory, Environment.CurrentDirectory,
+            Environment.ProcessId, System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription,
+            System.Runtime.InteropServices.RuntimeInformation.OSDescription);
 
         application.DispatcherUnhandledException += (_, e) =>
         {
             logger.LogError(e.Exception, "Unhandled DispatcherException");
             MessageBox.Show(e.Exception.ToString(), "MAP startup error", MessageBoxButton.OK, MessageBoxImage.Error);
-            e.Handled = true;
+            // Only handle if app can continue; let critical errors crash
+            e.Handled = IsRecoverableException(e.Exception);
         };
-        AppDomain.CurrentDomain.UnhandledException += (_, e) => logger.LogCritical(e.ExceptionObject as Exception, "Unhandled AppDomain exception. IsTerminating={IsTerminating}", e.IsTerminating);
+        AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+            logger.LogCritical(e.ExceptionObject as Exception, "Unhandled AppDomain exception. IsTerminating={IsTerminating}", e.IsTerminating);
         TaskScheduler.UnobservedTaskException += (_, e) =>
         {
             logger.LogError(e.Exception, "Unobserved task exception");
@@ -53,8 +59,10 @@ public static class WpfHost
                 await host.StartAsync();
                 logger.LogInformation("Host started. DurationMs={DurationMs}", Stopwatch.GetElapsedTime(started).TotalMilliseconds);
 
-                var menuService = host.Services.GetRequiredService<IMenuService>();
-                await menuService.LoadMenusAsync();
+                // Initialize localization async (not in ConfigureServices)
+                var langService = host.Services.GetRequiredService<ILanguageService>();
+                if (langService is JsonLanguageService jsonLang)
+                    await jsonLang.InitializeAsync(typeof(JsonLanguageService).Assembly);
 
                 var configService = host.Services.GetRequiredService<IAppConfigService>();
                 var config = configService.Current;
@@ -80,7 +88,6 @@ public static class WpfHost
 
                     if (!string.IsNullOrWhiteSpace(config.DefaultLanguage))
                     {
-                        var langService = host.Services.GetRequiredService<ILanguageService>();
                         langService.SetLanguage(config.DefaultLanguage);
                     }
                 }
@@ -109,5 +116,11 @@ public static class WpfHost
             host.Dispose();
             logger.LogInformation("Application stopped");
         };
+    }
+
+    private static bool IsRecoverableException(Exception ex)
+    {
+        // Don't handle OutOfMemory, StackOverflow, or AccessViolation
+        return ex is not (OutOfMemoryException or StackOverflowException or AccessViolationException);
     }
 }

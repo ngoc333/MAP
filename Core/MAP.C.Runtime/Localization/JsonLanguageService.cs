@@ -35,14 +35,14 @@ public sealed class JsonLanguageService : ILanguageService
         Merge(_en, enData);
     }
 
-    public async Task LoadModuleResourcesAsync(
+    public Task LoadModuleResourcesAsync(
         string moduleName,
         Dictionary<string, Dictionary<string, object>> vi,
         Dictionary<string, Dictionary<string, object>> en)
     {
         Merge(_vi, vi);
         Merge(_en, en);
-        await Task.CompletedTask;
+        return Task.CompletedTask;
     }
 
     public string T(string key)
@@ -64,6 +64,13 @@ public sealed class JsonLanguageService : ILanguageService
     public void SetLanguage(string language)
     {
         if (_currentLanguage == language) return;
+
+        // Validate language is in AvailableLanguages
+        if (!AvailableLanguages.Any(l => l.Code == language))
+        {
+            throw new ArgumentException($"Language '{language}' is not available. Available: {string.Join(", ", AvailableLanguages.Select(l => l.Code))}", nameof(language));
+        }
+
         _currentLanguage = language;
         CultureInfo.CurrentUICulture = new CultureInfo(language == "vi" ? "vi-VN" : "en-US");
         CultureInfo.CurrentCulture = CultureInfo.CurrentUICulture;

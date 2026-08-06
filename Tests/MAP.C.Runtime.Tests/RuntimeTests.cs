@@ -37,8 +37,9 @@ public sealed class RuntimeTests
         SystemMenus.EnsureRegistered(config);
 
         var system = Assert.Single(config.Menus);
-        var systemLogs = Assert.Single(system.Children!);
-        Assert.Equal(SystemMenus.SystemLogsPageId, systemLogs.Id);
+        Assert.Equal(2, system.Children!.Count);
+        Assert.Contains(system.Children, c => c.Id == SystemMenus.SystemLogsPageId);
+        Assert.Contains(system.Children, c => c.Id == SystemMenus.SystemConfigPageId);
     }
 
     [Fact]

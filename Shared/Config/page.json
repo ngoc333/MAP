@@ -5,11 +5,13 @@
     {
       "id": "home",
       "title": "Trang chủ",
+      "titleKey": "menu.home",
       "icon": "home",
       "children": [
         {
           "id": "home-dashboard",
           "title": "Dashboard",
+          "titleKey": "menu.dashboard",
           "icon": "dashboard",
           "assembly": "MAP.M.Home.dll",
           "component": "MAP.M.Home.Pages.DashboardPage"
@@ -17,6 +19,7 @@
         {
           "id": "home-welcome",
           "title": "Giới thiệu",
+          "titleKey": "menu.welcome",
           "icon": "info",
           "assembly": "MAP.M.Home.dll",
           "component": "MAP.M.Home.Pages.HomePage"
@@ -26,11 +29,13 @@
     {
       "id": "products",
       "title": "Sản phẩm",
+      "titleKey": "menu.products",
       "icon": "inventory_2",
       "children": [
         {
           "id": "product-list",
           "title": "Danh sách",
+          "titleKey": "menu.productList",
           "icon": "list",
           "assembly": "MAP.M.Products.dll",
           "component": "MAP.M.Products.Pages.ProductList"
@@ -38,6 +43,7 @@
         {
           "id": "product-add",
           "title": "Thêm mới",
+          "titleKey": "menu.productAdd",
           "icon": "add_circle",
           "assembly": "MAP.M.Products.dll",
           "component": "MAP.M.Products.Pages.ProductAdd"
@@ -47,11 +53,13 @@
     {
       "id": "customers",
       "title": "Khách hàng",
+      "titleKey": "menu.customers",
       "icon": "people",
       "children": [
         {
           "id": "customer-list",
           "title": "Danh sách",
+          "titleKey": "menu.customerList",
           "icon": "list_alt",
           "assembly": "MAP.M.Customers.dll",
           "component": "MAP.M.Customers.Pages.CustomerList"
@@ -59,6 +67,7 @@
         {
           "id": "customer-detail",
           "title": "Chi tiết",
+          "titleKey": "menu.customerDetail",
           "icon": "person",
           "assembly": "MAP.M.Customers.dll",
           "component": "MAP.M.Customers.Pages.CustomerDetail"
@@ -68,11 +77,13 @@
     {
       "id": "reports",
       "title": "Báo cáo",
+      "titleKey": "menu.reports",
       "icon": "bar_chart",
       "children": [
         {
           "id": "report-sales",
           "title": "Doanh số",
+          "titleKey": "menu.sales",
           "icon": "trending_up",
           "assembly": "MAP.M.Reports.dll",
           "component": "MAP.M.Reports.Pages.SalesReport"
@@ -80,6 +91,7 @@
         {
           "id": "report-revenue",
           "title": "Biểu đồ doanh thu",
+          "titleKey": "menu.revenueChart",
           "icon": "pie_chart",
           "assembly": "MAP.M.Reports.dll",
           "component": "MAP.M.Reports.Pages.RevenueChart"

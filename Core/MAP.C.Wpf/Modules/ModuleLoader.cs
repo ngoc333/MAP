@@ -29,45 +29,62 @@ public sealed class ModuleLoader : IModuleLoader
         _logger = logger;
     }
 
-    public Task<Type?> LoadComponentAsync(MenuItem menuItem)
+    public async Task<Type?> LoadComponentAsync(MenuItem menuItem)
     {
+        // Validate input
+        if (string.IsNullOrWhiteSpace(menuItem.Assembly))
+            throw new ArgumentException("MenuItem.Assembly is null or empty.", nameof(menuItem));
+        if (string.IsNullOrWhiteSpace(menuItem.Component))
+            throw new ArgumentException("MenuItem.Component is null or empty.", nameof(menuItem));
+
         var started = Stopwatch.GetTimestamp();
-        var cacheKey = menuItem.Component!;
+        // Use combined key to avoid conflicts when two assemblies have same component name
+        var cacheKey = $"{menuItem.Assembly}|{menuItem.Component}";
+
         if (_cachedTypes.TryGetValue(cacheKey, out var cachedType))
         {
             _logger.LogInformation("Module cache hit. Assembly={Assembly} Component={Component}", menuItem.Assembly, menuItem.Component);
-            return Task.FromResult<Type?>(cachedType);
+            return cachedType;
         }
 
         try
         {
             OnLoadingChanged?.Invoke(true);
 
-            if (!_loadedAssemblies.ContainsKey(menuItem.Assembly!))
+            if (!_loadedAssemblies.ContainsKey(menuItem.Assembly))
             {
-                var path = Path.Combine(_modulesRoot, menuItem.Assembly!);
-                _logger.LogInformation("Loading WPF module. Assembly={Assembly} Path={Path} Exists={Exists}", menuItem.Assembly, path, File.Exists(path));
+                var path = Path.Combine(_modulesRoot, menuItem.Assembly);
+                if (!File.Exists(path))
+                {
+                    throw new FileNotFoundException(
+                        $"Assembly file not found: {Path.GetFullPath(path)}",
+                        path);
+                }
+
+                _logger.LogInformation("Loading WPF module. Assembly={Assembly} Path={Path}", menuItem.Assembly, path);
                 var assembly = Assembly.LoadFrom(path);
-                _loadedAssemblies[menuItem.Assembly!] = assembly;
-                LoadModuleLocalization(assembly);
+                _loadedAssemblies[menuItem.Assembly] = assembly;
+                await LoadModuleLocalizationAsync(assembly);
             }
 
-            var type = _loadedAssemblies[menuItem.Assembly!].GetType(menuItem.Component!);
-            if (type is not null)
+            var type = _loadedAssemblies[menuItem.Assembly].GetType(menuItem.Component);
+            if (type is null)
             {
-                _cachedTypes[cacheKey] = type;
-                _logger.LogInformation("WPF module loaded. Assembly={Assembly} Component={Component} DurationMs={DurationMs}", menuItem.Assembly, menuItem.Component, Stopwatch.GetElapsedTime(started).TotalMilliseconds);
+                throw new InvalidOperationException(
+                    $"Component '{menuItem.Component}' not found in assembly '{menuItem.Assembly}'.");
             }
-            else
-                _logger.LogError("Component was not found. Assembly={Assembly} Component={Component}", menuItem.Assembly, menuItem.Component);
 
-            return Task.FromResult(type);
+            _cachedTypes[cacheKey] = type;
+            _logger.LogInformation("WPF module loaded. Assembly={Assembly} Component={Component} DurationMs={DurationMs}",
+                menuItem.Assembly, menuItem.Component, Stopwatch.GetElapsedTime(started).TotalMilliseconds);
+            return type;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "WPF module load failed. Assembly={Assembly} Component={Component} DurationMs={DurationMs}", menuItem.Assembly, menuItem.Component, Stopwatch.GetElapsedTime(started).TotalMilliseconds);
+            _logger.LogError(ex, "WPF module load failed. Assembly={Assembly} Component={Component} DurationMs={DurationMs}",
+                menuItem.Assembly, menuItem.Component, Stopwatch.GetElapsedTime(started).TotalMilliseconds);
             OnError?.Invoke($"Failed to load module '{menuItem.Assembly}': {ex.Message}");
-            return Task.FromResult<Type?>(null);
+            throw; // Re-throw to preserve original exception
         }
         finally
         {
@@ -81,10 +98,10 @@ public sealed class ModuleLoader : IModuleLoader
         return type;
     }
 
-    private void LoadModuleLocalization(Assembly assembly)
+    private async Task LoadModuleLocalizationAsync(Assembly assembly)
     {
         if (_langService is null) return;
         var moduleName = assembly.GetName().Name!;
-        _resourceLoader.LoadModuleResourcesAsync(_langService, assembly, moduleName).GetAwaiter().GetResult();
+        await _resourceLoader.LoadModuleResourcesAsync(_langService, assembly, moduleName);
     }
 }

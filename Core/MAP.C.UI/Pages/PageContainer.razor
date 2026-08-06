@@ -1,4 +1,5 @@
 @implements IDisposable
+@using MAP.C.Contract.Logging
 @inject IModuleLoader ModuleLoader
 @inject ILanguageService Lang
 @inject ILogger<PageContainer> Logger
@@ -21,12 +22,57 @@ else if (Type is null)
 }
 else
 {
-    <DynamicComponent Type="Type" />
+    <ErrorBoundary @ref="_errorBoundary">
+        <ChildContent>
+            <DynamicComponent Type="Type" />
+        </ChildContent>
+        <ErrorContent Context="exception">
+            <div class="flex items-center justify-center h-full">
+                <div class="text-center p-6 max-w-lg">
+                    <RadzenIcon Icon="error_outline" class="text-6xl mb-4 text-red-400" />
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">
+                        @Lang.T("layout.moduleError", "Đã xảy ra lỗi khi hiển thị trang")
+                    </h3>
+                    @if (_sessionId is not null || _operationId is not null)
+                    {
+                        <div class="text-sm text-gray-500 mb-4 font-mono">
+                            @if (_sessionId is not null)
+                            {
+                                <div>Session: @_sessionId</div>
+                            }
+                            @if (_operationId is not null)
+                            {
+                                <div>Operation: @_operationId</div>
+                            }
+                        </div>
+                    }
+                    <p class="text-sm text-gray-500 mb-4">
+                        @exception.Message
+                    </p>
+                    <div class="flex gap-2 justify-center">
+                        <RadzenButton Text="@Lang.T("layout.retry", "Thử lại")"
+                                      ButtonStyle="ButtonStyle.Light"
+                                      Click="OnRetry" />
+                        <RadzenButton Text="@Lang.T("layout.back", "Quay lại")"
+                                      ButtonStyle="ButtonStyle.Light"
+                                      Click="OnBack" />
+                    </div>
+                </div>
+            </div>
+        </ErrorContent>
+    </ErrorBoundary>
 }
 
 @code {
     [Parameter] public Type? Type { get; set; }
+
     private bool _isLoading;
+    private ErrorBoundary? _errorBoundary;
+    private string _sessionId = DiagnosticContext.SessionId;
+    private string? _operationId => DiagnosticContext.OperationId;
+
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
+    [Inject] private IPageNavigator Navigator { get; set; } = default!;
 
     protected override void OnInitialized()
     {
@@ -36,6 +82,9 @@ else
 
     protected override void OnParametersSet()
     {
+        // Reset error boundary when type changes
+        _errorBoundary?.Recover();
+
         if (Type is not null)
             Logger.LogInformation("Rendering page component. Component={Component}", Type.FullName);
     }
@@ -43,12 +92,22 @@ else
     private void OnLoadingChanged(bool isLoading)
     {
         _isLoading = isLoading;
-        StateHasChanged();
+        InvokeAsync(StateHasChanged);
     }
 
     private void OnLanguageChanged()
     {
         InvokeAsync(StateHasChanged);
+    }
+
+    private void OnRetry()
+    {
+        _errorBoundary?.Recover();
+    }
+
+    private void OnBack()
+    {
+        Navigator.BackAsync();
     }
 
     public void Dispose()

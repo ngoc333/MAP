@@ -28,15 +28,40 @@ public sealed class AppConfigService : IAppConfigService
             if (!_loaded)
             {
                 _loaded = true;
-                if (Exists)
-                {
-                    var json = File.ReadAllText(_configPath);
-                    _current = JsonSerializer.Deserialize<AppConfig>(json,
-                        new JsonSerializerOptions(JsonSerializerDefaults.Web))
-                        ?? new AppConfig();
-                }
+                LoadConfig();
             }
             return _current;
+        }
+    }
+
+    private void LoadConfig()
+    {
+        try
+        {
+            if (File.Exists(_configPath))
+            {
+                var json = File.ReadAllText(_configPath);
+                _current = JsonSerializer.Deserialize<AppConfig>(json,
+                    new JsonSerializerOptions(JsonSerializerDefaults.Web))
+                    ?? new AppConfig();
+            }
+        }
+        catch (JsonException ex)
+        {
+            // Corrupt config - rename and log
+            try
+            {
+                var corruptPath = $"{_configPath}.corrupt-{DateTime.Now:yyyyMMddHHmmss}";
+                File.Move(_configPath, corruptPath);
+                System.Diagnostics.Debug.WriteLine($"[AppConfigService] Corrupt config renamed to {corruptPath}: {ex.Message}");
+            }
+            catch { /* best effort */ }
+            _current = new AppConfig();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[AppConfigService] Failed to load config: {ex.Message}");
+            _current = new AppConfig();
         }
     }
 
@@ -50,7 +75,6 @@ public sealed class AppConfigService : IAppConfigService
         int displayNum = 1;
         while (EnumDisplayDevices(null, adapterIndex, ref dd, 0))
         {
-            // DISPLAY_DEVICE_ATTACHED_TO_DESKTOP = 0x00000001
             if ((dd.StateFlags & 0x00000001) != 0)
             {
                 var isPrimary = (dd.StateFlags & 0x00000004) != 0;
@@ -67,7 +91,17 @@ public sealed class AppConfigService : IAppConfigService
     {
         var json = JsonSerializer.Serialize(config,
             new JsonSerializerOptions(JsonSerializerDefaults.Web) { WriteIndented = true });
-        await File.WriteAllTextAsync(_configPath, json);
+
+        // Atomic write: temp file → replace
+        var tempPath = _configPath + ".tmp";
+        await File.WriteAllTextAsync(tempPath, json);
+
+        using (var fs = new FileStream(tempPath, FileMode.Open, FileAccess.Read))
+        {
+            await fs.FlushAsync();
+        }
+        File.Move(tempPath, _configPath, overwrite: true);
+
         _current = config;
     }
 
@@ -78,11 +112,17 @@ public sealed class AppConfigService : IAppConfigService
         {
             try
             {
-                Process.Start(new ProcessStartInfo
+                var newProcess = Process.Start(new ProcessStartInfo
                 {
                     FileName = processPath,
                     UseShellExecute = true
                 });
+
+                if (newProcess is not null)
+                {
+                    Application.Current.Shutdown();
+                    return;
+                }
             }
             catch (Exception ex)
             {
