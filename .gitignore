@@ -50,3 +50,7 @@ tools/tailwindcss.exe
 
 ## Command code
 .commandcode/
+
+## Environment secrets
+.env
+MAP_CORE_STABILITY_PLAN.md
