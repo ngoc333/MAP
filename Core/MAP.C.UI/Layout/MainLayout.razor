@@ -1,7 +1,6 @@
 @inherits LayoutComponentBase
 @implements IDisposable
 @inject IMenuService MenuService
-@inject IModuleLoader ModuleLoader
 @inject IPageNavigator Navigator
 @inject IPageHeaderState HeaderState
 @inject ILanguageService Lang
@@ -26,11 +25,15 @@
         <main class="flex-1 overflow-auto bg-gray-50 p-6">
             @if (Navigator.Current is { } active)
             {
-                <PageContainer Type="active.ComponentType" @key="@(active.PageId + ":" + _pageGeneration)" OnFaulted="OnPageFaulted" />
+                <div @key="_pageGeneration">
+                    <PageContainer Type="active.ComponentType" @key="active" OnFaulted="OnPageFaulted" />
+                </div>
             }
             else
             {
-                <PageContainer Type="null" @key="@("__empty:" + _pageGeneration)" OnFaulted="OnPageFaulted" />
+                <div @key="_pageGeneration">
+                    <PageContainer Type="null" @key="@("__empty")" OnFaulted="OnPageFaulted" />
+                </div>
             }
         </main>
     </div>

@@ -102,12 +102,16 @@ Handle these within the Module:
 Use appropriate patterns:
 
 ```csharp
-// Show validation message
-notificationService.Notify(...);
-// Return result
-return Result.Fail("...");
-// Show dialog
-await dialogService.Alert(...);
+// Validate input
+if (string.IsNullOrWhiteSpace(model.Code))
+{
+    notificationService.Notify(...);
+    return;
+}
+
+// Show confirmation dialog
+var confirmed = await dialogService.Confirm("Are you sure?");
+if (!confirmed) return;
 ```
 
 Do NOT push business errors into ErrorBoundary.
