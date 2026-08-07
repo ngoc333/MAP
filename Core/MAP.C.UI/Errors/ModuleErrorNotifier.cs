@@ -39,17 +39,25 @@ public sealed class ModuleErrorNotifier
         if (config is null || !config.ShowModuleErrorNotification)
             return;
 
-        var message = ResolveMessage(config);
-        var summary = _languageService.T("moduleError.title", "Lỗi chức năng");
-        var fullMessage = $"{summary}\n\n{message}\nMã lỗi: {errorId}";
-
-        _notificationService.Notify(new NotificationMessage
+        try
         {
-            Severity = NotificationSeverity.Error,
-            Summary = summary,
-            Detail = fullMessage,
-            Duration = NotificationDuration
-        });
+            var message = ResolveMessage(config);
+            var summary = _languageService.T("moduleError.title", "Lỗi chức năng");
+            var errorIdLabel = _languageService.T("moduleError.errorId", "Mã lỗi");
+            var detail = $"{message}\n{errorIdLabel}: {errorId}";
+
+            _notificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = summary,
+                Detail = detail,
+                Duration = NotificationDuration
+            });
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[ModuleErrorNotifier] Notification failed: {ex.Message}");
+        }
     }
 
     private string ResolveMessage(AppConfig config)

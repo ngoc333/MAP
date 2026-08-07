@@ -9,6 +9,7 @@
 @inject IAppConfigService ConfigService
 @inject IUiStateService UiState
 @inject ModuleErrorNotifier ErrorNotifier
+@using MAP.C.Contract.Diagnostics
 
 <div class="flex flex-col h-screen w-screen overflow-hidden">
     @if (UiState.ShowHeader)
@@ -25,11 +26,11 @@
         <main class="flex-1 overflow-auto bg-gray-50 p-6">
             @if (Navigator.Current is { } active)
             {
-                <PageContainer Type="active.ComponentType" @key="active" />
+                <PageContainer Type="active.ComponentType" @key="active" OnFaulted="OnPageFaulted" />
             }
             else
             {
-                <PageContainer Type="null" />
+                <PageContainer Type="null" OnFaulted="OnPageFaulted" />
             }
         </main>
     </div>
@@ -44,6 +45,7 @@
     private Action? _uiStateChanged;
     private DotNetObjectReference<MainLayout>? _shortcutReference;
     private DotNetObjectReference<MainLayout>? _uiShortcutReference;
+    private string? FaultedPageId { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -67,6 +69,12 @@
         }
     }
 
+    private void OnPageFaulted()
+    {
+        if (Navigator.Current is { } active)
+            FaultedPageId = active.PageId;
+    }
+
     private void OnLanguageChanged()
     {
         InvokeAsync(StateHasChanged);
@@ -88,7 +96,7 @@
     private async Task OnMenuSelected(MenuItem menuItem)
     {
         if (!menuItem.IsPage) return;
-        await OpenPageSafeAsync(menuItem.Id);
+        await OpenPageSafeAsync(menuItem.Id, forceReopen: FaultedPageId == menuItem.Id);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -117,15 +125,17 @@
         return Task.CompletedTask;
     }
 
-    private async Task OpenPageSafeAsync(string pageId, object? parameters = null)
+    private async Task OpenPageSafeAsync(string pageId, object? parameters = null, bool forceReopen = false)
     {
         try
         {
-            await Navigator.OpenAsync(pageId, parameters);
+            await Navigator.OpenAsync(pageId, forceReopen, parameters);
+            FaultedPageId = null; // clear fault on successful navigation
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            var errorId = Guid.NewGuid().ToString("N")[..8].ToUpperInvariant();
+            FaultedPageId = pageId;
+            var errorId = ModuleErrorId.GetOrCreate(ex);
             // Logging is owned by PageNavigator - don't duplicate here
             ErrorNotifier.Notify(errorId);
         }

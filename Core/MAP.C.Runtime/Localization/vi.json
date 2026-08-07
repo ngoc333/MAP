@@ -25,6 +25,11 @@
     "title": "Không tìm thấy",
     "message": "Nội dung bạn tìm kiếm không tồn tại."
   },
+  "moduleError": {
+    "title": "Lỗi chức năng",
+    "defaultMessage": "Chức năng tạm thời không khả dụng.",
+    "errorId": "Mã lỗi"
+  },
   "radzen": {
     "DataGrid_FilterText": "Lọc",
     "DataGrid_ClearFilterText": "Xóa bộ lọc",

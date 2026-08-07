@@ -6,5 +6,6 @@ public interface IPageNavigator
     bool CanBack { get; }
     event Action? Changed;
     Task OpenAsync(string pageId, object? parameters = null);
+    Task OpenAsync(string pageId, bool forceReopen, object? parameters = null);
     Task BackAsync();
 }

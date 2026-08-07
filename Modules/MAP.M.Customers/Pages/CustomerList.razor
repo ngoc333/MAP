@@ -18,7 +18,7 @@
                 <RadzenDataGridColumn TItem="Customer" Title="" Width="80px" Filterable="false">
                     <Template Context="item">
                         <RadzenButton Text="@Lang.T("CustomerList.view")" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Small"
-                            Click="@(() => Navigator.OpenAsync("customer-detail", new { Code = item.Code, FullName = item.FullName, Email = item.Email, Phone = item.Phone, City = item.City, TotalOrders = item.TotalOrders }))" />
+                            Click="@(() => OpenPageAsync("customer-detail", new { Code = item.Code, FullName = item.FullName, Email = item.Email, Phone = item.Phone, City = item.City, TotalOrders = item.TotalOrders }))" />
                     </Template>
                 </RadzenDataGridColumn>
             </Columns>

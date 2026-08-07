@@ -25,6 +25,11 @@
     "title": "Not Found",
     "message": "Sorry, the content you are looking for does not exist."
   },
+  "moduleError": {
+    "title": "Function error",
+    "defaultMessage": "This function is temporarily unavailable.",
+    "errorId": "Error ID"
+  },
   "radzen": {
     "DataGrid_FilterText": "Filter",
     "DataGrid_ClearFilterText": "Clear filter",

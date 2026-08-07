@@ -5,6 +5,7 @@ using MAP.C.Contract.Menus;
 using MAP.C.Contract.Modules;
 using MAP.C.Contract.Models;
 using MAP.C.Contract.Logging;
+using MAP.C.Contract.Diagnostics;
 
 namespace MAP.C.Runtime.Navigation;
 
@@ -28,6 +29,11 @@ public sealed class PageNavigator : IPageNavigator
 
     public async Task OpenAsync(string pageId, object? parameters = null)
     {
+        await OpenAsync(pageId, forceReopen: false, parameters);
+    }
+
+    public async Task OpenAsync(string pageId, bool forceReopen, object? parameters = null)
+    {
         var navigationId = Guid.NewGuid().ToString("N");
         var started = Stopwatch.GetTimestamp();
         var fromPageId = _stack.Count > 0 ? _stack.Peek().PageId : null;
@@ -37,7 +43,7 @@ public sealed class PageNavigator : IPageNavigator
         try
         {
             // Check if already on same page with no new parameters — skip silently
-            if (_stack.Count > 0 && _stack.Peek().PageId == pageId && parameters is null)
+            if (!forceReopen && _stack.Count > 0 && _stack.Peek().PageId == pageId && parameters is null)
             {
                 _logger.LogInformation("Skipping page {PageId} — already current, no new parameters", pageId);
                 return;
@@ -82,8 +88,9 @@ public sealed class PageNavigator : IPageNavigator
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Navigation failed. NavigationId={NavigationId} PageId={PageId} FromPageId={FromPageId} DurationMs={DurationMs}",
-                navigationId, pageId, fromPageId, Stopwatch.GetElapsedTime(started).TotalMilliseconds);
+            var errorId = ModuleErrorId.GetOrCreate(ex);
+            _logger.LogError(ex, "Navigation failed. ErrorId={ErrorId} NavigationId={NavigationId} PageId={PageId} FromPageId={FromPageId} DurationMs={DurationMs}",
+                errorId, navigationId, pageId, fromPageId, Stopwatch.GetElapsedTime(started).TotalMilliseconds);
             throw;
         }
     }

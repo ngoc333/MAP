@@ -37,15 +37,15 @@
             <h4 class="font-semibold text-gray-700 mb-3">@Lang.T("HomePage.testNav")</h4>
             <div class="flex flex-wrap gap-3">
                 <RadzenButton Text="@Lang.T("HomePage.openDashboard")" ButtonStyle="ButtonStyle.Primary"
-                    Click="@(() => Navigator.OpenAsync("home-dashboard"))" />
+                    Click="@(() => OpenPageAsync("home-dashboard"))" />
                 <RadzenButton Text="@Lang.T("HomePage.openCustomerList")" ButtonStyle="ButtonStyle.Secondary"
-                    Click="@(() => Navigator.OpenAsync("customer-list"))" />
+                    Click="@(() => OpenPageAsync("customer-list"))" />
                 <RadzenButton Text="@Lang.T("HomePage.openCustomerDetail")" ButtonStyle="ButtonStyle.Secondary"
-                    Click="@(() => Navigator.OpenAsync("customer-detail", new { Code = "KH999", FullName = "Test User", Email = "test@test.com", Phone = "000", City = "Test", TotalOrders = 0 }))" />
+                    Click="@(() => OpenPageAsync("customer-detail", new { Code = "KH999", FullName = "Test User", Email = "test@test.com", Phone = "000", City = "Test", TotalOrders = 0 }))" />
                 <RadzenButton Text="@Lang.T("HomePage.openProductAdd")" ButtonStyle="ButtonStyle.Secondary"
-                    Click="@(() => Navigator.OpenAsync("product-add", new { Id = "SP-NEW", Name = "Sản phẩm test", Category = "Điện tử" }))" />
+                    Click="@(() => OpenPageAsync("product-add", new { Id = "SP-NEW", Name = "Sản phẩm test", Category = "Điện tử" }))" />
                 <RadzenButton Text="@Lang.T("HomePage.openSales")" ButtonStyle="ButtonStyle.Light"
-                    Click="@(() => Navigator.OpenAsync("report-sales"))" />
+                    Click="@(() => OpenPageAsync("report-sales"))" />
             </div>
         </div>
 

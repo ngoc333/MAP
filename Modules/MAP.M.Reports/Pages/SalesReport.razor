@@ -6,7 +6,7 @@
 
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <RadzenCard class="p-3 text-center cursor-pointer hover:shadow-md transition-shadow"
-            Click="@(() => Navigator.OpenAsync("report-revenue"))">
+            Click="@(() => OpenPageAsync("report-revenue"))">
             <p class="text-sm text-gray-500">@Lang.T("SalesReport.totalOrders")</p>
             <p class="text-xl font-bold text-blue-600">1,245</p>
             <p class="text-xs text-gray-400 mt-1">@Lang.T("SalesReport.viewChart")</p>

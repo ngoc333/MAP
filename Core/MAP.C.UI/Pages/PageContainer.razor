@@ -22,13 +22,14 @@ else if (Type is null)
 }
 else
 {
-    <ModuleErrorBoundary>
+    <ModuleErrorBoundary OnFaulted="OnFaulted">
         <DynamicComponent Type="Type" />
     </ModuleErrorBoundary>
 }
 
 @code {
     [Parameter] public Type? Type { get; set; }
+    [Parameter] public EventCallback OnFaulted { get; set; }
 
     private bool _isLoading;
 

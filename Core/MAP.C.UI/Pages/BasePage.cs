@@ -1,6 +1,8 @@
 using MAP.C.Contract.Config;
 using MAP.C.Contract.Localization;
 using MAP.C.Contract.Navigation;
+using MAP.C.Contract.Diagnostics;
+using MAP.C.UI.Errors;
 using Microsoft.AspNetCore.Components;
 using MAP.C.UI.Headers;
 
@@ -19,6 +21,9 @@ public abstract class BasePage : ComponentBase, IDisposable
 
     [Inject]
     protected IUiStateService UiState { get; private set; } = default!;
+
+    [Inject]
+    protected ModuleErrorNotifier ErrorNotifier { get; private set; } = default!;
 
     protected object? PageParameters => Navigator.Current?.RawParameters;
 
@@ -66,6 +71,24 @@ public abstract class BasePage : ComponentBase, IDisposable
     protected void SetHeaderVisible(bool visible) => UiState.SetHeader(visible);
     protected void ToggleMenu() => UiState.ToggleMenu();
     protected void ToggleHeader() => UiState.ToggleHeader();
+
+    /// <summary>
+    /// Safe navigation method for Module pages.
+    /// Catches navigation exceptions and shows notification instead of
+    /// letting the error propagate to the Module's ErrorBoundary.
+    /// </summary>
+    protected async Task OpenPageAsync(string pageId, object? parameters = null)
+    {
+        try
+        {
+            await Navigator.OpenAsync(pageId, parameters);
+        }
+        catch (Exception ex)
+        {
+            // Logging is owned by PageNavigator — don't duplicate here
+            ErrorNotifier.Notify(ModuleErrorId.GetOrCreate(ex));
+        }
+    }
 
     public void Dispose()
     {

@@ -80,11 +80,9 @@ public sealed class ModuleLoader : IModuleLoader
                 menuItem.Assembly, menuItem.Component, Stopwatch.GetElapsedTime(started).TotalMilliseconds);
             return type;
         }
-        catch (Exception ex)
+        catch
         {
-            _logger.LogError(ex, "WPF module load failed. Assembly={Assembly} Component={Component} DurationMs={DurationMs}",
-                menuItem.Assembly, menuItem.Component, Stopwatch.GetElapsedTime(started).TotalMilliseconds);
-            throw; // Re-throw to preserve original exception
+            throw; // Re-throw — full exception logging is owned by PageNavigator
         }
         finally
         {
