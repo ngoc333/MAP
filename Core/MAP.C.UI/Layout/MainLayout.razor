@@ -8,6 +8,7 @@
 @inject IJSRuntime Js
 @inject IAppConfigService ConfigService
 @inject IUiStateService UiState
+@inject ModuleErrorNotifier ErrorNotifier
 
 <div class="flex flex-col h-screen w-screen overflow-hidden">
     @if (UiState.ShowHeader)
@@ -34,6 +35,7 @@
     </div>
 
     <RadzenDialog />
+    <RadzenNotification />
 </div>
 
 @code {
@@ -56,12 +58,12 @@
 
         if (!ConfigService.Exists)
         {
-            await Navigator.OpenAsync("system-config");
+            await OpenPageSafeAsync("system-config");
         }
         else if (ConfigService.Current?.DefaultPageId is { Length: > 0 } defaultPage
                  && Navigator.Current is null)
         {
-            await Navigator.OpenAsync(defaultPage);
+            await OpenPageSafeAsync(defaultPage);
         }
     }
 
@@ -86,7 +88,7 @@
     private async Task OnMenuSelected(MenuItem menuItem)
     {
         if (!menuItem.IsPage) return;
-        await Navigator.OpenAsync(menuItem.Id);
+        await OpenPageSafeAsync(menuItem.Id);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -99,7 +101,7 @@
     }
 
     [JSInvokable]
-    public Task OpenSystemLogsAsync() => Navigator.OpenAsync("system-logs");
+    public Task OpenSystemLogsAsync() => OpenPageSafeAsync("system-logs");
 
     [JSInvokable]
     public Task ToggleMenu()
@@ -113,6 +115,20 @@
     {
         UiState.ToggleHeader();
         return Task.CompletedTask;
+    }
+
+    private async Task OpenPageSafeAsync(string pageId, object? parameters = null)
+    {
+        try
+        {
+            await Navigator.OpenAsync(pageId, parameters);
+        }
+        catch (Exception)
+        {
+            var errorId = Guid.NewGuid().ToString("N")[..8].ToUpperInvariant();
+            // Logging is owned by PageNavigator - don't duplicate here
+            ErrorNotifier.Notify(errorId);
+        }
     }
 
     public void Dispose()

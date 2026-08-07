@@ -10,6 +10,7 @@ using MAP.C.Contract.Modules;
 using MAP.C.Contract.Database;
 using MAP.C.Contract.Logging;
 using MAP.C.Contract.Config;
+using MAP.C.Runtime.Logging;
 using MAP.C.Wpf.Logging;
 using MAP.C.Wpf.Menus;
 using MAP.C.Wpf.Modules;
@@ -18,6 +19,8 @@ using MAP.C.Runtime.Database;
 using MAP.C.Runtime.Navigation;
 using MAP.C.Runtime.Config;
 using MAP.C.Runtime.Localization;
+using MAP.C.UI.Errors;
+using Radzen;
 
 namespace MAP.C.Wpf;
 
@@ -42,7 +45,7 @@ internal static class WpfServices
             logging.ClearProviders();
             logging.SetMinimumLevel(LogLevel.Information);
             logging.Services.AddSingleton<FileLogStore>();
-            logging.Services.AddSingleton<ILoggerProvider, FileLoggerProvider>();
+            logging.Services.AddSingleton<ILoggerProvider, LogStoreLoggerProvider>();
         });
 
         services.AddSingleton<IModuleLoader>(sp => new ModuleLoader(
@@ -84,6 +87,7 @@ internal static class WpfServices
             sp.GetRequiredService<IAppConfigService>(),
             sp.GetRequiredService<ILogger<MenuService>>()));
         services.AddSingleton(sp => new MainWindow(sp, rootComponentType));
+        services.AddScoped<ModuleErrorNotifier>();
 
         return services;
     }

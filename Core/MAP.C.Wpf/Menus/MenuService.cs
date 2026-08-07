@@ -5,7 +5,6 @@ using MAP.C.Contract.Config;
 using MAP.C.Contract.Database;
 using MAP.C.Contract.Models;
 using MAP.C.Contract.Menus;
-using MAP.C.Runtime.Database;
 using MAP.C.Runtime.Menus;
 using Microsoft.Extensions.Logging;
 
@@ -34,28 +33,12 @@ public sealed class MenuService : IMenuService
         var path = Path.Combine(AppContext.BaseDirectory, "page.json");
         _logger.LogInformation("Loading WPF menu. Path={Path} Exists={Exists}", path, File.Exists(path));
         using var stream = File.OpenRead(path);
-        _config = JsonSerializer.Deserialize<PageConfig>(stream,
+        var localConfig = JsonSerializer.Deserialize<PageConfig>(stream,
             new JsonSerializerOptions(JsonSerializerDefaults.Web))
             ?? throw new InvalidOperationException("Menu configuration could not be loaded.");
 
-        var source = _configService.Current?.MenuSource ?? _config.Source;
-        if (string.Equals(source, "db", StringComparison.OrdinalIgnoreCase))
-        {
-            try
-            {
-                _config = await DatabaseMenuLoader.LoadAsync(
-                    _dbClient, _config.DbName!, _config.DbFunction!);
-                _logger.LogInformation("Database menu loaded. MenuCount={MenuCount}", _config.Menus.Count);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Database menu load failed; preserving local menu.");
-                // Preserve the local menu if the remote source is unavailable or invalid.
-            }
-        }
-
-        SystemMenus.EnsureRegistered(_config);
-        _logger.LogInformation("WPF menu ready. MenuCount={MenuCount} DurationMs={DurationMs}", _config.Menus.Count, Stopwatch.GetElapsedTime(started).TotalMilliseconds);
+        _config = await MenuConfigResolver.ResolveAsync(
+            localConfig, _configService, _dbClient, _logger, started);
 
         OnMenusLoaded?.Invoke();
     }

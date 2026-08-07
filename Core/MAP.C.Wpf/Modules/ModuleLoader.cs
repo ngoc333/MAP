@@ -19,7 +19,6 @@ public sealed class ModuleLoader : IModuleLoader
     private readonly Dictionary<string, Type> _cachedTypes = new();
 
     public event Action<bool>? OnLoadingChanged;
-    public event Action<string>? OnError;
 
     public ModuleLoader(string modulesRoot, ILanguageService? langService, IResourceLoader resourceLoader, ILogger<ModuleLoader> logger)
     {
@@ -29,7 +28,7 @@ public sealed class ModuleLoader : IModuleLoader
         _logger = logger;
     }
 
-    public async Task<Type?> LoadComponentAsync(MenuItem menuItem)
+    public async Task<Type> LoadComponentAsync(MenuItem menuItem)
     {
         // Validate input
         if (string.IsNullOrWhiteSpace(menuItem.Assembly))
@@ -85,20 +84,12 @@ public sealed class ModuleLoader : IModuleLoader
         {
             _logger.LogError(ex, "WPF module load failed. Assembly={Assembly} Component={Component} DurationMs={DurationMs}",
                 menuItem.Assembly, menuItem.Component, Stopwatch.GetElapsedTime(started).TotalMilliseconds);
-            OnError?.Invoke($"Failed to load module '{menuItem.Assembly}': {ex.Message}");
             throw; // Re-throw to preserve original exception
         }
         finally
         {
             OnLoadingChanged?.Invoke(false);
         }
-    }
-
-    public Type? GetCachedType(string assemblyName, string componentName)
-    {
-        var cacheKey = CreateCacheKey(assemblyName, componentName);
-        _cachedTypes.TryGetValue(cacheKey, out var type);
-        return type;
     }
 
     private static string CreateCacheKey(string assemblyName, string componentName)

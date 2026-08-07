@@ -31,14 +31,13 @@ public sealed class PageNavigatorTests
     private sealed class FakeModuleLoader : IModuleLoader
     {
         private readonly Dictionary<string, Type> _cache = new();
-        private Func<MenuItem, Task<Type?>>? _loadFunc;
+        private Func<MenuItem, Task<Type>>? _loadFunc;
 
         public event Action<bool>? OnLoadingChanged;
-        public event Action<string>? OnError;
 
-        public void SetLoadFunc(Func<MenuItem, Task<Type?>> func) => _loadFunc = func;
+        public void SetLoadFunc(Func<MenuItem, Task<Type>> func) => _loadFunc = func;
 
-        public async Task<Type?> LoadComponentAsync(MenuItem menuItem)
+        public async Task<Type> LoadComponentAsync(MenuItem menuItem)
         {
             OnLoadingChanged?.Invoke(true);
             try
@@ -51,12 +50,6 @@ public sealed class PageNavigatorTests
             {
                 OnLoadingChanged?.Invoke(false);
             }
-        }
-
-        public Type? GetCachedType(string assemblyName, string componentName)
-        {
-            var key = $"{assemblyName}|{componentName}";
-            return _cache.TryGetValue(key, out var t) ? t : null;
         }
     }
 
@@ -142,7 +135,7 @@ public sealed class PageNavigatorTests
         {
             if (mi.Id == "page1")
                 throw new InvalidOperationException("Module load failed");
-            return Task.FromResult<Type?>(typeof(string));
+            return Task.FromResult<Type>(typeof(string));
         });
 
         await Assert.ThrowsAsync<InvalidOperationException>(() =>

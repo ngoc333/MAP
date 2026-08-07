@@ -64,8 +64,7 @@ public sealed class PageNavigator : IPageNavigator
             var menuItem = _menuService.FindById(pageId)
                 ?? throw new InvalidOperationException($"Page not found: {pageId}");
 
-            var type = await _moduleLoader.LoadComponentAsync(menuItem)
-                ?? throw new InvalidOperationException($"Failed to load component: {menuItem.Component}");
+            var type = await _moduleLoader.LoadComponentAsync(menuItem);
 
             // All preparation succeeded — now safely modify the stack
             if (isReplace)

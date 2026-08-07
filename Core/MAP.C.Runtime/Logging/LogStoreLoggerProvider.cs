@@ -1,14 +1,18 @@
 using MAP.C.Contract.Logging;
 using Microsoft.Extensions.Logging;
 
-namespace MAP.C.Wpf.Logging;
+namespace MAP.C.Runtime.Logging;
 
-public sealed class FileLoggerProvider(ILogStore store) : ILoggerProvider
+/// <summary>
+/// Platform-agnostic logger provider that delegates to <see cref="ILogStore"/>.
+/// Replaces the previous FileLoggerProvider (WPF) and IndexedDbLoggerProvider (Wasm).
+/// </summary>
+public sealed class LogStoreLoggerProvider(ILogStore store) : ILoggerProvider
 {
-    public ILogger CreateLogger(string categoryName) => new FileLogger(categoryName, store);
+    public ILogger CreateLogger(string categoryName) => new LogStoreLogger(categoryName, store);
     public void Dispose() { }
 
-    private sealed class FileLogger(string category, ILogStore store) : ILogger
+    private sealed class LogStoreLogger(string category, ILogStore store) : ILogger
     {
         public IDisposable? BeginScope<TState>(TState state) where TState : notnull => NullScope.Instance;
         public bool IsEnabled(LogLevel logLevel) => logLevel >= LogLevel.Information;
@@ -33,7 +37,7 @@ public sealed class FileLoggerProvider(ILogStore store) : ILoggerProvider
         private async Task WriteAsync(LogEntry entry)
         {
             try { await store.WriteAsync(entry); }
-            catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"[FileLogger] Write failed: {ex.Message}"); }
+            catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"[LogStoreLogger] Write failed: {ex.Message}"); }
         }
     }
 

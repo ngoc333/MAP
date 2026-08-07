@@ -56,5 +56,5 @@ tools/tailwindcss.exe
 MAP_CORE_STABILITY_PLAN.md
 
 ## Review artifacts (local only)
-MAP — Review Fix Request*.md
-MAP_REVIEW_FIX_REQUEST_2.md
+MAP*.md
+MODULE_RULES.md

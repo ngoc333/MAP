@@ -60,6 +60,19 @@
                             </RadzenStack>
 
                             <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem" Wrap="FlexWrap.Wrap">
+                                <RadzenLabel Component="showModuleErrorNotification" Text="@Lang.T("AppConfig.showModuleErrorNotification")" Style="min-width: 150px;" />
+                                <RadzenSwitch @bind-Value="_model.ShowModuleErrorNotification" />
+                            </RadzenStack>
+
+                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem" Wrap="FlexWrap.Wrap">
+                                <RadzenLabel Component="moduleErrorMessage" Text="@Lang.T("AppConfig.moduleErrorMessage")" Style="min-width: 150px;" />
+                                <RadzenTextBox Name="moduleErrorMessage" @bind-Value="_model.ModuleErrorMessage"
+                                               Placeholder="@Lang.T("AppConfig.moduleErrorMessagePlaceholder")"
+                                               Disabled="@(!_model.ShowModuleErrorNotification)"
+                                               Style="width: 100%;" />
+                            </RadzenStack>
+
+                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem" Wrap="FlexWrap.Wrap">
                                 <RadzenLabel Component="defaultPage" Text="@Lang.T("AppConfig.defaultPage")" Style="min-width: 150px;" />
                                 <RadzenDropDown TValue="string" Data="_pages" TextProperty="Text" ValueProperty="Id"
                                                 @bind-Value="_model.DefaultPageId" Style="width: 100%;" />

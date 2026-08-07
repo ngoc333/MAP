@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices;
 using System.Windows;
+using MAP.C.Contract.Models;
 
 namespace MAP.C.Wpf;
 
@@ -31,6 +32,31 @@ internal static class DisplayHelper
         public RECT rcMonitor;
         public RECT rcWork;
         public uint dwFlags;
+    }
+
+    /// <summary>
+    /// Returns all connected displays with their index, name, and primary status.
+    /// This is the single source of truth for display enumeration.
+    /// </summary>
+    public static IReadOnlyList<DisplayInfo> GetDisplays()
+    {
+        var displays = new List<DisplayInfo>();
+        var index = 0;
+
+        EnumDisplayMonitors(IntPtr.Zero, IntPtr.Zero, (IntPtr hMonitor, IntPtr hdc, ref RECT rc, IntPtr lParam) =>
+        {
+            var mi = new MONITORINFO { cbSize = Marshal.SizeOf<MONITORINFO>() };
+            if (GetMonitorInfo(hMonitor, ref mi))
+            {
+                var isPrimary = (mi.dwFlags & 1) != 0; // MONITORINFOF_PRIMARY
+                var name = $"Màn hình {index + 1}{(isPrimary ? " (Chính)" : "")}";
+                displays.Add(new DisplayInfo(index, name, isPrimary));
+            }
+            index++;
+            return true;
+        }, IntPtr.Zero);
+
+        return displays;
     }
 
     public static void PositionOnDisplay(Window window, int displayIndex)

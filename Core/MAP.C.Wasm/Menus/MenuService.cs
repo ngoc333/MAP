@@ -4,7 +4,6 @@ using MAP.C.Contract.Config;
 using MAP.C.Contract.Database;
 using MAP.C.Contract.Models;
 using MAP.C.Contract.Menus;
-using MAP.C.Runtime.Database;
 using MAP.C.Runtime.Menus;
 using Microsoft.Extensions.Logging;
 
@@ -33,39 +32,20 @@ public class MenuService : IMenuService
     public async Task LoadMenusAsync()
     {
         var started = Stopwatch.GetTimestamp();
+        PageConfig localConfig;
         try
         {
-            _config = await _http.GetFromJsonAsync<PageConfig>("page.json");
-            if (_config is null)
-                throw new InvalidOperationException("Menu configuration could not be loaded.");
+            localConfig = await _http.GetFromJsonAsync<PageConfig>("page.json")
+                ?? throw new InvalidOperationException("Menu configuration could not be loaded.");
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Local web menu load failed; using fallback menu.");
-            _config = GetFallbackMenus();
-            SystemMenus.EnsureRegistered(_config);
-            OnMenusLoaded?.Invoke();
-            return;
+            localConfig = GetFallbackMenus();
         }
 
-        var source = _configService?.Current?.MenuSource ?? _config.Source;
-        if (string.Equals(source, "db", StringComparison.OrdinalIgnoreCase))
-        {
-            try
-            {
-                _config = await DatabaseMenuLoader.LoadAsync(
-                    _dbClient, _config.DbName!, _config.DbFunction!);
-                _logger.LogInformation("Database menu loaded. MenuCount={MenuCount}", _config.Menus.Count);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Database menu load failed; preserving local menu.");
-                // Preserve the local menu if the remote source is unavailable or invalid.
-            }
-        }
-
-        SystemMenus.EnsureRegistered(_config);
-        _logger.LogInformation("Web menu ready. MenuCount={MenuCount} DurationMs={DurationMs}", _config.Menus.Count, Stopwatch.GetElapsedTime(started).TotalMilliseconds);
+        _config = await MenuConfigResolver.ResolveAsync(
+            localConfig, _configService, _dbClient, _logger, started);
 
         OnMenusLoaded?.Invoke();
     }

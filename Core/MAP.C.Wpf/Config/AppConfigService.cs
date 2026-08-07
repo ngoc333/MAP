@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using System.IO;
-using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Windows;
 using MAP.C.Contract.Config;
@@ -67,25 +66,7 @@ public sealed class AppConfigService : IAppConfigService
 
     public SystemInfo GetSystemInfo() => new();
 
-    public IReadOnlyList<DisplayInfo> GetDisplays()
-    {
-        var displays = new List<DisplayInfo>();
-        var dd = new DISPLAY_DEVICE { cb = Marshal.SizeOf<DISPLAY_DEVICE>() };
-        uint adapterIndex = 0;
-        int displayNum = 1;
-        while (EnumDisplayDevices(null, adapterIndex, ref dd, 0))
-        {
-            if ((dd.StateFlags & 0x00000001) != 0)
-            {
-                var isPrimary = (dd.StateFlags & 0x00000004) != 0;
-                var name = $"Màn hình {displayNum}{(isPrimary ? " (Chính)" : "")}";
-                displays.Add(new DisplayInfo(displayNum - 1, name, isPrimary));
-                displayNum++;
-            }
-            adapterIndex++;
-        }
-        return displays;
-    }
+    public IReadOnlyList<DisplayInfo> GetDisplays() => DisplayHelper.GetDisplays();
 
     public async Task SaveAsync(AppConfig config)
     {
@@ -137,23 +118,5 @@ public sealed class AppConfigService : IAppConfigService
             System.Diagnostics.Debug.WriteLine($"[AppConfigService] Restart failed: {ex}");
             MessageBox.Show($"Failed to restart:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
         }
-    }
-
-    [DllImport("user32.dll")]
-    private static extern bool EnumDisplayDevices(string? lpDevice, uint iDevNum, ref DISPLAY_DEVICE lpDisplayDevice, uint dwFlags);
-
-    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-    private struct DISPLAY_DEVICE
-    {
-        public int cb;
-        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)]
-        public string DeviceName;
-        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
-        public string DeviceString;
-        public uint StateFlags;
-        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
-        public string DeviceID;
-        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
-        public string DeviceKey;
     }
 }

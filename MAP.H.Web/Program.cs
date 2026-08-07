@@ -17,6 +17,8 @@ using MAP.C.Wasm.Menus;
 using MAP.C.Wasm.Modules;
 using MAP.C.Wasm.Config;
 using MAP.C.Wasm.Logging;
+using MAP.C.Runtime.Logging;
+using MAP.C.UI.Errors;
 using MAP.H.Web;
 using Radzen;
 
@@ -32,7 +34,7 @@ builder.Services.AddLogging(logging =>
     logging.ClearProviders();
     logging.SetMinimumLevel(LogLevel.Information);
     logging.Services.AddSingleton<IndexedDbLogStore>();
-    logging.Services.AddSingleton<ILoggerProvider, IndexedDbLoggerProvider>();
+    logging.Services.AddSingleton<ILoggerProvider, LogStoreLoggerProvider>();
 });
 builder.Services.AddSingleton<ILogStore>(sp => sp.GetRequiredService<IndexedDbLogStore>());
 builder.Services.AddSingleton<AppConfigService>();
@@ -62,6 +64,7 @@ builder.Services.AddScoped<IModuleLoader, ModuleLoader>();
 builder.Services.AddScoped<IPageNavigator, PageNavigator>();
 builder.Services.AddScoped<IPageHeaderState, PageHeaderState>();
 builder.Services.AddScoped<IUiStateService, UiStateService>();
+builder.Services.AddScoped<ModuleErrorNotifier>();
 
 builder.Services.AddRadzenComponents();
 
