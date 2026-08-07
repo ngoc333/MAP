@@ -83,10 +83,6 @@ public class ModuleLoader : IModuleLoader
                 menuItem.Assembly, menuItem.Component, Stopwatch.GetElapsedTime(started).TotalMilliseconds);
             return type;
         }
-        catch
-        {
-            throw; // Re-throw — full exception logging is owned by PageNavigator
-        }
         finally
         {
             OnLoadingChanged?.Invoke(false);

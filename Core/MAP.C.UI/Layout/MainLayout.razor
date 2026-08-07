@@ -26,11 +26,11 @@
         <main class="flex-1 overflow-auto bg-gray-50 p-6">
             @if (Navigator.Current is { } active)
             {
-                <PageContainer Type="active.ComponentType" @key="active" OnFaulted="OnPageFaulted" />
+                <PageContainer Type="active.ComponentType" @key="@(active.PageId + ":" + _pageGeneration)" OnFaulted="OnPageFaulted" />
             }
             else
             {
-                <PageContainer Type="null" OnFaulted="OnPageFaulted" />
+                <PageContainer Type="null" @key="@("__empty:" + _pageGeneration)" OnFaulted="OnPageFaulted" />
             }
         </main>
     </div>
@@ -46,6 +46,7 @@
     private DotNetObjectReference<MainLayout>? _shortcutReference;
     private DotNetObjectReference<MainLayout>? _uiShortcutReference;
     private string? FaultedPageId { get; set; }
+    private int _pageGeneration;
 
     protected override async Task OnInitializedAsync()
     {
@@ -96,7 +97,17 @@
     private async Task OnMenuSelected(MenuItem menuItem)
     {
         if (!menuItem.IsPage) return;
-        await OpenPageSafeAsync(menuItem.Id, forceReopen: FaultedPageId == menuItem.Id);
+
+        // Retry faulted page: recreate component tree without navigation stack change
+        if (FaultedPageId == menuItem.Id)
+        {
+            FaultedPageId = null;
+            _pageGeneration++;
+            StateHasChanged();
+            return;
+        }
+
+        await OpenPageSafeAsync(menuItem.Id);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -125,16 +136,17 @@
         return Task.CompletedTask;
     }
 
-    private async Task OpenPageSafeAsync(string pageId, object? parameters = null, bool forceReopen = false)
+    private async Task OpenPageSafeAsync(string pageId, object? parameters = null)
     {
         try
         {
-            await Navigator.OpenAsync(pageId, forceReopen, parameters);
+            await Navigator.OpenAsync(pageId, parameters);
             FaultedPageId = null; // clear fault on successful navigation
         }
         catch (Exception ex)
         {
-            FaultedPageId = pageId;
+            // Navigation failure: current page remains unchanged, do NOT set FaultedPageId
+            // FaultedPageId only tracks RENDER faults (set via ModuleErrorBoundary → OnPageFaulted)
             var errorId = ModuleErrorId.GetOrCreate(ex);
             // Logging is owned by PageNavigator - don't duplicate here
             ErrorNotifier.Notify(errorId);

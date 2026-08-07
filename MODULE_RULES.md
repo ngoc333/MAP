@@ -55,7 +55,8 @@ async Task HandleClick()
 }
 ```
 
-Exception: API event handlers that require `async void` (e.g., Blazor event callbacks).
+Exception: Only for external/native .NET event signatures that truly require `void`.
+Blazor UI event handlers should use `async Task`, not `async void`.
 
 ### Do NOT discard fire-and-forget tasks
 
@@ -65,9 +66,6 @@ _ = SomeAsync();
 
 // CORRECT - await the task
 await SomeAsync();
-
-// CORRECT - if you must fire-and-forget, use safe wrapper
-_ = SafeFireAndForget(SomeAsync());
 ```
 
 ---
@@ -91,22 +89,45 @@ If platform/process behavior is needed, use Core contracts.
 
 ## Error Handling Rules
 
-### Let Core handle module errors
+### Expected/business errors
 
-The framework provides error isolation:
+Handle these within the Module:
 
-- **Navigation errors**: Caught by `PageNavigator` and `MainLayout.OpenPageSafeAsync`
-- **Render/lifecycle errors**: Caught by `ModuleErrorBoundary`
+- Validation errors
+- Invalid user input
+- Business rule violations
+- Expected API results (not found, access denied)
+- User action not allowed
 
-Modules should:
+Use appropriate patterns:
 
-1. Throw exceptions when errors occur (don't swallow them silently)
-2. Let the framework's error isolation handle user notification and logging
-3. Not try to catch and display errors themselves
+```csharp
+// Show validation message
+notificationService.Notify(...);
+// Return result
+return Result.Fail("...");
+// Show dialog
+await dialogService.Alert(...);
+```
 
-### Exception types
+Do NOT push business errors into ErrorBoundary.
 
-Throw meaningful exceptions:
+### Unexpected technical exceptions
+
+These include:
+
+- `NullReferenceException`
+- Unexpected service failure
+- Render/lifecycle bugs
+- Uncaught exceptions
+
+Do NOT swallow these. Let Core fault-isolation handle them:
+
+- Log with ErrorId
+- Show notification to user
+- Isolate the failed module
+
+### Throw meaningful exceptions
 
 ```csharp
 // GOOD
@@ -135,40 +156,26 @@ Module localization resources are loaded automatically when the module assembly 
 
 ## Navigation Rules
 
-### Don't navigate directly
+### Module Page normal UI navigation
 
-Use `IPageNavigator` through the framework:
-
-```csharp
-@inject IPageNavigator Navigator
-
-// Navigate to a page
-await Navigator.OpenAsync("page-id");
-
-// Go back
-await Navigator.BackAsync();
-```
-
-### Use safe navigation from Module UI
-
-Module pages should use the `OpenPageAsync` method inherited from `BasePage`
-for navigation triggered by UI events (button clicks, links, etc.).
+Use `OpenPageAsync` from `BasePage` for button/link/event navigation:
 
 ```csharp
 // GOOD — safe navigation, error handled gracefully
-await OpenPageAsync("other-page");
-await OpenPageAsync("other-page", new { Id = 42 });
-
-// BAD — raw navigation, error propagates to Module's ErrorBoundary
-await Navigator.OpenAsync("other-page");
+await OpenPageAsync("target");
+await OpenPageAsync("target", new { Id = 1 });
 ```
 
-`OpenPageAsync` catches navigation exceptions and shows a notification
-instead of letting the error crash the current Module.
+Do NOT use raw `Navigator.OpenAsync(...)` for normal UI navigation in BasePage.
 
-Raw `Navigator.OpenAsync` is still available for special cases
-(e.g., imperative navigation in non-BasePage components) but
-Module pages should prefer `OpenPageAsync`.
+### Back navigation
+
+```csharp
+await Navigator.BackAsync();
+```
+
+This is acceptable — it's not a module load operation.
+Prefer shell-provided navigation UI when available.
 
 ### Don't create your own navigation UI
 
@@ -234,6 +241,11 @@ Logger.LogInformation("Processing order. OrderId={OrderId}", orderId);
 Logger.LogError(exception, "Failed to process order. OrderId={OrderId}", orderId);
 ```
 
+### Avoid duplicate logging
+
+Module may use `ILogger` but should not full-log and then rethrow if Core
+will log again at the containment boundary. Avoid unnecessary duplicate logs.
+
 ### Don't log sensitive data
 
 ```csharp
@@ -293,12 +305,12 @@ Test modules that intentionally throw errors should:
 | Rule | Do | Don't |
 | ------ | ----- | ------- |
 | References | MAP.C.Contract, MAP.C.UI, Radzen.Blazor | MAP.C.Wpf, MAP.C.Wasm, Hosts |
-| Async | `await`, explicit fire-and-forget | `async void`, `_ = task` |
+| Async | `async Task`, `await` | `async void`, `_ = task` |
 | Process | Use Core contracts | `Environment.Exit`, `Process.Kill` |
-| Errors | Throw, let framework handle | Swallow silently, show raw errors |
+| Errors | Business: handle in Module; Technical: let Core isolate | Swallow technical errors, push business errors to ErrorBoundary |
 | Localization | `ILanguageService.T()` | Hardcoded strings |
-| Navigation | `IPageNavigator` | Custom navigation UI |
+| Navigation | `OpenPageAsync` from BasePage | Raw `Navigator.OpenAsync` for UI events |
 | UI | Radzen components | Competing frameworks |
 | Config | `IAppConfigService` | Direct file access |
-| Logging | `ILogger` | Console.WriteLine, Debug.WriteLine |
+| Logging | `ILogger`, avoid duplicate logs | Console.WriteLine, duplicate full-log + rethrow |
 | Sensitive data | Never log passwords/tokens | Log everything |

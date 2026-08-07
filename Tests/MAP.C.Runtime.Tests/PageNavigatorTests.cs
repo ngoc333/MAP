@@ -1,3 +1,4 @@
+using MAP.C.Contract.Diagnostics;
 using MAP.C.Contract.Models;
 using MAP.C.Contract.Menus;
 using MAP.C.Contract.Modules;
@@ -53,12 +54,56 @@ public sealed class PageNavigatorTests
         }
     }
 
+    private sealed class LogRecord
+    {
+        public LogLevel Level { get; init; }
+        public EventId EventId { get; init; }
+        public string? Message { get; init; }
+        public Exception? Exception { get; init; }
+        public Dictionary<string, object?> State { get; init; } = new();
+    }
+
+    private sealed class TestLogger<T> : ILogger<T>
+    {
+        public List<LogRecord> Records { get; } = [];
+
+        public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
+        public bool IsEnabled(LogLevel logLevel) => true;
+
+        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+        {
+            var record = new LogRecord
+            {
+                Level = logLevel,
+                EventId = eventId,
+                Message = formatter(state, exception),
+                Exception = exception
+            };
+
+            // Capture structured state key-value pairs
+            if (state is IEnumerable<KeyValuePair<string, object?>> pairs)
+            {
+                foreach (var pair in pairs)
+                    record.State[pair.Key] = pair.Value;
+            }
+
+            Records.Add(record);
+        }
+    }
+
     private readonly FakeMenuService _menuService = new();
     private readonly FakeModuleLoader _moduleLoader = new();
     private readonly ILogger<PageNavigator> _logger = NullLogger<PageNavigator>.Instance;
 
     private PageNavigator CreateNavigator() =>
         new(_menuService, _moduleLoader, _logger);
+
+    private (PageNavigator nav, TestLogger<PageNavigator> logger) CreateNavigatorWithLogger()
+    {
+        var logger = new TestLogger<PageNavigator>();
+        var nav = new PageNavigator(_menuService, _moduleLoader, logger);
+        return (nav, logger);
+    }
 
     [Fact]
     public async Task OpenAsync_FirstPage_PushesPage()
@@ -182,7 +227,7 @@ public sealed class PageNavigatorTests
     }
 
     [Fact]
-    public async Task OpenAsync_ForceReopen_SkipsSamePageCheck()
+    public async Task OpenAsync_SamePageWithParameters_BypassesSamePageCheck()
     {
         var nav = CreateNavigator();
         _menuService.Register("home");
@@ -190,8 +235,8 @@ public sealed class PageNavigatorTests
         await nav.OpenAsync("home");
         var first = nav.Current;
 
-        // forceReopen should bypass the same-page skip
-        await nav.OpenAsync("home", forceReopen: true);
+        // Same page with parameters should create a new ActivePage instance
+        await nav.OpenAsync("home", new { Refresh = true });
 
         Assert.NotNull(nav.Current);
         Assert.Equal("home", nav.Current.PageId);
@@ -218,14 +263,14 @@ public sealed class PageNavigatorTests
         // ErrorId should be attached to the exception
         Assert.NotNull(ex.Data["MAP.ErrorId"]);
         Assert.IsType<string>(ex.Data["MAP.ErrorId"]);
-        Assert.Equal(8, ((string)ex.Data["MAP.ErrorId"]).Length);
+        Assert.Equal(8, ((string)ex.Data["MAP.ErrorId"]!).Length);
     }
 
     [Fact]
     public async Task OpenAsync_Failure_SameErrorIdInLogAndException()
     {
-        // This test verifies the ErrorId correlation between log and exception
-        var nav = CreateNavigator();
+        // Verify ErrorId in exception matches ErrorId in structured log
+        var (nav, logger) = CreateNavigatorWithLogger();
         _menuService.Register("broken");
 
         _moduleLoader.SetLoadFunc(mi =>
@@ -234,9 +279,43 @@ public sealed class PageNavigatorTests
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             nav.OpenAsync("broken"));
 
-        var errorId = ex.Data["MAP.ErrorId"] as string;
-        Assert.NotNull(errorId);
-        // The same ErrorId would appear in the log (verified by structure, not by reading log)
+        var exceptionErrorId = ex.Data["MAP.ErrorId"] as string;
+        Assert.NotNull(exceptionErrorId);
+
+        // Find the "Navigation failed" log entry
+        var failedLog = logger.Records
+            .FirstOrDefault(r => r.Message != null && r.Message.Contains("Navigation failed"));
+        Assert.NotNull(failedLog);
+
+        // Verify structured ErrorId in log matches exception ErrorId
+        Assert.True(failedLog.State.ContainsKey("ErrorId"), "Log state should contain ErrorId key");
+        Assert.Equal(exceptionErrorId, failedLog.State["ErrorId"]?.ToString());
+    }
+
+    [Fact]
+    public void ErrorId_IsExactly8UpperCaseHexChars()
+    {
+        var id = ModuleErrorId.Create();
+        Assert.Equal(8, id.Length);
+        Assert.Matches("^[0-9A-F]{8}$", id);
+    }
+
+    [Fact]
+    public void ErrorId_SameExceptionRetainsSameId()
+    {
+        var ex = new InvalidOperationException("test");
+        var id1 = ModuleErrorId.GetOrCreate(ex);
+        var id2 = ModuleErrorId.GetOrCreate(ex);
+        Assert.Equal(id1, id2);
+    }
+
+    [Fact]
+    public void ErrorId_GetOrCreate_DoesNotReplaceExisting()
+    {
+        var ex = new InvalidOperationException("test");
+        ModuleErrorId.Set(ex, "FIXED123");
+        var result = ModuleErrorId.GetOrCreate(ex);
+        Assert.Equal("FIXED123", result);
     }
 
     [Fact]

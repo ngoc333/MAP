@@ -35,8 +35,8 @@ public sealed class ModuleErrorNotifier
     /// <param name="errorId">Short error ID for user reference (e.g., "A83F28C1").</param>
     public void Notify(string errorId)
     {
-        var config = _configService.Current;
-        if (config is null || !config.ShowModuleErrorNotification)
+        var config = _configService.Current ?? new AppConfig();
+        if (!config.ShowModuleErrorNotification)
             return;
 
         try
