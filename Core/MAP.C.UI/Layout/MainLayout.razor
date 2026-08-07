@@ -25,15 +25,11 @@
         <main class="flex-1 overflow-auto bg-gray-50 p-6">
             @if (Navigator.Current is { } active)
             {
-                <div @key="_pageGeneration">
-                    <PageContainer Type="active.ComponentType" @key="active" OnFaulted="OnPageFaulted" />
-                </div>
+                <PageContainer Type="active.ComponentType" @key="(active, _pageGeneration)" OnFaulted="OnPageFaulted" />
             }
             else
             {
-                <div @key="_pageGeneration">
-                    <PageContainer Type="null" @key="@("__empty")" OnFaulted="OnPageFaulted" />
-                </div>
+                <PageContainer Type="null" @key="(EmptyPageKey, _pageGeneration)" OnFaulted="OnPageFaulted" />
             }
         </main>
     </div>
@@ -48,6 +44,7 @@
     private Action? _uiStateChanged;
     private DotNetObjectReference<MainLayout>? _shortcutReference;
     private DotNetObjectReference<MainLayout>? _uiShortcutReference;
+    private const string EmptyPageKey = "__empty";
     private string? FaultedPageId { get; set; }
     private int _pageGeneration;
 
