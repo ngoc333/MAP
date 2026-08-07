@@ -62,8 +62,11 @@ public sealed class ModuleLoader : IModuleLoader
 
                 _logger.LogInformation("Loading WPF module. Assembly={Assembly} Path={Path}", menuItem.Assembly, path);
                 var assembly = Assembly.LoadFrom(path);
-                _loadedAssemblies[menuItem.Assembly] = assembly;
+
+                // Commit to cache only after localization succeeds, so a failed
+                // localization keeps the assembly retryable on next load.
                 await LoadModuleLocalizationAsync(assembly);
+                _loadedAssemblies[menuItem.Assembly] = assembly;
             }
 
             var type = _loadedAssemblies[menuItem.Assembly].GetType(menuItem.Component);

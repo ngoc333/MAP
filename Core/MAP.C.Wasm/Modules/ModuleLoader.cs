@@ -52,7 +52,9 @@ public class ModuleLoader : IModuleLoader
             if (!_loadedAssemblies.ContainsKey(menuItem.Assembly))
             {
                 _logger.LogInformation("Lazy loading web module. Assembly={Assembly}", menuItem.Assembly);
-                var assemblies = (await _assemblyLoader.LoadAssembliesAsync(new[] { menuItem.Assembly })).ToList();
+                var assemblies = (await _assemblyLoader
+                    .LoadAssembliesAsync(new[] { menuItem.Assembly }))
+                    .ToList();
 
                 if (assemblies.Count == 0)
                 {
@@ -60,8 +62,12 @@ public class ModuleLoader : IModuleLoader
                         $"LoadAssembliesAsync returned empty list for assembly '{menuItem.Assembly}'.");
                 }
 
-                _loadedAssemblies[menuItem.Assembly] = assemblies[0];
-                await LoadModuleLocalizationAsync(assemblies[0]);
+                var loadedAssembly = assemblies[0];
+
+                // Commit to cache only after localization succeeds, so a failed
+                // localization keeps the assembly retryable on next load.
+                await LoadModuleLocalizationAsync(loadedAssembly);
+                _loadedAssemblies[menuItem.Assembly] = loadedAssembly;
             }
 
             var assembly = _loadedAssemblies[menuItem.Assembly];

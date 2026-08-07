@@ -1,3 +1,7 @@
+param(
+    [switch]$RemoveSymbols
+)
+
 $ErrorActionPreference = "Stop"
 $root = $PSScriptRoot
 $publishRoot = Join-Path $root "publish"
@@ -44,7 +48,9 @@ if (Test-Path $tailwindCss) {
     Copy-Item $tailwindCss $destCss -Force
 }
 
-Get-ChildItem $publishDesktop -Filter "*.pdb" -Recurse | Remove-Item -Force
+if ($RemoveSymbols) {
+    Get-ChildItem $publishDesktop -Filter "*.pdb" -Recurse | Remove-Item -Force
+}
 
 Write-Host "  OK" -ForegroundColor Green
 $desktopSize = [math]::Round(((Get-ChildItem $publishDesktop -Recurse -File | Measure-Object Length -Sum).Sum / 1MB), 1)
@@ -63,7 +69,9 @@ if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 
-Get-ChildItem $publishWeb -Filter "*.pdb" -Recurse | Remove-Item -Force
+if ($RemoveSymbols) {
+    Get-ChildItem $publishWeb -Filter "*.pdb" -Recurse | Remove-Item -Force
+}
 
 Write-Host "  OK" -ForegroundColor Green
 $webSize = [math]::Round(((Get-ChildItem $publishWeb -Recurse -File | Measure-Object Length -Sum).Sum / 1MB), 1)
@@ -108,7 +116,9 @@ if (-not (Test-Path $indexHtml)) {
     exit 1
 }
 
-Get-ChildItem $publishWebExe -Filter "*.pdb" -Recurse | Remove-Item -Force
+if ($RemoveSymbols) {
+    Get-ChildItem $publishWebExe -Filter "*.pdb" -Recurse | Remove-Item -Force
+}
 
 $webExeName = (Get-Item $hostCsproj).BaseName + ".exe"
 $webExeSize = [math]::Round(((Get-Item (Join-Path $publishWebExe $webExeName)).Length / 1MB), 1)
