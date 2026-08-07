@@ -20,6 +20,8 @@ using MAP.C.Runtime.Navigation;
 using MAP.C.Runtime.Config;
 using MAP.C.Runtime.Localization;
 using MAP.C.UI.Errors;
+using MAP.C.UI.Headers;
+using MAP.C.UI.Localization;
 using Radzen;
 
 namespace MAP.C.Wpf;
@@ -88,6 +90,13 @@ internal static class WpfServices
             sp.GetRequiredService<ILogger<MenuService>>()));
         services.AddSingleton(sp => new MainWindow(sp, rootComponentType));
         services.AddScoped<ModuleErrorNotifier>();
+
+        // Register UI state services
+        services.AddSingleton<IPageHeaderState, PageHeaderState>();
+        services.AddSingleton<Radzen.ILocalizer, RadzenLocalizer>();
+
+        // Register Radzen components
+        services.AddRadzenComponents();
 
         return services;
     }
