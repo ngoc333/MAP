@@ -11,7 +11,10 @@
     "customerDetail": "Chi tiết",
     "reports": "Báo cáo",
     "sales": "Doanh số",
-    "revenueChart": "Biểu đồ doanh thu"
+    "revenueChart": "Biểu đồ doanh thu",
+    "system": "Hệ thống",
+    "systemConfig": "Cấu hình",
+    "systemLogs": "Nhật ký"
   },
   "layout": {
     "loading": "Đang tải module...",

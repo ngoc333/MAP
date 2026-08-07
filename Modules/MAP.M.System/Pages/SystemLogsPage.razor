@@ -5,15 +5,15 @@
 <div class="flex flex-col h-full">
     <div class="shrink-0">
         <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem" Wrap="FlexWrap.Wrap">
-            <RadzenDropDown TValue="DateOnly?" Data="_days" @bind-Value="_selectedDay" Placeholder="@Lang.T("SystemLogs.selectDay")" Style="width: 180px;" />
-            <RadzenDropDown TValue="string" Data="Levels" @bind-Value="_level" Placeholder="@Lang.T("SystemLogs.level")" Style="width: 150px;" />
-            <RadzenTextBox @bind-Value="_search" Placeholder="@Lang.T("SystemLogs.search")" Style="width: min(360px, 100%);" />
-            <RadzenButton Text="@Lang.T("SystemLogs.refresh")" Icon="refresh" Click="LoadAsync" />
+            <RadzenDropDown TValue="DateOnly?" Data="_days" @bind-Value="_selectedDay" Placeholder="@Lang.T("SystemLogs.selectDay")" Style="width: 180px;" Change="@OnDayChanged" />
+            <RadzenDropDown TValue="string" Data="Levels" @bind-Value="_level" Placeholder="@Lang.T("SystemLogs.level")" Style="width: 150px;" Change="@OnLevelChanged" />
+            <RadzenTextBox @bind-Value="_search" Placeholder="@Lang.T("SystemLogs.search")" Style="width: min(360px, 100%);" Change="@OnSearchChanged" />
+            <RadzenButton Text="@Lang.T("SystemLogs.refresh")" Icon="refresh" Click="RefreshAsync" />
             <RadzenButton Text="@Lang.T("SystemLogs.clearDay")" Icon="delete" ButtonStyle="ButtonStyle.Danger" Click="ClearAsync" Disabled="@(_selectedDay is null)" />
         </RadzenStack>
     </div>
 
-    <RadzenDataGrid @ref="_grid" Data="FilteredEntries" TItem="LogEntry" AllowSorting="true" AllowGrouping="true" Render="OnRender" Height="100%">
+    <RadzenDataGrid @ref="_grid" Data="_filteredEntries" TItem="LogEntry" AllowSorting="true" AllowGrouping="true" AllowVirtualization="true" Render="OnRender" Height="100%">
         <GroupHeaderTemplate Context="group">
             @{
                 var sid = (string?)group.Data.Key ?? "—";
@@ -67,6 +67,7 @@
     private static readonly string[] Levels = ["", "Information", "Warning", "Error", "Critical"];
     private IReadOnlyList<DateOnly> _days = [];
     private IReadOnlyList<LogEntry> _entries = [];
+    private IReadOnlyList<LogEntry> _filteredEntries = [];
     private DateOnly? _selectedDay;
     private string _level = string.Empty;
     private string _search = string.Empty;
@@ -88,9 +89,14 @@
         }
     }
 
-    private IEnumerable<LogEntry> FilteredEntries => _entries.Where(entry =>
-        (string.IsNullOrEmpty(_level) || entry.Level == _level) &&
-        (string.IsNullOrWhiteSpace(_search) || Contains(entry.Message, _search) || Contains(entry.Category, _search) || Contains(entry.SessionId, _search) || Contains(entry.OperationId, _search)));
+    private void ApplyFilter()
+    {
+        _filteredEntries = _entries
+            .Where(entry =>
+                (string.IsNullOrEmpty(_level) || entry.Level == _level) &&
+                (string.IsNullOrWhiteSpace(_search) || Contains(entry.Message, _search) || Contains(entry.Category, _search) || Contains(entry.SessionId, _search) || Contains(entry.OperationId, _search)))
+            .ToList();
+    }
 
     private static (DateTimeOffset First, DateTimeOffset Last, int Info, int Warn, int Error, int Critical) GetGroupStats(IEnumerable<LogEntry> entries)
     {
@@ -126,6 +132,16 @@
         _days = await LogStore.GetDaysAsync();
         _selectedDay ??= _days.FirstOrDefault();
         _entries = await LogStore.GetAsync(_selectedDay);
+        ApplyFilter();
+    }
+
+    private async Task RefreshAsync()
+    {
+        if (_selectedDay is not null)
+        {
+            _entries = await LogStore.GetAsync(_selectedDay);
+            ApplyFilter();
+        }
     }
 
     private async Task ClearAsync()
@@ -133,6 +149,28 @@
         if (_selectedDay is null) return;
         await LogStore.ClearAsync(_selectedDay);
         await LoadAsync();
+    }
+
+    private async Task OnDayChanged(object value)
+    {
+        _selectedDay = (DateOnly?)value;
+        if (_selectedDay is not null)
+        {
+            _entries = await LogStore.GetAsync(_selectedDay);
+            ApplyFilter();
+        }
+    }
+
+    private void OnLevelChanged(object value)
+    {
+        _level = (string)(value ?? string.Empty);
+        ApplyFilter();
+    }
+
+    private void OnSearchChanged(object value)
+    {
+        _search = (string)(value ?? string.Empty);
+        ApplyFilter();
     }
 
     private static bool Contains(string? value, string query) => value?.Contains(query, StringComparison.OrdinalIgnoreCase) == true;

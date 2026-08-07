@@ -12,34 +12,50 @@ public static class SystemMenus
         var system = config.Menus.FirstOrDefault(x => x.Id == "system");
         if (system is null)
         {
-            system = new MenuItem { Id = "system", Title = "Hệ thống", Icon = "settings", Children = new List<MenuItem>() };
+            system = new MenuItem { Id = "system", Title = "Hệ thống", TitleKey = "menu.system", Icon = "settings", Children = new List<MenuItem>() };
             config.Menus.Add(system);
+        }
+        else
+        {
+            system.TitleKey ??= "menu.system";
         }
 
         system.Children ??= new List<MenuItem>();
 
-        if (MenuTree.Find(config.Menus, SystemConfigPageId) is null)
+        var systemConfig = MenuTree.Find(config.Menus, SystemConfigPageId);
+        if (systemConfig is null)
         {
             system.Children.Add(new MenuItem
             {
                 Id = SystemConfigPageId,
                 Title = "Cấu hình",
+                TitleKey = "menu.systemConfig",
                 Icon = "settings",
                 Assembly = "MAP.M.System.dll",
                 Component = "MAP.M.System.Pages.AppConfigPage"
             });
         }
+        else
+        {
+            systemConfig.TitleKey ??= "menu.systemConfig";
+        }
 
-        if (MenuTree.Find(config.Menus, SystemLogsPageId) is null)
+        var systemLogs = MenuTree.Find(config.Menus, SystemLogsPageId);
+        if (systemLogs is null)
         {
             system.Children.Add(new MenuItem
             {
                 Id = SystemLogsPageId,
                 Title = "Nhật ký",
+                TitleKey = "menu.systemLogs",
                 Icon = "article",
                 Assembly = "MAP.M.System.dll",
                 Component = "MAP.M.System.Pages.SystemLogsPage"
             });
+        }
+        else
+        {
+            systemLogs.TitleKey ??= "menu.systemLogs";
         }
     }
 }

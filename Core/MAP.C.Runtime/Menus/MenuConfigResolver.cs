@@ -47,10 +47,38 @@ public static class MenuConfigResolver
             }
         }
 
+        FillMissingTitleKeys(config.Menus, localConfig.Menus);
+
         SystemMenus.EnsureRegistered(config);
         logger.LogInformation("Menu ready. MenuCount={MenuCount} DurationMs={DurationMs}",
             config.Menus.Count, Stopwatch.GetElapsedTime(started).TotalMilliseconds);
 
         return config;
+    }
+
+    /// <summary>
+    /// Fills missing TitleKey values in target menus from fallback menus matched by Id.
+    /// Does not overwrite existing TitleKey values. Recursively processes children.
+    /// </summary>
+    internal static void FillMissingTitleKeys(
+        IEnumerable<MenuItem> target,
+        IEnumerable<MenuItem> fallback)
+    {
+        foreach (var targetItem in target)
+        {
+            if (string.IsNullOrEmpty(targetItem.TitleKey))
+            {
+                var fallbackItem = MenuTree.Find(fallback, targetItem.Id);
+                if (fallbackItem is not null && !string.IsNullOrEmpty(fallbackItem.TitleKey))
+                {
+                    targetItem.TitleKey = fallbackItem.TitleKey;
+                }
+            }
+
+            if (targetItem.Children is not null)
+            {
+                FillMissingTitleKeys(targetItem.Children, fallback);
+            }
+        }
     }
 }

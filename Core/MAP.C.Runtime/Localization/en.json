@@ -11,7 +11,10 @@
     "customerDetail": "Detail",
     "reports": "Reports",
     "sales": "Sales",
-    "revenueChart": "Revenue Chart"
+    "revenueChart": "Revenue Chart",
+    "system": "System",
+    "systemConfig": "Configuration",
+    "systemLogs": "Logs"
   },
   "layout": {
     "loading": "Loading module...",
