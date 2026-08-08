@@ -40,8 +40,8 @@ public class MenuService : IMenuService
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Local web menu load failed; using fallback menu.");
-            localConfig = GetFallbackMenus();
+            _logger.LogError(ex, "Local web menu load failed; using empty menu config.");
+            localConfig = new PageConfig { Menus = [] };
         }
 
         _config = await MenuConfigResolver.ResolveAsync(
@@ -53,21 +53,5 @@ public class MenuService : IMenuService
     public MenuItem? FindById(string id)
     {
         return MenuTree.Find(Menus, id);
-    }
-
-    private static PageConfig GetFallbackMenus()
-    {
-        return new PageConfig
-        {
-            Menus = new List<MenuItem>
-            {
-                new() { Id = "home", Title = "Trang chủ", Icon = "home",
-                    Children = new List<MenuItem>
-                    {
-                        new() { Id = "fallback-dashboard", Title = "Dashboard", Icon = "dashboard" }
-                    }
-                }
-            }
-        };
     }
 }

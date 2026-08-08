@@ -16,6 +16,7 @@ public class ModuleLoader : IModuleLoader
     private readonly ILogger<ModuleLoader> _logger;
     private readonly Dictionary<string, Assembly> _loadedAssemblies = new();
     private readonly Dictionary<string, Type> _cachedTypes = new();
+    private int _activeLoadCount;
 
     public event Action<bool>? OnLoadingChanged;
 
@@ -46,7 +47,8 @@ public class ModuleLoader : IModuleLoader
 
         try
         {
-            OnLoadingChanged?.Invoke(true);
+            if (Interlocked.Increment(ref _activeLoadCount) == 1)
+                OnLoadingChanged?.Invoke(true);
 
             if (!_loadedAssemblies.ContainsKey(menuItem.Assembly))
             {
@@ -85,7 +87,15 @@ public class ModuleLoader : IModuleLoader
         }
         finally
         {
-            OnLoadingChanged?.Invoke(false);
+            var count = Interlocked.Decrement(ref _activeLoadCount);
+            if (count < 0)
+            {
+                // Never allow count to go below zero
+                Interlocked.CompareExchange(ref _activeLoadCount, 0, count);
+                count = 0;
+            }
+            if (count == 0)
+                OnLoadingChanged?.Invoke(false);
         }
     }
 

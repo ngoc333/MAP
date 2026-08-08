@@ -16,9 +16,6 @@
 
   <!-- Platform references -->
   <ItemGroup>
-    <ProjectReference Include="..\Core\MAP.C.Contract\MAP.C.Contract.csproj" />
-    <ProjectReference Include="..\Core\MAP.C.Runtime\MAP.C.Runtime.csproj" />
-    <ProjectReference Include="..\Core\MAP.C.UI\MAP.C.UI.csproj" />
     <ProjectReference Include="..\Core\MAP.C.Wasm\MAP.C.Wasm.csproj" />
   </ItemGroup>
 
@@ -100,6 +97,38 @@
     <ItemGroup>
       <StaticWebAsset Include="@(_SharedScriptStaticWebAsset)" />
       <StaticWebAssetEndpoint Include="@(_SharedScriptStaticWebAssetEndpoint)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="UseSharedStylesStaticWebAssets" AfterTargets="ResolveStaticWebAssetsInputs">
+    <ItemGroup>
+      <_SharedStyleAsset Include="$(MSBuildProjectDirectory)\..\Shared\Styles\tailwind.css">
+        <RelativePath>css/tailwind.css</RelativePath>
+      </_SharedStyleAsset>
+    </ItemGroup>
+
+    <DefineStaticWebAssets CandidateAssets="@(_SharedStyleAsset)"
+                           SourceId="$(PackageId)"
+                           SourceType="Computed"
+                           AssetKind="All"
+                           AssetMode="All"
+                           AssetRole="Primary"
+                           CopyToOutputDirectory="PreserveNewest"
+                           CopyToPublishDirectory="PreserveNewest"
+                           ContentRoot="$(MSBuildProjectDirectory)\..\Shared\Styles\"
+                           BasePath="$(StaticWebAssetBasePath)">
+      <Output TaskParameter="Assets" ItemName="_SharedStyleStaticWebAsset" />
+    </DefineStaticWebAssets>
+
+    <DefineStaticWebAssetEndpoints CandidateAssets="@(_SharedStyleStaticWebAsset)"
+                                   ExistingEndpoints="@(StaticWebAssetEndpoint)"
+                                   ContentTypeMappings="@(StaticWebAssetContentTypeMapping)">
+      <Output TaskParameter="Endpoints" ItemName="_SharedStyleStaticWebAssetEndpoint" />
+    </DefineStaticWebAssetEndpoints>
+
+    <ItemGroup>
+      <StaticWebAsset Include="@(_SharedStyleStaticWebAsset)" />
+      <StaticWebAssetEndpoint Include="@(_SharedStyleStaticWebAssetEndpoint)" />
     </ItemGroup>
   </Target>
 

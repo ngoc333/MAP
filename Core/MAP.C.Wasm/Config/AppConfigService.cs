@@ -88,14 +88,17 @@ public sealed class AppConfigService : IAppConfigService
 
     public void RestartApp()
     {
-        _ = RestartAsync();
-    }
-
-    private async Task RestartAsync()
-    {
         try
         {
-            await _js.InvokeVoidAsync("location.reload");
+            // Use synchronous in-process JS interop in Blazor WebAssembly
+            if (_js is IJSInProcessRuntime jsInProcess)
+            {
+                jsInProcess.InvokeVoid("location.reload");
+            }
+            else
+            {
+                _logger.LogWarning("IJSInProcessRuntime not available; restart may not work.");
+            }
         }
         catch (Exception ex)
         {

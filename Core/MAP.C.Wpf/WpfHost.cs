@@ -40,9 +40,9 @@ public static class WpfHost
         application.DispatcherUnhandledException += (_, e) =>
         {
             logger.LogError(e.Exception, "Unhandled DispatcherException");
-            MessageBox.Show(e.Exception.ToString(), "MAP startup error", MessageBoxButton.OK, MessageBoxImage.Error);
-            // Only handle if app can continue; let critical errors crash
-            e.Handled = IsRecoverableException(e.Exception);
+            // Default: do NOT handle unknown exceptions - let normal process failure behavior apply
+            // Module-level faults are handled by ModuleErrorBoundary, not here
+            e.Handled = false;
         };
         AppDomain.CurrentDomain.UnhandledException += (_, e) =>
             logger.LogCritical(e.ExceptionObject as Exception, "Unhandled AppDomain exception. IsTerminating={IsTerminating}", e.IsTerminating);
@@ -127,11 +127,5 @@ public static class WpfHost
                 logger.LogInformation("Application stopped");
             }
         };
-    }
-
-    private static bool IsRecoverableException(Exception ex)
-    {
-        // Don't handle OutOfMemory, StackOverflow, or AccessViolation
-        return ex is not (OutOfMemoryException or StackOverflowException or AccessViolationException);
     }
 }
