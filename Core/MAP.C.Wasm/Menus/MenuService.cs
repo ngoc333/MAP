@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using System.Text.Json;
 using System.Diagnostics;
 using MAP.C.Contract.Config;
 using MAP.C.Contract.Database;
@@ -31,17 +32,24 @@ public class MenuService : IMenuService
 
     public async Task LoadMenusAsync()
     {
+        if (_config is not null) return;
+
         var started = Stopwatch.GetTimestamp();
         PageConfig localConfig;
         try
         {
             localConfig = await _http.GetFromJsonAsync<PageConfig>("page.json")
-                ?? throw new InvalidOperationException("Menu configuration could not be loaded.");
+                ?? throw new InvalidOperationException("Menu configuration deserialized to null.");
+        }
+        catch (JsonException ex)
+        {
+            throw new InvalidOperationException(
+                $"Invalid menu configuration 'page.json': {ex.Message}", ex);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Local web menu load failed; using empty menu config.");
-            localConfig = new PageConfig { Menus = [] };
+            throw new InvalidOperationException(
+                $"Failed to load menu configuration 'page.json': {ex.Message}", ex);
         }
 
         _config = await MenuConfigResolver.ResolveAsync(

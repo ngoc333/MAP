@@ -16,7 +16,7 @@ public class ModuleLoader : IModuleLoader
     private readonly ILogger<ModuleLoader> _logger;
     private readonly Dictionary<string, Assembly> _loadedAssemblies = new();
     private readonly Dictionary<string, Type> _cachedTypes = new();
-    private readonly Dictionary<string, Task<Assembly>> _inFlightAssemblyLoads = new();
+    private readonly Dictionary<string, Lazy<Task<Assembly>>> _inFlightAssemblyLoads = new();
     private readonly object _syncLock = new();
     private int _activeLoadCount;
 
@@ -94,6 +94,8 @@ public class ModuleLoader : IModuleLoader
         if (_loadedAssemblies.TryGetValue(assemblyName, out var cached))
             return Task.FromResult(cached);
 
+        Lazy<Task<Assembly>> operation;
+
         lock (_syncLock)
         {
             // Recheck after acquiring lock (another caller may have committed the assembly)
@@ -101,16 +103,17 @@ public class ModuleLoader : IModuleLoader
                 return Task.FromResult(cached);
 
             // Reuse an existing in-flight load-and-commit task
-            if (_inFlightAssemblyLoads.TryGetValue(assemblyName, out var existing))
-                return existing;
+            if (!_inFlightAssemblyLoads.TryGetValue(assemblyName, out operation!))
+            {
+                operation = new Lazy<Task<Assembly>>(
+                    () => LoadAndCommitAsync(assemblyName),
+                    LazyThreadSafetyMode.ExecutionAndPublication);
 
-            // Create the full load-and-commit task so every caller shares the
-            // exact same task — including assembly load, localization, and
-            // durable cache commit.
-            var loadTask = LoadAndCommitAsync(assemblyName);
-            _inFlightAssemblyLoads[assemblyName] = loadTask;
-            return loadTask;
+                _inFlightAssemblyLoads[assemblyName] = operation;
+            }
         }
+
+        return operation.Value;
     }
 
     /// <summary>

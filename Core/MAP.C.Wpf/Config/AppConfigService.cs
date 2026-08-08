@@ -28,50 +28,32 @@ public sealed class AppConfigService : IAppConfigService
         get
         {
             if (!_loaded)
-            {
-                _loaded = true;
                 LoadConfig();
-            }
             return _current;
         }
     }
 
     private void LoadConfig()
     {
+        if (!File.Exists(_configPath))
+        {
+            _logger.LogInformation("App config not found at {Path}; first-run state", _configPath);
+            _loaded = true;
+            return;
+        }
+
         try
         {
-            if (File.Exists(_configPath))
-            {
-                var json = File.ReadAllText(_configPath);
-                _current = JsonSerializer.Deserialize<AppConfig>(json,
-                    new JsonSerializerOptions(JsonSerializerDefaults.Web))
-                    ?? new AppConfig();
-                _logger.LogDebug("App config loaded from {Path}", _configPath);
-            }
-            else
-            {
-                _logger.LogInformation("App config not found at {Path}, using defaults", _configPath);
-            }
+            var json = File.ReadAllText(_configPath);
+            _current = JsonSerializer.Deserialize<AppConfig>(json,
+                new JsonSerializerOptions(JsonSerializerDefaults.Web));
+            _loaded = true;
+            _logger.LogDebug("App config loaded from {Path}", _configPath);
         }
         catch (JsonException ex)
         {
-            // Corrupt config - rename and log
-            try
-            {
-                var corruptPath = $"{_configPath}.corrupt-{DateTime.Now:yyyyMMddHHmmss}";
-                File.Move(_configPath, corruptPath);
-                _logger.LogWarning(ex, "Corrupt config renamed to {CorruptPath}", corruptPath);
-            }
-            catch (Exception moveEx)
-            {
-                _logger.LogError(moveEx, "Failed to rename corrupt config at {Path}", _configPath);
-            }
-            _current = new AppConfig();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to load app config from {Path}", _configPath);
-            _current = new AppConfig();
+            throw new InvalidOperationException(
+                $"Corrupt app configuration '{_configPath}': {ex.Message}", ex);
         }
     }
 

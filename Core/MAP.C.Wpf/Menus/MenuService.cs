@@ -29,6 +29,8 @@ public sealed class MenuService : IMenuService
 
     public async Task LoadMenusAsync()
     {
+        if (_config is not null) return;
+
         var started = Stopwatch.GetTimestamp();
         var path = Path.Combine(AppContext.BaseDirectory, "page.json");
         _logger.LogInformation("Loading WPF menu. Path={Path} Exists={Exists}", path, File.Exists(path));
@@ -39,12 +41,17 @@ public sealed class MenuService : IMenuService
             using var stream = File.OpenRead(path);
             localConfig = JsonSerializer.Deserialize<PageConfig>(stream,
                 new JsonSerializerOptions(JsonSerializerDefaults.Web))
-                ?? throw new InvalidOperationException("Menu configuration could not be loaded.");
+                ?? throw new InvalidOperationException("Menu configuration deserialized to null.");
+        }
+        catch (JsonException ex)
+        {
+            throw new InvalidOperationException(
+                $"Invalid menu configuration '{path}': {ex.Message}", ex);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Local menu load failed; using empty menu config. Path={Path}", path);
-            localConfig = new PageConfig { Menus = [] };
+            throw new InvalidOperationException(
+                $"Failed to load menu configuration '{path}': {ex.Message}", ex);
         }
 
         _config = await MenuConfigResolver.ResolveAsync(

@@ -15,7 +15,6 @@ using MAP.C.Wpf.Logging;
 using MAP.C.Wpf.Menus;
 using MAP.C.Wpf.Modules;
 using MAP.C.Wpf.Config;
-using MAP.C.Wpf.Database;
 using MAP.C.Runtime.Database;
 using MAP.C.Runtime.Navigation;
 using MAP.C.Runtime.Config;
@@ -64,26 +63,17 @@ internal static class WpfServices
         services.AddSingleton<IPlatformCapabilities, PlatformCapabilities>();
         services.AddSingleton<IDbApiClient>(sp =>
         {
-            var logger = sp.GetRequiredService<ILoggerFactory>().CreateLogger("DbApiConfig");
             var configPath = Path.Combine(baseDir, "db-api.json");
-            try
+            var config = DbApiConfiguration.LoadFromFile(configPath);
+            return new DbApiClient(new HttpClient
             {
-                var config = DbApiConfiguration.LoadFromFile(configPath);
-                return new DbApiClient(new HttpClient
-                {
-                    BaseAddress = config.OracleBaseAddress,
-                    Timeout = TimeSpan.FromSeconds(10)
-                }, new HttpClient
-                {
-                    BaseAddress = config.PostgreSqlBaseAddress,
-                    Timeout = TimeSpan.FromSeconds(10)
-                });
-            }
-            catch (Exception ex)
+                BaseAddress = config.OracleBaseAddress,
+                Timeout = TimeSpan.FromSeconds(10)
+            }, new HttpClient
             {
-                logger.LogError(ex, "Failed to load db-api.json. Shell will start with limited functionality. Path={Path}", configPath);
-                return new FallbackDbApiClient(logger, ex.Message);
-            }
+                BaseAddress = config.PostgreSqlBaseAddress,
+                Timeout = TimeSpan.FromSeconds(10)
+            });
         });
         services.AddSingleton<IUiStateService, UiStateService>();
         services.AddSingleton<IMenuService>(sp => new MenuService(
