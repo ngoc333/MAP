@@ -8,29 +8,26 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>MAP.H.Desktop</RootNamespace>
+    <EnableDefaultContentItems>false</EnableDefaultContentItems>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Radzen.Blazor" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Core\MAP.C.Contract\MAP.C.Contract.csproj" />
-    <ProjectReference Include="..\Core\MAP.C.Runtime\MAP.C.Runtime.csproj" />
-    <ProjectReference Include="..\Core\MAP.C.UI\MAP.C.UI.csproj" />
     <ProjectReference Include="..\Core\MAP.C.Wpf\MAP.C.Wpf.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="index.html" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="wwwroot\index.html" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+    <Content Include="wwwroot\css\**" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+    <Content Include="wwwroot\js\**" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+    <Content Include="wwwroot\fonts\**" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Include="..\Shared\Config\page.json" Link="page.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <None Include="..\Shared\Config\db-api.json" Link="db-api.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
-    <None Include="..\Shared\Scripts\app-log.js" Link="js\app-log.js" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
-    <None Update="css\inter.css" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
-    <None Update="css\app.css" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
-    <None Include="..\Shared\Fonts\Inter\*.woff2" Link="fonts\inter\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
-    <!-- Tailwind CSS is pre-built, commit changes via build-css.ps1 -->
-    <None Include="..\MAP.H.Web\wwwroot\css\tailwind.css" Link="css\tailwind.css" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Include="..\Shared\Scripts\app-log.js" Link="wwwroot\js\app-log.js" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Include="..\Shared\Fonts\Inter\*.woff2" Link="wwwroot\fonts\inter\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Include="..\Shared\Styles\tailwind.css" Link="wwwroot\css\tailwind.css" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
   <!-- Module discovery: all module projects under Modules/ -->
@@ -55,6 +52,10 @@
     </PropertyGroup>
     <Copy SourceFiles="@(_ModuleAssembly)"
           DestinationFolder="$(_ModulesOut)" />
+    <!-- Copy PDB files for Debug builds -->
+    <Copy SourceFiles="@(_ModuleAssembly->'%(RootDir)%(Directory)%(Filename).pdb')"
+          DestinationFolder="$(_ModulesOut)"
+          Condition="Exists('%(RootDir)%(Directory)%(Filename).pdb')" />
   </Target>
 
   <Target Name="CopyModulesToPublishOutput"
@@ -67,16 +68,6 @@
           DestinationFolder="$(_ModulesOut)" />
   </Target>
 
-  <!-- Flatten wwwroot for BlazorWebView -->
-  <Target Name="FlattenWwwrootForPublish" AfterTargets="Publish">
-    <ItemGroup>
-      <_WwwrootFiles Include="$(PublishDir)wwwroot\**\*" />
-    </ItemGroup>
-    <Copy SourceFiles="@(_WwwrootFiles)"
-          DestinationFiles="@(_WwwrootFiles -> '$(PublishDir)%(RecursiveDir)%(Filename)%(Extension)')"
-          Condition="'@(_WwwrootFiles)' != ''"
-          SkipUnchangedFiles="true" />
-    <RemoveDir Directories="$(PublishDir)wwwroot" ContinueOnError="true" />
-  </Target>
+
 
 </Project>

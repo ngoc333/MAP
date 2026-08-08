@@ -11,16 +11,17 @@ using MAP.C.Contract.Models;
 using MAP.C.Contract.Menus;
 using MAP.C.Contract.Logging;
 using MAP.C.Runtime.Localization;
+using MAP.C.UI.Layout;
 
 namespace MAP.C.Wpf;
 
 public static class WpfHost
 {
-    public static void Run(Application application, Type rootComponentType, Action<IServiceCollection>? configureUi = null)
+    public static void Run(Application application, Action<IServiceCollection>? configureUi = null)
     {
         ArgumentNullException.ThrowIfNull(application);
-        ArgumentNullException.ThrowIfNull(rootComponentType);
 
+        var rootComponentType = typeof(MainLayout);
         var started = Stopwatch.GetTimestamp();
         var host = Host.CreateDefaultBuilder()
             .ConfigureServices(services =>
@@ -109,12 +110,22 @@ public static class WpfHost
             }
         };
 
-        application.Exit += async (_, _) =>
+        application.Exit += (_, _) =>
         {
             logger.LogInformation("Application shutting down. SessionId={SessionId}", DiagnosticContext.SessionId);
-            await host.StopAsync();
-            host.Dispose();
-            logger.LogInformation("Application stopped");
+            try
+            {
+                host.StopAsync().GetAwaiter().GetResult();
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error during shutdown");
+            }
+            finally
+            {
+                host.Dispose();
+                logger.LogInformation("Application stopped");
+            }
         };
     }
 

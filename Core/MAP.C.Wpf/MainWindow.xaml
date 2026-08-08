@@ -5,7 +5,7 @@
         Title="MAP" Height="800" Width="1280"
         WindowStartupLocation="Manual">
     <Grid>
-        <blazor:BlazorWebView x:Name="blazorWebView" HostPage="index.html">
+        <blazor:BlazorWebView x:Name="blazorWebView" HostPage="wwwroot/index.html">
         </blazor:BlazorWebView>
     </Grid>
 </Window>

@@ -15,6 +15,7 @@ using MAP.C.Wpf.Logging;
 using MAP.C.Wpf.Menus;
 using MAP.C.Wpf.Modules;
 using MAP.C.Wpf.Config;
+using MAP.C.Wpf.Database;
 using MAP.C.Runtime.Database;
 using MAP.C.Runtime.Navigation;
 using MAP.C.Runtime.Config;
@@ -57,8 +58,9 @@ internal static class WpfServices
             sp.GetRequiredService<ILogger<ModuleLoader>>()));
         services.AddSingleton<ILogStore>(sp => sp.GetRequiredService<FileLogStore>());
         services.AddSingleton<IPageNavigator, PageNavigator>();
-        services.AddSingleton<IAppConfigService>(_ => new AppConfigService(
-            Path.Combine(baseDir, "app-config.json")));
+        services.AddSingleton<IAppConfigService>(sp => new AppConfigService(
+            Path.Combine(baseDir, "app-config.json"),
+            sp.GetRequiredService<ILogger<AppConfigService>>()));
         services.AddSingleton<IPlatformCapabilities, PlatformCapabilities>();
         services.AddSingleton<IDbApiClient>(sp =>
         {
@@ -79,8 +81,8 @@ internal static class WpfServices
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to load db-api.json. Path={Path}", configPath);
-                throw;
+                logger.LogError(ex, "Failed to load db-api.json. Shell will start with limited functionality. Path={Path}", configPath);
+                return new FallbackDbApiClient(logger, ex.Message);
             }
         });
         services.AddSingleton<IUiStateService, UiStateService>();

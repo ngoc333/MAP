@@ -9,7 +9,7 @@ $root = $PSScriptRoot
 $tailwindExe = Join-Path $root "tools\tailwindcss.exe"
 $inputCss = Join-Path $root "Shared\Styles\tailwind-input.css"
 $configJs = Join-Path $root "Shared\Styles\tailwind.config.js"
-$outputCss = Join-Path $root "MAP.H.Web\wwwroot\css\tailwind.css"
+$outputCss = Join-Path $root "Shared\Styles\tailwind.css"
 
 Write-Host "=== Build CSS ===" -ForegroundColor Cyan
 

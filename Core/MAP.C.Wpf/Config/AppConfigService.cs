@@ -4,18 +4,21 @@ using System.Text.Json;
 using System.Windows;
 using MAP.C.Contract.Config;
 using MAP.C.Contract.Models;
+using Microsoft.Extensions.Logging;
 
 namespace MAP.C.Wpf.Config;
 
 public sealed class AppConfigService : IAppConfigService
 {
     private readonly string _configPath;
+    private readonly ILogger<AppConfigService> _logger;
     private AppConfig? _current;
     private bool _loaded;
 
-    public AppConfigService(string configPath)
+    public AppConfigService(string configPath, ILogger<AppConfigService> logger)
     {
         _configPath = configPath;
+        _logger = logger;
     }
 
     public bool Exists => File.Exists(_configPath);
@@ -43,6 +46,11 @@ public sealed class AppConfigService : IAppConfigService
                 _current = JsonSerializer.Deserialize<AppConfig>(json,
                     new JsonSerializerOptions(JsonSerializerDefaults.Web))
                     ?? new AppConfig();
+                _logger.LogDebug("App config loaded from {Path}", _configPath);
+            }
+            else
+            {
+                _logger.LogInformation("App config not found at {Path}, using defaults", _configPath);
             }
         }
         catch (JsonException ex)
@@ -52,14 +60,17 @@ public sealed class AppConfigService : IAppConfigService
             {
                 var corruptPath = $"{_configPath}.corrupt-{DateTime.Now:yyyyMMddHHmmss}";
                 File.Move(_configPath, corruptPath);
-                System.Diagnostics.Debug.WriteLine($"[AppConfigService] Corrupt config renamed to {corruptPath}: {ex.Message}");
+                _logger.LogWarning(ex, "Corrupt config renamed to {CorruptPath}", corruptPath);
             }
-            catch { /* best effort */ }
+            catch (Exception moveEx)
+            {
+                _logger.LogError(moveEx, "Failed to rename corrupt config at {Path}", _configPath);
+            }
             _current = new AppConfig();
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"[AppConfigService] Failed to load config: {ex.Message}");
+            _logger.LogError(ex, "Failed to load app config from {Path}", _configPath);
             _current = new AppConfig();
         }
     }
@@ -91,8 +102,8 @@ public sealed class AppConfigService : IAppConfigService
         var processPath = Environment.ProcessPath;
         if (string.IsNullOrEmpty(processPath))
         {
-            System.Diagnostics.Debug.WriteLine("[AppConfigService] Cannot restart: ProcessPath is null or empty.");
-            MessageBox.Show("Không thể khởi động lại: không tìm thấy đường dẫn executable.", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+            _logger.LogError("Cannot restart: ProcessPath is null or empty");
+            MessageBox.Show("Cannot restart: executable path not found.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             return;
         }
 
@@ -106,8 +117,8 @@ public sealed class AppConfigService : IAppConfigService
 
             if (newProcess is null)
             {
-                System.Diagnostics.Debug.WriteLine("[AppConfigService] Process.Start returned null.");
-                MessageBox.Show("Không thể khởi động lại: process mới không được tạo.", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+                _logger.LogError("Process.Start returned null when restarting");
+                MessageBox.Show("Cannot restart: new process was not created.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
@@ -115,7 +126,7 @@ public sealed class AppConfigService : IAppConfigService
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"[AppConfigService] Restart failed: {ex}");
+            _logger.LogError(ex, "Restart failed. ProcessPath={ProcessPath}", processPath);
             MessageBox.Show($"Failed to restart:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }

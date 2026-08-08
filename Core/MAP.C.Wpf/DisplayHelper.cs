@@ -49,7 +49,7 @@ internal static class DisplayHelper
             if (GetMonitorInfo(hMonitor, ref mi))
             {
                 var isPrimary = (mi.dwFlags & 1) != 0; // MONITORINFOF_PRIMARY
-                var name = $"Màn hình {index + 1}{(isPrimary ? " (Chính)" : "")}";
+                var name = $"Display {index + 1}{(isPrimary ? " (Primary)" : "")}";
                 displays.Add(new DisplayInfo(index, name, isPrimary));
             }
             index++;

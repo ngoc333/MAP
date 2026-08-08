@@ -30,6 +30,7 @@
     <None Include="..\Shared\Config\db-api.json" Link="wwwroot\db-api.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <None Include="..\Shared\Scripts\app-log.js" Link="wwwroot\js\app-log.js" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <None Include="..\Shared\Scripts\app-config.js" Link="wwwroot\js\app-config.js" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Include="..\Shared\Styles\tailwind.css" Link="wwwroot\css\tailwind.css" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
   <Target Name="UseSharedConfigurationStaticWebAssets" AfterTargets="ResolveStaticWebAssetsInputs">
