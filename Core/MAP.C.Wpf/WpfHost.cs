@@ -22,6 +22,24 @@ public static class WpfHost
     {
         ArgumentNullException.ThrowIfNull(application);
 
+        try
+        {
+            RunCore(application);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(
+                BuildStartupErrorMessage(ex),
+                "MAP Startup Error",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+
+            application.Shutdown(1);
+        }
+    }
+
+    private static void RunCore(Application application)
+    {
         var rootComponentType = typeof(MainLayout);
         var started = Stopwatch.GetTimestamp();
         var host = Host.CreateDefaultBuilder()
@@ -40,8 +58,6 @@ public static class WpfHost
         application.DispatcherUnhandledException += (_, e) =>
         {
             logger.LogError(e.Exception, "Unhandled DispatcherException");
-            // Default: do NOT handle unknown exceptions - let normal process failure behavior apply
-            // Module-level faults are handled by ModuleErrorBoundary, not here
             e.Handled = false;
         };
         AppDomain.CurrentDomain.UnhandledException += (_, e) =>
@@ -158,13 +174,16 @@ public static class WpfHost
                 ?? throw new InvalidOperationException(
                     $"Configured default page '{defaultPageId}' was not found in menu configuration.");
 
-            if (menuItem.IsPage)
+            if (!menuItem.IsPage)
             {
-                var moduleLoader = services.GetRequiredService<IModuleLoader>();
-                await moduleLoader.LoadComponentAsync(menuItem);
-                logger.LogInformation("Startup validation: default page loaded. PageId={PageId} Assembly={Assembly} Component={Component}",
-                    defaultPageId, menuItem.Assembly, menuItem.Component);
+                throw new InvalidOperationException(
+                    $"Configured default page '{defaultPageId}' is not a page.");
             }
+
+            var moduleLoader = services.GetRequiredService<IModuleLoader>();
+            await moduleLoader.LoadComponentAsync(menuItem);
+            logger.LogInformation("Startup validation: default page loaded. PageId={PageId} Assembly={Assembly} Component={Component}",
+                defaultPageId, menuItem.Assembly, menuItem.Component);
         }
 
         logger.LogInformation("Startup validation passed.");

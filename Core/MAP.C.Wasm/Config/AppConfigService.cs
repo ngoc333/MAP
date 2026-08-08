@@ -32,34 +32,31 @@ public sealed class AppConfigService : IAppConfigService
         try
         {
             var json = await _js.InvokeAsync<string?>("mapConfig.get");
-            if (!string.IsNullOrEmpty(json))
+            if (string.IsNullOrEmpty(json))
             {
-                _current = JsonSerializer.Deserialize<AppConfig>(json, _jsonOptions);
-                _existsInStorage = _current is not null;
+                // No stored configuration — valid first-run state
+                _current = null;
+                _existsInStorage = false;
+                _loaded = true;
+                _logger.LogInformation("No app config found; first-run state.");
+                return;
             }
 
-            if (_current is null)
-            {
-                _current = new AppConfig();
-                var defaultJson = JsonSerializer.Serialize(_current, _jsonOptions);
-                await _js.InvokeVoidAsync("mapConfig.set", defaultJson);
-                _existsInStorage = true;
-            }
-
-            // Only mark as loaded after successful load
+            _current = JsonSerializer.Deserialize<AppConfig>(json, _jsonOptions)
+                ?? throw new InvalidOperationException(
+                    "App configuration in storage deserialized to null.");
+            _existsInStorage = true;
             _loaded = true;
         }
-        catch (JSException ex)
+        catch (JSException)
         {
-            _logger.LogError(ex, "JS interop failed during config load");
-            _current ??= new AppConfig();
-            // Don't set _loaded = true so we can retry
+            // JS interop itself failed — startup fatal
+            throw;
         }
-        catch (Exception ex)
+        catch (InvalidOperationException)
         {
-            _logger.LogError(ex, "Failed to load app config");
-            _current ??= new AppConfig();
-            // Don't set _loaded = true so we can retry
+            // Corrupt config — startup fatal
+            throw;
         }
     }
 

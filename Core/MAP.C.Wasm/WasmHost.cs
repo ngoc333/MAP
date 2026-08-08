@@ -19,27 +19,33 @@ namespace MAP.C.Wasm;
 
 public static class WasmHost
 {
+    private static IJSRuntime? _jsRuntime;
+
     public static async Task RunAsync(string[] args)
     {
         var started = Stopwatch.GetTimestamp();
-        var builder = WebAssemblyHostBuilder.CreateDefault(args);
-
-        // Register MainLayout as root component (no Router needed)
-        builder.RootComponents.Add<MainLayout>("#app");
-        builder.RootComponents.Add<HeadOutlet>("head::after");
-
-        var http = new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) };
-
-        // Register Wasm platform services
-        builder.Services.AddWasm(http);
-
-        // Register database API configuration (throws on invalid config)
-        await RegisterDbApiAsync(builder, http);
-
-        var host = builder.Build();
 
         try
         {
+            var builder = WebAssemblyHostBuilder.CreateDefault(args);
+
+            // Register MainLayout as root component (no Router needed)
+            builder.RootComponents.Add<MainLayout>("#app");
+            builder.RootComponents.Add<HeadOutlet>("head::after");
+
+            var http = new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) };
+
+            // Register Wasm platform services
+            builder.Services.AddWasm(http);
+
+            // Register database API configuration (throws on invalid config)
+            await RegisterDbApiAsync(builder, http);
+
+            var host = builder.Build();
+
+            // Capture JS runtime for startup error display
+            _jsRuntime = host.Services.GetService<IJSRuntime>();
+
             // Initialize language service
             var langService = host.Services.GetRequiredService<ILanguageService>();
             if (langService is JsonLanguageService jsonLang)
@@ -58,6 +64,7 @@ public static class WasmHost
             // Validate all required startup resources
             await ValidateStartupAsync(host.Services, logger);
 
+            // Startup boundary ends here — runtime failures are not startup errors
             await host.RunAsync();
         }
         catch (Exception ex)
@@ -65,17 +72,54 @@ public static class WasmHost
             var error = BuildStartupErrorMessage(ex);
             System.Console.Error.WriteLine($"[MAP Startup Error] {error}");
 
-            try
-            {
-                var js = host.Services.GetRequiredService<Microsoft.JSInterop.IJSRuntime>();
-                await js.InvokeVoidAsync("alert", error);
-            }
-            catch
-            {
-                // JS interop unavailable — error is already in console
-            }
+            ShowStartupError(error);
         }
     }
+
+    /// <summary>
+    /// Shows startup error before the Blazor host exists.
+    /// Uses the mapStartupError JS helper injected in index.html when IJSRuntime is available,
+    /// otherwise falls back to DOM injection via eval.
+    /// </summary>
+    private static void ShowStartupError(string message)
+    {
+        // Try mapStartupError helper (from index.html)
+        try
+        {
+            if (_jsRuntime is IJSInProcessRuntime jsInProcess)
+            {
+                jsInProcess.InvokeVoid("mapStartupError", message);
+                return;
+            }
+        }
+        catch
+        {
+            // mapStartupError not available
+        }
+
+        // Fallback: inject error directly into the #app element
+        try
+        {
+            if (_jsRuntime is IJSInProcessRuntime jsFallback)
+            {
+                jsFallback.InvokeVoid("eval",
+                    $"document.getElementById('app').innerHTML='<pre style=\"padding:16px;color:red;font-family:monospace;white-space:pre-wrap\">{EscapeJs(message)}</pre>'");
+                return;
+            }
+        }
+        catch
+        {
+            // All JS mechanisms unavailable
+        }
+    }
+
+    private static string EscapeJs(string s) =>
+        s.Replace("\\", "\\\\")
+         .Replace("'", "\\'")
+         .Replace("\n", "\\n")
+         .Replace("\r", "\\r")
+         .Replace("<", "\\x3c")
+         .Replace(">", "\\x3e");
 
     private static async Task RegisterDbApiAsync(WebAssemblyHostBuilder builder, HttpClient http)
     {
@@ -104,13 +148,16 @@ public static class WasmHost
                 ?? throw new InvalidOperationException(
                     $"Configured default page '{defaultPageId}' was not found in menu configuration.");
 
-            if (menuItem.IsPage)
+            if (!menuItem.IsPage)
             {
-                var moduleLoader = services.GetRequiredService<IModuleLoader>();
-                await moduleLoader.LoadComponentAsync(menuItem);
-                logger.LogInformation("Startup validation: default page loaded. PageId={PageId} Assembly={Assembly} Component={Component}",
-                    defaultPageId, menuItem.Assembly, menuItem.Component);
+                throw new InvalidOperationException(
+                    $"Configured default page '{defaultPageId}' is not a page.");
             }
+
+            var moduleLoader = services.GetRequiredService<IModuleLoader>();
+            await moduleLoader.LoadComponentAsync(menuItem);
+            logger.LogInformation("Startup validation: default page loaded. PageId={PageId} Assembly={Assembly} Component={Component}",
+                defaultPageId, menuItem.Assembly, menuItem.Component);
         }
 
         logger.LogInformation("Startup validation passed.");

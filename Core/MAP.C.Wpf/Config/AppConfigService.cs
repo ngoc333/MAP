@@ -46,7 +46,9 @@ public sealed class AppConfigService : IAppConfigService
         {
             var json = File.ReadAllText(_configPath);
             _current = JsonSerializer.Deserialize<AppConfig>(json,
-                new JsonSerializerOptions(JsonSerializerDefaults.Web));
+                new JsonSerializerOptions(JsonSerializerDefaults.Web))
+                ?? throw new InvalidOperationException(
+                    $"App configuration '{_configPath}' deserialized to null.");
             _loaded = true;
             _logger.LogDebug("App config loaded from {Path}", _configPath);
         }
