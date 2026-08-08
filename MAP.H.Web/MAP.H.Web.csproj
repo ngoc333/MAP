@@ -105,6 +105,9 @@
       <_SharedStyleAsset Include="$(MSBuildProjectDirectory)\..\Shared\Styles\tailwind.css">
         <RelativePath>css/tailwind.css</RelativePath>
       </_SharedStyleAsset>
+      <_SharedStyleAsset Include="$(MSBuildProjectDirectory)\..\Shared\Styles\inter.css">
+        <RelativePath>css/inter.css</RelativePath>
+      </_SharedStyleAsset>
     </ItemGroup>
 
     <DefineStaticWebAssets CandidateAssets="@(_SharedStyleAsset)"
@@ -129,6 +132,44 @@
     <ItemGroup>
       <StaticWebAsset Include="@(_SharedStyleStaticWebAsset)" />
       <StaticWebAssetEndpoint Include="@(_SharedStyleStaticWebAssetEndpoint)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="UseSharedFontsStaticWebAssets" AfterTargets="ResolveStaticWebAssetsInputs">
+    <ItemGroup>
+      <_SharedFontAsset Include="$(MSBuildProjectDirectory)\..\Shared\Fonts\Inter\Inter-latin.woff2">
+        <RelativePath>fonts/inter/Inter-latin.woff2</RelativePath>
+      </_SharedFontAsset>
+      <_SharedFontAsset Include="$(MSBuildProjectDirectory)\..\Shared\Fonts\Inter\Inter-latin-ext.woff2">
+        <RelativePath>fonts/inter/Inter-latin-ext.woff2</RelativePath>
+      </_SharedFontAsset>
+      <_SharedFontAsset Include="$(MSBuildProjectDirectory)\..\Shared\Fonts\Inter\Inter-vietnamese.woff2">
+        <RelativePath>fonts/inter/Inter-vietnamese.woff2</RelativePath>
+      </_SharedFontAsset>
+    </ItemGroup>
+
+    <DefineStaticWebAssets CandidateAssets="@(_SharedFontAsset)"
+                           SourceId="$(PackageId)"
+                           SourceType="Computed"
+                           AssetKind="All"
+                           AssetMode="All"
+                           AssetRole="Primary"
+                           CopyToOutputDirectory="PreserveNewest"
+                           CopyToPublishDirectory="PreserveNewest"
+                           ContentRoot="$(MSBuildProjectDirectory)\..\Shared\Fonts\Inter\"
+                           BasePath="$(StaticWebAssetBasePath)">
+      <Output TaskParameter="Assets" ItemName="_SharedFontStaticWebAsset" />
+    </DefineStaticWebAssets>
+
+    <DefineStaticWebAssetEndpoints CandidateAssets="@(_SharedFontStaticWebAsset)"
+                                   ExistingEndpoints="@(StaticWebAssetEndpoint)"
+                                   ContentTypeMappings="@(StaticWebAssetContentTypeMapping)">
+      <Output TaskParameter="Endpoints" ItemName="_SharedFontStaticWebAssetEndpoint" />
+    </DefineStaticWebAssetEndpoints>
+
+    <ItemGroup>
+      <StaticWebAsset Include="@(_SharedFontStaticWebAsset)" />
+      <StaticWebAssetEndpoint Include="@(_SharedFontStaticWebAssetEndpoint)" />
     </ItemGroup>
   </Target>
 

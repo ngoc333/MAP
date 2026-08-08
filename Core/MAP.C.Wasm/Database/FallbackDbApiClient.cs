@@ -2,11 +2,12 @@ using System.Text.Json;
 using MAP.C.Contract.Database;
 using Microsoft.Extensions.Logging;
 
-namespace MAP.C.Wpf.Database;
+namespace MAP.C.Wasm.Database;
 
 /// <summary>
-/// Fallback implementation used when real DB client fails to initialize.
-/// Allows shell to start and show configuration errors without crashing.
+/// Fallback implementation used when db-api.json cannot be loaded.
+/// Every DB operation fails immediately with a clear diagnostic instead
+/// of returning a fake empty response.
 /// </summary>
 internal sealed class FallbackDbApiClient : IDbApiClient
 {

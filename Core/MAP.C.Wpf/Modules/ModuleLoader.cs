@@ -17,6 +17,8 @@ public sealed class ModuleLoader : IModuleLoader
     private readonly ILogger<ModuleLoader> _logger;
     private readonly Dictionary<string, Assembly> _loadedAssemblies = new();
     private readonly Dictionary<string, Type> _cachedTypes = new();
+    private readonly Dictionary<string, Task<Assembly>> _inFlightAssemblyLoads = new();
+    private readonly object _syncLock = new();
     private int _activeLoadCount;
 
     public event Action<bool>? OnLoadingChanged;
@@ -51,24 +53,7 @@ public sealed class ModuleLoader : IModuleLoader
             if (Interlocked.Increment(ref _activeLoadCount) == 1)
                 OnLoadingChanged?.Invoke(true);
 
-            if (!_loadedAssemblies.ContainsKey(menuItem.Assembly))
-            {
-                var path = Path.Combine(_modulesRoot, menuItem.Assembly);
-                if (!File.Exists(path))
-                {
-                    throw new FileNotFoundException(
-                        $"Assembly file not found: {Path.GetFullPath(path)}",
-                        path);
-                }
-
-                _logger.LogInformation("Loading WPF module. Assembly={Assembly} Path={Path}", menuItem.Assembly, path);
-                var assembly = Assembly.LoadFrom(path);
-
-                // Commit to cache only after localization succeeds, so a failed
-                // localization keeps the assembly retryable on next load.
-                await LoadModuleLocalizationAsync(assembly);
-                _loadedAssemblies[menuItem.Assembly] = assembly;
-            }
+            var assembly = await GetOrLoadAssemblyAsync(menuItem.Assembly);
 
             var type = _loadedAssemblies[menuItem.Assembly].GetType(menuItem.Component);
             if (type is null)
@@ -98,6 +83,79 @@ public sealed class ModuleLoader : IModuleLoader
 
     private static string CreateCacheKey(string assemblyName, string componentName)
         => $"{assemblyName}|{componentName}";
+
+    /// <summary>
+    /// Returns the loaded assembly for the given name, loading it if necessary.
+    /// Concurrent callers for the same uncached assembly share one in-flight load task.
+    /// Failures are not cached — the next caller may retry.
+    /// </summary>
+    private Task<Assembly> GetOrLoadAssemblyAsync(string assemblyName)
+    {
+        // Fast path: already loaded
+        if (_loadedAssemblies.TryGetValue(assemblyName, out var cached))
+            return Task.FromResult(cached);
+
+        Task<Assembly>? inFlight;
+        lock (_syncLock)
+        {
+            // Recheck after acquiring lock (another caller may have committed the assembly)
+            if (_loadedAssemblies.TryGetValue(assemblyName, out cached))
+                return Task.FromResult(cached);
+
+            // Reuse an existing in-flight load
+            if (_inFlightAssemblyLoads.TryGetValue(assemblyName, out var existing))
+                return existing;
+
+            // Create and register a new load task
+            inFlight = LoadAssemblyInternalAsync(assemblyName);
+            _inFlightAssemblyLoads[assemblyName] = inFlight;
+        }
+
+        return AwaitAndCommitAsync(assemblyName, inFlight);
+    }
+
+    private async Task<Assembly> AwaitAndCommitAsync(string assemblyName, Task<Assembly> loadTask)
+    {
+        try
+        {
+            var assembly = await loadTask;
+            // Commit to durable cache on success
+            lock (_syncLock)
+            {
+                _loadedAssemblies[assemblyName] = assembly;
+                _inFlightAssemblyLoads.Remove(assemblyName);
+            }
+            return assembly;
+        }
+        catch
+        {
+            // Do not cache failures — remove in-flight entry so next caller may retry
+            lock (_syncLock)
+            {
+                _inFlightAssemblyLoads.Remove(assemblyName);
+            }
+            throw;
+        }
+    }
+
+    private async Task<Assembly> LoadAssemblyInternalAsync(string assemblyName)
+    {
+        var path = Path.Combine(_modulesRoot, assemblyName);
+        if (!File.Exists(path))
+        {
+            throw new FileNotFoundException(
+                $"Assembly file not found: {Path.GetFullPath(path)}",
+                path);
+        }
+
+        _logger.LogInformation("Loading WPF module. Assembly={Assembly} Path={Path}", assemblyName, path);
+        var assembly = Assembly.LoadFrom(path);
+
+        // Commit to cache only after localization succeeds, so a failed
+        // localization keeps the assembly retryable on next load.
+        await LoadModuleLocalizationAsync(assembly);
+        return assembly;
+    }
 
     private async Task LoadModuleLocalizationAsync(Assembly assembly)
     {

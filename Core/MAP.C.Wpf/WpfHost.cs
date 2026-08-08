@@ -17,7 +17,7 @@ namespace MAP.C.Wpf;
 
 public static class WpfHost
 {
-    public static void Run(Application application, Action<IServiceCollection>? configureUi = null)
+    public static void Run(Application application)
     {
         ArgumentNullException.ThrowIfNull(application);
 
@@ -27,7 +27,6 @@ public static class WpfHost
             .ConfigureServices(services =>
             {
                 services.AddWpf(rootComponentType);
-                configureUi?.Invoke(services);
             })
             .Build();
 
@@ -105,7 +104,11 @@ public static class WpfHost
             catch (Exception ex)
             {
                 logger.LogError(ex, "Startup failed");
-                MessageBox.Show(ex.ToString(), "MAP startup error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(
+                    $"MAP could not start.\n\nPlease review the application logs or contact support.\n\nSession: {DiagnosticContext.SessionId}",
+                    "MAP Startup Error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
                 application.Shutdown(1);
             }
         };

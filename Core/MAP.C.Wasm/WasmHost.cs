@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Text.Json;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -64,44 +63,16 @@ public static class WasmHost
         }
         catch (Exception ex)
         {
-            // Register fallback DB client that fails gracefully
+            var reason = ex is FileNotFoundException or HttpRequestException
+                ? $"Failed to load db-api.json: {ex.Message}"
+                : $"Invalid db-api.json: {ex.Message}";
+
             builder.Services.AddSingleton<IDbApiClient>(sp =>
             {
                 var logger = sp.GetRequiredService<ILoggerFactory>().CreateLogger("DbApiFallback");
-                logger.LogError(ex, "Failed to load db-api.json. Using fallback DB client.");
-                return new FallbackDbApiClient(logger);
+                logger.LogError(ex, "DB API configuration unavailable. Reason={Reason}", reason);
+                return new MAP.C.Wasm.Database.FallbackDbApiClient(logger, reason);
             });
         }
-    }
-}
-
-/// <summary>
-/// Fallback DB client that returns controlled errors when db-api.json is unavailable.
-/// </summary>
-internal sealed class FallbackDbApiClient : IDbApiClient
-{
-    private readonly ILogger _logger;
-
-    public FallbackDbApiClient(ILogger logger)
-    {
-        _logger = logger;
-    }
-
-    public Task<JsonElement> CallOracleAsync(JsonElement requestBody, CancellationToken cancellationToken = default)
-    {
-        _logger.LogWarning("DB operation attempted but db-api.json is not configured. Operation=CallOracleAsync");
-        return Task.FromResult(JsonDocument.Parse("{}").RootElement);
-    }
-
-    public Task<JsonElement> CallPostgreSqlFunctionAsync(string dbName, string commandName, JsonElement parameters, CancellationToken cancellationToken = default)
-    {
-        _logger.LogWarning("DB operation attempted but db-api.json is not configured. Operation=CallPostgreSqlFunctionAsync DbName={DbName} CommandName={CommandName}", dbName, commandName);
-        return Task.FromResult(JsonDocument.Parse("{}").RootElement);
-    }
-
-    public Task<JsonElement> CallPostgreSqlProcedureAsync(string dbName, string commandName, JsonElement parameters, CancellationToken cancellationToken = default)
-    {
-        _logger.LogWarning("DB operation attempted but db-api.json is not configured. Operation=CallPostgreSqlProcedureAsync DbName={DbName} CommandName={CommandName}", dbName, commandName);
-        return Task.FromResult(JsonDocument.Parse("{}").RootElement);
     }
 }
