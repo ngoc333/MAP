@@ -24,6 +24,8 @@ public static class WasmHost
     public static async Task RunAsync(string[] args)
     {
         var started = Stopwatch.GetTimestamp();
+        WebAssemblyHost? host = null;
+        ILogger? startupLogger = null;
 
         try
         {
@@ -38,10 +40,28 @@ public static class WasmHost
             // Register Wasm platform services
             builder.Services.AddWasm(http);
 
-            // Register database API configuration (throws on invalid config)
-            await RegisterDbApiAsync(builder, http);
+            // Register IDbApiClient as lazy — actual initialization after host build
+            // so _jsRuntime is available for error display if db-api.json is missing/malformed.
+            DbApiConfiguration? dbApiConfig = null;
+            builder.Services.AddSingleton<IDbApiClient>(_ =>
+            {
+                if (dbApiConfig is null)
+                    throw new InvalidOperationException("DB API configuration not loaded.");
+                return new DbApiClient(
+                    new HttpClient
+                    {
+                        BaseAddress = dbApiConfig.OracleBaseAddress,
+                        Timeout = TimeSpan.FromSeconds(10)
+                    },
+                    new HttpClient
+                    {
+                        BaseAddress = dbApiConfig.PostgreSqlBaseAddress,
+                        Timeout = TimeSpan.FromSeconds(10)
+                    });
+            });
 
-            var host = builder.Build();
+            var host0 = builder.Build();
+            host = host0;
 
             // Capture JS runtime for startup error display
             _jsRuntime = host.Services.GetService<IJSRuntime>();
@@ -51,29 +71,43 @@ public static class WasmHost
             if (langService is JsonLanguageService jsonLang)
                 await jsonLang.InitializeAsync(typeof(JsonLanguageService).Assembly);
 
-            // Log startup
-            var logger = host.Services.GetRequiredService<ILoggerFactory>().CreateLogger("AppStartup");
-            logger.LogInformation(
+            // Create logger (available for all subsequent operations)
+            startupLogger = host.Services.GetRequiredService<ILoggerFactory>().CreateLogger("AppStartup");
+            startupLogger.LogInformation(
                 "Web application starting. SessionId={SessionId} BaseAddress={BaseAddress} DurationMs={DurationMs}",
                 DiagnosticContext.SessionId, builder.HostEnvironment.BaseAddress,
                 Stopwatch.GetElapsedTime(started).TotalMilliseconds);
 
-            // Load configuration
+            // Load DB API configuration — after _jsRuntime is captured so errors are visible.
+            // Throws on missing or malformed db-api.json (startup fatal).
+            await using var dbApiStream = await http.GetStreamAsync("db-api.json");
+            dbApiConfig = await DbApiConfiguration.LoadAsync(dbApiStream);
+
+            // Load app configuration
             await host.Services.GetRequiredService<AppConfigService>().LoadAsync();
 
             // Validate all required startup resources
-            await ValidateStartupAsync(host.Services, logger);
-
-            // Startup boundary ends here — runtime failures are not startup errors
-            await host.RunAsync();
+            await ValidateStartupAsync(host.Services, startupLogger);
         }
         catch (Exception ex)
         {
+            // Log full exception when logger is available
+            startupLogger?.LogError(ex, "Startup failed");
+
+            // Console fallback for errors before logging services exist
+            if (startupLogger is null)
+                Console.Error.WriteLine(ex);
+
             var error = BuildStartupErrorMessage(ex);
-            System.Console.Error.WriteLine($"[MAP Startup Error] {error}");
+            Console.Error.WriteLine($"[MAP Startup Error] {error}");
 
             ShowStartupError(error);
+            return;
         }
+
+        // Normal application lifetime — outside startup error boundary.
+        // Runtime exceptions here are NOT startup errors.
+        await host.RunAsync();
     }
 
     /// <summary>
@@ -121,13 +155,6 @@ public static class WasmHost
          .Replace("<", "\\x3c")
          .Replace(">", "\\x3e");
 
-    private static async Task RegisterDbApiAsync(WebAssemblyHostBuilder builder, HttpClient http)
-    {
-        await using var dbApiConfigurationStream = await http.GetStreamAsync("db-api.json");
-        var dbApiConfiguration = await DbApiConfiguration.LoadAsync(dbApiConfigurationStream);
-        builder.Services.AddWasmDbApi(dbApiConfiguration);
-    }
-
     /// <summary>
     /// Validates all required startup resources before entering normal operation.
     /// Throws if any required resource is missing or invalid.
@@ -139,26 +166,46 @@ public static class WasmHost
         await menuService.LoadMenusAsync();
         logger.LogInformation("Startup validation: menu loaded. MenuCount={MenuCount}", menuService.Menus.Count);
 
-        // 2. Validate default page if configured
+        // 2. Determine startup page:
+        //    - First run (no config): validate system-config
+        //    - Configured default page: validate DefaultPageId
+        //    - Otherwise: no startup page validation required
         var configService = services.GetRequiredService<IAppConfigService>();
-        var config = configService.Current;
-        if (config?.DefaultPageId is { Length: > 0 } defaultPageId)
+
+        string? startupPageId = null;
+
+        if (!configService.Exists)
         {
-            var menuItem = menuService.FindById(defaultPageId)
-                ?? throw new InvalidOperationException(
-                    $"Configured default page '{defaultPageId}' was not found in menu configuration.");
-
-            if (!menuItem.IsPage)
-            {
-                throw new InvalidOperationException(
-                    $"Configured default page '{defaultPageId}' is not a page.");
-            }
-
-            var moduleLoader = services.GetRequiredService<IModuleLoader>();
-            await moduleLoader.LoadComponentAsync(menuItem);
-            logger.LogInformation("Startup validation: default page loaded. PageId={PageId} Assembly={Assembly} Component={Component}",
-                defaultPageId, menuItem.Assembly, menuItem.Component);
+            startupPageId = "system-config";
+            logger.LogInformation("Startup validation: first-run detected, validating system-config.");
         }
+        else if (configService.Current?.DefaultPageId is { Length: > 0 } defaultPageId)
+        {
+            startupPageId = defaultPageId;
+        }
+
+        if (startupPageId is null)
+        {
+            logger.LogInformation("Startup validation passed (no startup page to validate).");
+            return;
+        }
+
+        // 3. Validate the startup page exists and is a page
+        var menuItem = menuService.FindById(startupPageId)
+            ?? throw new InvalidOperationException(
+                $"Startup page '{startupPageId}' was not found in menu configuration.");
+
+        if (!menuItem.IsPage)
+        {
+            throw new InvalidOperationException(
+                $"Startup page '{startupPageId}' is not a page.");
+        }
+
+        // 4. Validate the module can be loaded
+        var moduleLoader = services.GetRequiredService<IModuleLoader>();
+        await moduleLoader.LoadComponentAsync(menuItem);
+        logger.LogInformation("Startup validation: page loaded. PageId={PageId} Assembly={Assembly} Component={Component}",
+            startupPageId, menuItem.Assembly, menuItem.Component);
 
         logger.LogInformation("Startup validation passed.");
     }

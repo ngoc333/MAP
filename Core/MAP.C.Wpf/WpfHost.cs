@@ -165,26 +165,46 @@ public static class WpfHost
         await menuService.LoadMenusAsync();
         logger.LogInformation("Startup validation: menu loaded. MenuCount={MenuCount}", menuService.Menus.Count);
 
-        // 2. Validate default page if configured
+        // 2. Determine startup page:
+        //    - First run (no config): validate system-config
+        //    - Configured default page: validate DefaultPageId
+        //    - Otherwise: no startup page validation required
         var configService = services.GetRequiredService<IAppConfigService>();
-        var config = configService.Current;
-        if (config?.DefaultPageId is { Length: > 0 } defaultPageId)
+
+        string? startupPageId = null;
+
+        if (!configService.Exists)
         {
-            var menuItem = menuService.FindById(defaultPageId)
-                ?? throw new InvalidOperationException(
-                    $"Configured default page '{defaultPageId}' was not found in menu configuration.");
-
-            if (!menuItem.IsPage)
-            {
-                throw new InvalidOperationException(
-                    $"Configured default page '{defaultPageId}' is not a page.");
-            }
-
-            var moduleLoader = services.GetRequiredService<IModuleLoader>();
-            await moduleLoader.LoadComponentAsync(menuItem);
-            logger.LogInformation("Startup validation: default page loaded. PageId={PageId} Assembly={Assembly} Component={Component}",
-                defaultPageId, menuItem.Assembly, menuItem.Component);
+            startupPageId = "system-config";
+            logger.LogInformation("Startup validation: first-run detected, validating system-config.");
         }
+        else if (configService.Current?.DefaultPageId is { Length: > 0 } defaultPageId)
+        {
+            startupPageId = defaultPageId;
+        }
+
+        if (startupPageId is null)
+        {
+            logger.LogInformation("Startup validation passed (no startup page to validate).");
+            return;
+        }
+
+        // 3. Validate the startup page exists and is a page
+        var menuItem = menuService.FindById(startupPageId)
+            ?? throw new InvalidOperationException(
+                $"Startup page '{startupPageId}' was not found in menu configuration.");
+
+        if (!menuItem.IsPage)
+        {
+            throw new InvalidOperationException(
+                $"Startup page '{startupPageId}' is not a page.");
+        }
+
+        // 4. Validate the module can be loaded
+        var moduleLoader = services.GetRequiredService<IModuleLoader>();
+        await moduleLoader.LoadComponentAsync(menuItem);
+        logger.LogInformation("Startup validation: page loaded. PageId={PageId} Assembly={Assembly} Component={Component}",
+            startupPageId, menuItem.Assembly, menuItem.Component);
 
         logger.LogInformation("Startup validation passed.");
     }
