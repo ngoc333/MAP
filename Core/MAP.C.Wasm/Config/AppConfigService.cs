@@ -29,35 +29,22 @@ public sealed class AppConfigService : IAppConfigService
     {
         if (_loaded) return;
 
-        try
+        var json = await _js.InvokeAsync<string?>("mapConfig.get");
+        if (string.IsNullOrEmpty(json))
         {
-            var json = await _js.InvokeAsync<string?>("mapConfig.get");
-            if (string.IsNullOrEmpty(json))
-            {
-                // No stored configuration — valid first-run state
-                _current = null;
-                _existsInStorage = false;
-                _loaded = true;
-                _logger.LogInformation("No app config found; first-run state.");
-                return;
-            }
-
-            _current = JsonSerializer.Deserialize<AppConfig>(json, _jsonOptions)
-                ?? throw new InvalidOperationException(
-                    "App configuration in storage deserialized to null.");
-            _existsInStorage = true;
+            // No stored configuration — valid first-run state
+            _current = null;
+            _existsInStorage = false;
             _loaded = true;
+            _logger.LogInformation("No app config found; first-run state.");
+            return;
         }
-        catch (JSException)
-        {
-            // JS interop itself failed — startup fatal
-            throw;
-        }
-        catch (InvalidOperationException)
-        {
-            // Corrupt config — startup fatal
-            throw;
-        }
+
+        _current = JsonSerializer.Deserialize<AppConfig>(json, _jsonOptions)
+            ?? throw new InvalidOperationException(
+                "App configuration in storage deserialized to null.");
+        _existsInStorage = true;
+        _loaded = true;
     }
 
     public async Task SaveAsync(AppConfig config)

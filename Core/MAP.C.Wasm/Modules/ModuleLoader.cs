@@ -68,14 +68,7 @@ public class ModuleLoader : IModuleLoader
         }
         finally
         {
-            var count = Interlocked.Decrement(ref _activeLoadCount);
-            if (count < 0)
-            {
-                // Never allow count to go below zero
-                Interlocked.CompareExchange(ref _activeLoadCount, 0, count);
-                count = 0;
-            }
-            if (count == 0)
+            if (Interlocked.Decrement(ref _activeLoadCount) == 0)
                 OnLoadingChanged?.Invoke(false);
         }
     }

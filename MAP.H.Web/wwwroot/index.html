@@ -15,27 +15,6 @@
     <script src="_content/Radzen.Blazor/Radzen.Blazor.js"></script>
     <script src="js/app-log.js"></script>
     <script src="js/app-config.js"></script>
-    <script>
-      // Startup error display helper — called before Blazor host exists
-      window.mapStartupError = function (message) {
-        var app = document.getElementById("app");
-        if (app) {
-          app.textContent = "";
-          var wrapper = document.createElement("div");
-          wrapper.style.cssText =
-            "padding:24px;font-family:monospace;color:red;white-space:pre-wrap";
-          var heading = document.createElement("h2");
-          heading.textContent = "MAP Startup Error";
-          var pre = document.createElement("pre");
-          pre.textContent = message;
-          wrapper.appendChild(heading);
-          wrapper.appendChild(pre);
-          app.appendChild(wrapper);
-        } else {
-          alert("MAP Startup Error\n\n" + message);
-        }
-      };
-    </script>
   </head>
 
   <body class="bg-gray-100">

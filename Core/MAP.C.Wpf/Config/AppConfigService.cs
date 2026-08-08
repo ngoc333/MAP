@@ -68,17 +68,12 @@ public sealed class AppConfigService : IAppConfigService
         var json = JsonSerializer.Serialize(config,
             new JsonSerializerOptions(JsonSerializerDefaults.Web) { WriteIndented = true });
 
-        // Atomic write: temp file → replace
         var tempPath = _configPath + ".tmp";
         await File.WriteAllTextAsync(tempPath, json);
-
-        using (var fs = new FileStream(tempPath, FileMode.Open, FileAccess.Read))
-        {
-            await fs.FlushAsync();
-        }
         File.Move(tempPath, _configPath, overwrite: true);
 
         _current = config;
+        _loaded = true;
     }
 
     public void RestartApp()
