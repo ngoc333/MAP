@@ -55,7 +55,7 @@ public sealed class ModuleLoader : IModuleLoader
 
             var assembly = await GetOrLoadAssemblyAsync(menuItem.Assembly);
 
-            var type = _loadedAssemblies[menuItem.Assembly].GetType(menuItem.Component);
+            var type = assembly.GetType(menuItem.Component);
             if (type is null)
             {
                 throw new InvalidOperationException(
@@ -86,8 +86,8 @@ public sealed class ModuleLoader : IModuleLoader
 
     /// <summary>
     /// Returns the loaded assembly for the given name, loading it if necessary.
-    /// Concurrent callers for the same uncached assembly share one in-flight load task.
-    /// Failures are not cached — the next caller may retry.
+    /// Concurrent callers for the same uncached assembly share one in-flight
+    /// load-and-commit task.  Failures are not cached — the next caller may retry.
     /// </summary>
     private Task<Assembly> GetOrLoadAssemblyAsync(string assemblyName)
     {
@@ -95,31 +95,35 @@ public sealed class ModuleLoader : IModuleLoader
         if (_loadedAssemblies.TryGetValue(assemblyName, out var cached))
             return Task.FromResult(cached);
 
-        Task<Assembly>? inFlight;
         lock (_syncLock)
         {
             // Recheck after acquiring lock (another caller may have committed the assembly)
             if (_loadedAssemblies.TryGetValue(assemblyName, out cached))
                 return Task.FromResult(cached);
 
-            // Reuse an existing in-flight load
+            // Reuse an existing in-flight load-and-commit task
             if (_inFlightAssemblyLoads.TryGetValue(assemblyName, out var existing))
                 return existing;
 
-            // Create and register a new load task
-            inFlight = LoadAssemblyInternalAsync(assemblyName);
-            _inFlightAssemblyLoads[assemblyName] = inFlight;
+            // Create the full load-and-commit task so every caller shares the
+            // exact same task — including assembly load, localization, and
+            // durable cache commit.
+            var loadTask = LoadAndCommitAsync(assemblyName);
+            _inFlightAssemblyLoads[assemblyName] = loadTask;
+            return loadTask;
         }
-
-        return AwaitAndCommitAsync(assemblyName, inFlight);
     }
 
-    private async Task<Assembly> AwaitAndCommitAsync(string assemblyName, Task<Assembly> loadTask)
+    /// <summary>
+    /// Loads the assembly, initializes localization, and commits to the durable
+    /// cache.  On failure the in-flight entry is removed so the next request
+    /// may retry.
+    /// </summary>
+    private async Task<Assembly> LoadAndCommitAsync(string assemblyName)
     {
         try
         {
-            var assembly = await loadTask;
-            // Commit to durable cache on success
+            var assembly = await LoadAssemblyInternalAsync(assemblyName);
             lock (_syncLock)
             {
                 _loadedAssemblies[assemblyName] = assembly;
@@ -129,7 +133,6 @@ public sealed class ModuleLoader : IModuleLoader
         }
         catch
         {
-            // Do not cache failures — remove in-flight entry so next caller may retry
             lock (_syncLock)
             {
                 _inFlightAssemblyLoads.Remove(assemblyName);
@@ -151,8 +154,7 @@ public sealed class ModuleLoader : IModuleLoader
         _logger.LogInformation("Loading WPF module. Assembly={Assembly} Path={Path}", assemblyName, path);
         var assembly = Assembly.LoadFrom(path);
 
-        // Commit to cache only after localization succeeds, so a failed
-        // localization keeps the assembly retryable on next load.
+        // Localization must succeed before we consider the assembly ready.
         await LoadModuleLocalizationAsync(assembly);
         return assembly;
     }
