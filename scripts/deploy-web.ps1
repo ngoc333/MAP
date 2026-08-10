@@ -25,7 +25,6 @@ function Test-ReleaseDeploymentPreflight {
         throw 'Desktop deployment root is not reachable.'
     }
 
-    $desktopDestination = Join-Path $desktopDeploymentRoot 'desktop'
     $msdeployPath = Get-MsDeployPath
     if (-not (Test-Path -LiteralPath $msdeployPath -PathType Leaf)) {
         throw 'msdeploy.exe was not found in the expected Web Deploy V3 location.'
@@ -37,10 +36,6 @@ function Test-ReleaseDeploymentPreflight {
         'MAP_WEB_DEPLOY_USER',
         'MAP_WEB_DEPLOY_PASSWORD')) {
         $null = Get-RequiredSetting -Name $settingName
-    }
-
-    if (-not (Test-Path -LiteralPath $desktopDestination -PathType Container)) {
-        New-Item -ItemType Directory -Path $desktopDestination -Force | Out-Null
     }
 }
 

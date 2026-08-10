@@ -46,18 +46,30 @@ function Get-PreparedReleaseMetadata {
 
     Test-ReleaseArtifacts -DesktopArtifactPath $desktopArtifactPath -WebArtifactPath $webArtifactPath
     $artifactsProperty = $storedMetadata.PSObject.Properties['artifacts']
-    $storedArtifacts = $null
-    if ($null -ne $artifactsProperty) {
-        $storedArtifacts = $artifactsProperty.Value
+    if ($null -eq $artifactsProperty -or $null -eq $artifactsProperty.Value) {
+        throw 'DeployOnly artifacts/release.json does not contain artifact fingerprints.'
     }
-    if ($null -ne $storedArtifacts) {
-        $fingerprint = Get-ArtifactFingerprint `
-            -DesktopArtifactPath $desktopArtifactPath `
-            -WebArtifactPath $webArtifactPath
-        if ([string]$storedArtifacts.desktopExecutableSha256 -ne [string]$fingerprint.desktopExecutableSha256 -or
-            [string]$storedArtifacts.webIndexSha256 -ne [string]$fingerprint.webIndexSha256) {
-            throw 'DeployOnly artifacts do not match artifacts/release.json.'
+
+    $storedArtifacts = $artifactsProperty.Value
+    foreach ($propertyName in @(
+        'desktopSize',
+        'desktopAggregateSha256',
+        'webSize',
+        'webAggregateSha256')) {
+        $property = $storedArtifacts.PSObject.Properties[$propertyName]
+        if ($null -eq $property -or [string]::IsNullOrWhiteSpace([string]$property.Value)) {
+            throw 'DeployOnly artifacts/release.json is missing complete artifact fingerprints.'
         }
+    }
+
+    $fingerprint = Get-ArtifactFingerprint `
+        -DesktopArtifactPath $desktopArtifactPath `
+        -WebArtifactPath $webArtifactPath
+    if ([int64]$storedArtifacts.desktopSize -ne [int64]$fingerprint.desktopSize -or
+        [string]$storedArtifacts.desktopAggregateSha256 -ine [string]$fingerprint.desktopAggregateSha256 -or
+        [int64]$storedArtifacts.webSize -ne [int64]$fingerprint.webSize -or
+        [string]$storedArtifacts.webAggregateSha256 -ine [string]$fingerprint.webAggregateSha256) {
+        throw 'DeployOnly artifacts do not match artifacts/release.json.'
     }
 
     try {
@@ -82,12 +94,6 @@ function Get-PreparedReleaseMetadata {
     if ($null -ne $userProperty -and -not [string]::IsNullOrWhiteSpace([string]$userProperty.Value)) {
         $user = [string]$userProperty.Value
     }
-    if ($null -eq $storedArtifacts) {
-        $storedArtifacts = Get-ArtifactFingerprint `
-            -DesktopArtifactPath $desktopArtifactPath `
-            -WebArtifactPath $webArtifactPath
-    }
-
     return [ordered]@{
         release = [string]$storedMetadata.release
         commit = [string]$storedMetadata.commit

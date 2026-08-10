@@ -85,17 +85,11 @@ function Get-ArtifactFingerprint {
         [Parameter(Mandatory)][string]$WebArtifactPath
     )
 
-    $webContentPath = Get-WebDeployContentPath -WebArtifactPath $WebArtifactPath
-    $webIndexPath = $webContentPath
-    if (-not (Test-Path -LiteralPath (Join-Path $webContentPath 'index.html') -PathType Leaf)) {
-        $webIndexPath = Join-Path $webContentPath 'wwwroot'
-    }
-
     return [ordered]@{
         desktopSize = Get-DirectorySize -Path $DesktopArtifactPath
-        desktopExecutableSha256 = Get-FileSha256 -Path (Join-Path $DesktopArtifactPath 'MAP.H.Desktop.exe')
-        webSize = Get-DirectorySize -Path $webContentPath
-        webIndexSha256 = Get-FileSha256 -Path (Join-Path $webIndexPath 'index.html')
+        desktopAggregateSha256 = Get-DirectoryFingerprint -Path $DesktopArtifactPath
+        webSize = Get-DirectorySize -Path $WebArtifactPath
+        webAggregateSha256 = Get-DirectoryFingerprint -Path $WebArtifactPath
     }
 }
 

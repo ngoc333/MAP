@@ -108,9 +108,17 @@ function Invoke-ExternalProcess {
     $exitCode = $null
     try {
         $process.Start() | Out-Null
-        $standardOutput = $process.StandardOutput.ReadToEnd()
-        $standardError = $process.StandardError.ReadToEnd()
+
+        # Start both asynchronous readers before waiting. Reading one redirected
+        # stream to completion before reading the other can deadlock when the
+        # child process fills the unread stream's OS buffer.
+        $standardOutputTask = $process.StandardOutput.ReadToEndAsync()
+        $standardErrorTask = $process.StandardError.ReadToEndAsync()
         $process.WaitForExit()
+        $standardOutputTask.Wait()
+        $standardErrorTask.Wait()
+        $standardOutput = $standardOutputTask.Result
+        $standardError = $standardErrorTask.Result
         $exitCode = $process.ExitCode
     }
     finally {
@@ -140,6 +148,58 @@ function Get-FileSha256 {
     param([Parameter(Mandatory)][string]$Path)
 
     return (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash
+}
+
+function Get-DirectoryFingerprint {
+    param([Parameter(Mandatory)][string]$Path)
+
+    if (-not (Test-Path -LiteralPath $Path -PathType Container)) {
+        throw "Directory was not found: $Path"
+    }
+
+    $rootPath = (Resolve-Path -LiteralPath $Path).Path.TrimEnd('\', '/')
+    $entries = [System.Collections.Generic.List[object]]::new()
+    foreach ($file in @(Get-ChildItem -LiteralPath $rootPath -File -Recurse)) {
+        $relativePath = $file.FullName.Substring($rootPath.Length).TrimStart('\', '/')
+        $relativePath = $relativePath.Replace('\', '/')
+        $entries.Add([pscustomobject]@{
+            RelativePath = $relativePath
+            File = $file
+        })
+    }
+
+    $entries.Sort([System.Comparison[object]]{
+        param($left, $right)
+
+        $comparison = [StringComparer]::OrdinalIgnoreCase.Compare(
+            [string]$left.RelativePath,
+            [string]$right.RelativePath)
+        if ($comparison -ne 0) {
+            return $comparison
+        }
+
+        return [StringComparer]::Ordinal.Compare(
+            [string]$left.RelativePath,
+            [string]$right.RelativePath)
+    })
+
+    $sha256 = [System.Security.Cryptography.SHA256]::Create()
+    $utf8 = [System.Text.UTF8Encoding]::new($false)
+    try {
+        foreach ($entry in $entries) {
+            $fileHash = Get-FileSha256 -Path $entry.File.FullName
+            $record = '{0}|{1}|{2}' -f $entry.RelativePath, $entry.File.Length, $fileHash
+            $record += "`n"
+            $recordBytes = $utf8.GetBytes($record)
+            $null = $sha256.TransformBlock($recordBytes, 0, $recordBytes.Length, $recordBytes, 0)
+        }
+
+        $null = $sha256.TransformFinalBlock([byte[]]@(), 0, 0)
+        return ([System.BitConverter]::ToString($sha256.Hash) -replace '-', '')
+    }
+    finally {
+        $sha256.Dispose()
+    }
 }
 
 function Get-DirectorySize {
