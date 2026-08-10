@@ -1,35 +1,33 @@
-@using MAP.C.Contract.Config
 @inject IPageHeaderState HeaderState
-@inject ILanguageService Lang
 
-<header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 shadow-sm flex-shrink-0">
-    <div class="flex items-center gap-3">
-        @if (UiState is not null)
-        {
-            <RadzenButton Icon="menu" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
-                Click="@(() => UiState.ToggleMenu())" title="@Lang.T("layout.toggleMenu", "Toggle menu")" />
-        }
-        @NavigationControls
-        <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M4 7v10c0 2 1 3 3 3h10c2 0 3-1 3-3V7M4 7c0-2 1-3 3-3h10c2 0 3 1 3 3M4 7h16" />
-        </svg>
-        <span class="text-xl font-bold text-gray-800">@(HeaderState.Active?.Title ?? "MAP")</span>
+<header class="map-header">
+    <div class="map-header__title">@(HeaderState.Active?.Title ?? "MAP")</div>
+
+    <div class="map-header__content">
+        @HeaderState.Active?.Content
     </div>
 
-    <div>
-        @HeaderState.Active?.Center
-    </div>
+    @if (CanBack && (HeaderState.Active?.ShowBack ?? true))
+    {
+        <button
+            type="button"
+            class="map-header__back-button"
+            title="Back"
+            aria-label="Back"
+            @onclick="OnBack">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M15 5 8 12l7 7" />
+            </svg>
+        </button>
+    }
 
-    <div class="flex items-center gap-3">
-        @HeaderState.Active?.End
-        <LanguageSelector />
-        <RadzenButton Text="@Lang.T("layout.admin", "Admin")" ButtonStyle="ButtonStyle.Secondary" Size="ButtonSize.Small"
-            Icon="account_circle" class="text-gray-600" />
-    </div>
+    <HeaderClock />
 </header>
 
 @code {
-    [Parameter] public RenderFragment? NavigationControls { get; set; }
-    [Parameter] public IUiStateService? UiState { get; set; }
+    [Parameter]
+    public bool CanBack { get; set; }
+
+    [Parameter]
+    public EventCallback OnBack { get; set; }
 }

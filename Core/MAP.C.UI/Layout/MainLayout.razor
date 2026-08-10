@@ -12,7 +12,8 @@
 <div class="flex flex-col h-screen w-screen overflow-hidden">
     @if (UiState.ShowHeader)
     {
-        <AppHeader NavigationControls="NavigationControls" UiState="UiState" />
+        <AppHeader CanBack="Navigator.CanBack"
+                   OnBack="@(() => Navigator.BackAsync())" />
     }
 
     <div class="flex flex-1 overflow-hidden">
@@ -73,19 +74,6 @@
         if (Navigator.Current is { } active)
             FaultedPageId = active.PageId;
     }
-
-    private RenderFragment NavigationControls => builder =>
-    {
-        if (Navigator.CanBack)
-        {
-            builder.OpenComponent<RadzenButton>(0);
-            builder.AddAttribute(1, "Icon", "arrow_back");
-            builder.AddAttribute(2, "ButtonStyle", ButtonStyle.Light);
-            builder.AddAttribute(3, "Click", EventCallback.Factory.Create<MouseEventArgs>(
-                this, async _ => await Navigator.BackAsync()));
-            builder.CloseComponent();
-        }
-    };
 
     private async Task OnMenuSelected(MenuItem menuItem)
     {

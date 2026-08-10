@@ -33,18 +33,20 @@ public abstract class BasePage : ComponentBase, IDisposable
 
     protected virtual HeaderKind HeaderKind => HeaderKind.Default;
 
-    protected virtual RenderFragment? HeaderStart => null;
+    protected virtual RenderFragment? HeaderContent => null;
 
-    protected virtual RenderFragment? HeaderCenter => null;
-
-    protected virtual RenderFragment? HeaderEnd => null;
+    protected virtual bool ShowBack => true;
 
     protected string HeaderTitle =>
         string.IsNullOrEmpty(HeaderTitleKey) ? string.Empty : Lang.T(HeaderTitleKey);
 
     protected void RefreshHeader()
     {
-        Header.Set(new PageHeader(HeaderKind, HeaderTitle, HeaderStart, HeaderCenter, HeaderEnd));
+        Header.Set(new PageHeader(
+            HeaderKind,
+            HeaderTitle,
+            HeaderContent,
+            ShowBack));
     }
 
     protected override void OnInitialized()

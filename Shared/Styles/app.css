@@ -1,5 +1,104 @@
 :root {
 	--rz-text-font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+	--map-header-height: clamp(48px, 8vh, 96px);
+	--map-header-title-size: clamp(20px, 3vh, 32px);
+	--map-header-content-size: clamp(20px, 3vh, 32px);
+	--map-header-clock-size: clamp(20px, 3vh, 32px);
+	--map-header-back-size: clamp(32px, 4.2vh, 46px);
+	--map-header-gap: clamp(6px, 1vh, 12px);
+	--map-header-padding-x: clamp(6px, 1vw, 14px);
+}
+.map-header {
+	height: var(--map-header-height);
+	min-height: var(--map-header-height);
+
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr) auto auto;
+	align-items: center;
+	gap: var(--map-header-gap);
+
+	padding: 0 var(--map-header-padding-x);
+
+	background: #0f005f;
+	color: #fff;
+	flex-shrink: 0;
+}
+
+.map-header__title {
+	min-width: 0;
+
+	font-size: var(--map-header-title-size);
+	font-weight: 700;
+	line-height: 1;
+
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.map-header__content {
+	min-width: 0;
+
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: var(--map-header-gap);
+	font-size: var(--map-header-content-size);
+	overflow: hidden;
+}
+
+.map-header__content > * {
+	min-width: 0;
+	max-height: 100%;
+}
+
+.map-header__back-button {
+	width: var(--map-header-back-size);
+	height: var(--map-header-back-size);
+
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	padding: 0;
+
+	border: 1px solid rgba(255, 255, 255, 0.45);
+	border-radius: 50%;
+
+	color: #fff;
+	background: rgba(255, 255, 255, 0.12);
+	cursor: pointer;
+}
+
+.map-header__back-button:hover {
+	background: rgba(255, 255, 255, 0.2);
+}
+
+.map-header__back-button:focus-visible {
+	outline: 2px solid #fff;
+	outline-offset: 2px;
+}
+
+.map-header__back-button svg {
+	width: 60%;
+	height: 60%;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 2;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+
+.map-header__clock {
+	min-width: 7em;
+
+	text-align: right;
+	font-size: var(--map-header-clock-size);
+	font-weight: 600;
+	line-height: 1.25;
+
+	white-space: nowrap;
+	font-variant-numeric: tabular-nums;
 }
 
 html,
