@@ -7,26 +7,44 @@ function Get-DesktopDeploymentPlan {
         [Parameter(Mandatory)][string]$DestinationPath
     )
 
-    $items = [System.Collections.Generic.List[object]]::new()
-    $sourceRoot = (Resolve-Path -LiteralPath $SourcePath).Path.TrimEnd('\')
-    foreach ($sourceFile in Get-ChildItem -LiteralPath $sourceRoot -File -Recurse) {
-        $relativePath = $sourceFile.FullName.Substring($sourceRoot.Length).TrimStart('\', '/')
-        # The bootstrapper has its own release path and must never be deployed here.
-        if ([System.IO.Path]::GetFileName($relativePath) -ieq 'Run-App.exe') { continue }
+    $sourceRoot = (Resolve-Path -LiteralPath $SourcePath).Path.TrimEnd('\', '/')
+    $plan = [System.Collections.Generic.List[object]]::new()
 
+    foreach ($sourceFile in @(Get-ChildItem -LiteralPath $sourceRoot -File -Recurse)) {
+        $relativePath = $sourceFile.FullName.Substring($sourceRoot.Length).TrimStart('\', '/')
         $destinationFile = Join-Path $DestinationPath $relativePath
         $classification = 'NEW'
-        if (Test-Path -LiteralPath $destinationFile -PathType Leaf) {
-            $classification = if ((Get-FileSha256 -Path $sourceFile.FullName) -eq (Get-FileSha256 -Path $destinationFile)) { 'UNCHANGED' } else { 'CHANGED' }
+
+        if (Test-Path -LiteralPath $destinationFile) {
+            if (-not (Test-Path -LiteralPath $destinationFile -PathType Leaf)) {
+                throw "Desktop destination path is not a file: $relativePath"
+            }
+
+            $destinationInfo = Get-Item -LiteralPath $destinationFile
+            if ($sourceFile.Length -ne $destinationInfo.Length) {
+                $classification = 'CHANGED'
+            }
+            else {
+                $sourceHash = Get-FileSha256 -Path $sourceFile.FullName
+                $destinationHash = Get-FileSha256 -Path $destinationFile
+                if ($sourceHash -eq $destinationHash) {
+                    $classification = 'UNCHANGED'
+                }
+                else {
+                    $classification = 'CHANGED'
+                }
+            }
         }
-        $items.Add([pscustomobject]@{
+
+        $plan.Add([pscustomobject]@{
             Source = $sourceFile.FullName
             Destination = $destinationFile
             RelativePath = $relativePath
             Classification = $classification
         })
     }
-    return $items
+
+    return $plan
 }
 
 function Copy-DesktopDeploymentFile {
@@ -37,17 +55,27 @@ function Copy-DesktopDeploymentFile {
 
     $destinationDirectory = Split-Path -Parent $Item.Destination
     New-Item -ItemType Directory -Path $destinationDirectory -Force | Out-Null
-    $temporaryPath = "$($Item.Destination).mapdeploy.tmp"
+    $temporaryPath = '{0}.mapdeploy.tmp' -f $Item.Destination
+
     try {
         Copy-Item -LiteralPath $Item.Source -Destination $temporaryPath -Force
-        if ((Get-FileSha256 -Path $Item.Source) -ne (Get-FileSha256 -Path $temporaryPath)) {
-            throw "Hash verification failed for '$($Item.RelativePath)'."
+        $sourceHash = Get-FileSha256 -Path $Item.Source
+        $temporaryHash = Get-FileSha256 -Path $temporaryPath
+        if ($sourceHash -ne $temporaryHash) {
+            throw "Desktop hash verification failed for '$($Item.RelativePath)'."
         }
+
         Move-Item -LiteralPath $temporaryPath -Destination $Item.Destination -Force
-        (Get-Item -LiteralPath $Item.Destination).LastWriteTimeUtc = $ReleaseTimestampUtc
+        $destinationInfo = Get-Item -LiteralPath $Item.Destination
+        if ((Get-FileSha256 -Path $Item.Source) -ne (Get-FileSha256 -Path $Item.Destination)) {
+            throw "Desktop replacement verification failed for '$($Item.RelativePath)'."
+        }
+        $destinationInfo.LastWriteTimeUtc = $ReleaseTimestampUtc
     }
     finally {
-        if (Test-Path -LiteralPath $temporaryPath) { Remove-Item -LiteralPath $temporaryPath -Force }
+        if (Test-Path -LiteralPath $temporaryPath -PathType Leaf) {
+            Remove-Item -LiteralPath $temporaryPath -Force
+        }
     }
 }
 
@@ -59,25 +87,32 @@ function Invoke-DesktopDeployment {
     )
 
     $destinationPath = Join-Path $DeploymentRoot 'desktop'
-    New-Item -ItemType Directory -Path $destinationPath -Force | Out-Null
-    $plan = @(Get-DesktopDeploymentPlan -SourcePath $SourcePath -DestinationPath $destinationPath)
+    if (-not (Test-Path -LiteralPath $destinationPath -PathType Container)) {
+        New-Item -ItemType Directory -Path $destinationPath -Force | Out-Null
+    }
 
-    $newCount = @($plan | Where-Object Classification -eq 'NEW').Count
-    $changedCount = @($plan | Where-Object Classification -eq 'CHANGED').Count
-    $unchangedCount = @($plan | Where-Object Classification -eq 'UNCHANGED').Count
-    foreach ($item in $plan | Where-Object { $_.Classification -ne 'UNCHANGED' }) {
+    $plan = @(Get-DesktopDeploymentPlan -SourcePath $SourcePath -DestinationPath $destinationPath)
+    $newItems = @($plan | Where-Object { $_.Classification -eq 'NEW' })
+    $changedItems = @($plan | Where-Object { $_.Classification -eq 'CHANGED' })
+    $unchangedItems = @($plan | Where-Object { $_.Classification -eq 'UNCHANGED' })
+
+    foreach ($item in @($newItems + $changedItems)) {
         Write-Host ('{0,-8} {1}' -f $item.Classification, $item.RelativePath)
         Copy-DesktopDeploymentFile -Item $item -ReleaseTimestampUtc $ReleaseTimestampUtc
     }
 
     Write-Host ''
     Write-Host 'Desktop Deployment'
-    Write-Host '------------------------------'
+    Write-Host '--------------------------------'
     Write-Host ('Files scanned : {0}' -f $plan.Count)
-    Write-Host ('New           : {0}' -f $newCount)
-    Write-Host ('Changed       : {0}' -f $changedCount)
-    Write-Host ('Unchanged     : {0}' -f $unchangedCount)
-    Write-Host ('Copied        : {0}' -f ($newCount + $changedCount))
+    Write-Host ('New           : {0}' -f $newItems.Count)
+    Write-Host ('Changed       : {0}' -f $changedItems.Count)
+    Write-Host ('Unchanged     : {0}' -f $unchangedItems.Count)
+    Write-Host ('Copied        : {0}' -f ($newItems.Count + $changedItems.Count))
 
-    return [pscustomobject]@{ New = $newCount; Changed = $changedCount; Unchanged = $unchangedCount }
+    return [pscustomobject]@{
+        New = $newItems.Count
+        Changed = $changedItems.Count
+        Unchanged = $unchangedItems.Count
+    }
 }

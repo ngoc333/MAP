@@ -8,7 +8,7 @@ namespace RunApp;
 
 public partial class MainWindow : Window
 {
-    private const string ServerPath = @"\\172.30.10.8\WebService\LGMES_LIVE_6_Service\DeployAssembly\FormAssembly\MAP-App\desktop";
+    private const string ServerPath = @"\\172.30.10.8\WebService\LGMES_LIVE_6_Service\DeployAssembly\FormAssembly\MAP\desktop";
     private const string AppExeName = "MAP.H.Desktop.exe";
 
     public MainWindow()
