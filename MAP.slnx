@@ -1,7 +1,6 @@
 <Solution>
   <Project Path="MAP.H.Desktop/MAP.H.Desktop.csproj" />
   <Project Path="MAP.H.Web/MAP.H.Web.csproj" />
-  <Project Path="MAP.H.Web.Host/MAP.H.Web.Host.csproj" />
   <Folder Name="/Core/">
     <Project Path="Core/MAP.C.Contract/MAP.C.Contract.csproj" />
     <Project Path="Core/MAP.C.Runtime/MAP.C.Runtime.csproj" />

@@ -108,6 +108,9 @@
       <_SharedStyleAsset Include="$(MSBuildProjectDirectory)\..\Shared\Styles\inter.css">
         <RelativePath>css/inter.css</RelativePath>
       </_SharedStyleAsset>
+      <_SharedStyleAsset Include="$(MSBuildProjectDirectory)\..\Shared\Styles\app.css">
+        <RelativePath>css/app.css</RelativePath>
+      </_SharedStyleAsset>
     </ItemGroup>
 
     <DefineStaticWebAssets CandidateAssets="@(_SharedStyleAsset)"

@@ -29,6 +29,7 @@
     <None Include="..\Shared\Fonts\Inter\*.woff2" Link="wwwroot\fonts\inter\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <None Include="..\Shared\Styles\tailwind.css" Link="wwwroot\css\tailwind.css" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <None Include="..\Shared\Styles\inter.css" Link="wwwroot\css\inter.css" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Include="..\Shared\Styles\app.css" Link="wwwroot\css\app.css" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
   <!-- Module discovery: all module projects under Modules/ -->
