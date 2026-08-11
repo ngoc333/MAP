@@ -53,21 +53,8 @@
     private string? FaultedPageId { get; set; }
     private int _pageGeneration;
 
-    private PageHeader? CurrentPageHeader
-    {
-        get
-        {
-            var current = Navigator.Current;
-            var header = HeaderState.Active;
-
-            if (current is null || header is null)
-                return null;
-
-            return header.PageId == current.PageId
-                ? header
-                : null;
-        }
-    }
+    private PageHeader? CurrentPageHeader =>
+        PageHeaderResolver.GetMatchingHeader(Navigator.Current, HeaderState.Active);
 
     private string CurrentHeaderTitle
     {
@@ -78,14 +65,11 @@
             if (current is null)
                 return ConfigService.Current?.AppTitle ?? "MAP";
 
-            var menuTitle = MenuTitle.Get(
-                current.MenuItem,
-                Lang.CurrentLanguage);
-
-            if (CurrentPageHeader?.TitleKey is { Length: > 0 } key)
-                return Lang.T(key, menuTitle);
-
-            return menuTitle;
+            return PageHeaderResolver.ResolveTitle(
+                current,
+                HeaderState.Active,
+                menuItem => MenuTitle.Get(menuItem, Lang.CurrentLanguage),
+                Lang.T);
         }
     }
 

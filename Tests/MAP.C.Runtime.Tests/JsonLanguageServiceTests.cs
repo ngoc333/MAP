@@ -1,3 +1,4 @@
+using System.Globalization;
 using MAP.C.Runtime.Localization;
 
 namespace MAP.C.Runtime.Tests;
@@ -51,14 +52,48 @@ public sealed class JsonLanguageServiceTests
     }
 
     [Fact]
-    public void SetLanguage_SameCode_NoChange()
+    public void SetLanguage_SameInitialLanguage_AppliesVietnameseCultureWithoutRaisingEvent()
     {
         var service = CreateService();
-        var initial = service.CurrentLanguage;
+        var eventCount = 0;
+        service.LanguageChanged += () => eventCount++;
 
-        service.SetLanguage(initial);
+        service.SetLanguage("vi");
 
-        Assert.Equal(initial, service.CurrentLanguage);
+        Assert.Equal("vi", service.CurrentLanguage);
+        Assert.Equal("vi-VN", CultureInfo.CurrentCulture.Name);
+        Assert.Equal("vi-VN", CultureInfo.CurrentUICulture.Name);
+        Assert.Equal(0, eventCount);
+    }
+
+    [Fact]
+    public void SetLanguage_ChangesToEnglish_AppliesCultureAndRaisesEventOnce()
+    {
+        var service = CreateService();
+        var eventCount = 0;
+        service.LanguageChanged += () => eventCount++;
+
+        service.SetLanguage("en");
+
+        Assert.Equal("en", service.CurrentLanguage);
+        Assert.Equal("en-US", CultureInfo.CurrentCulture.Name);
+        Assert.Equal("en-US", CultureInfo.CurrentUICulture.Name);
+        Assert.Equal(1, eventCount);
+    }
+
+    [Fact]
+    public void SetLanguage_SameEnglishLanguage_ReappliesCultureWithoutRaisingSecondEvent()
+    {
+        var service = CreateService();
+        var eventCount = 0;
+        service.LanguageChanged += () => eventCount++;
+
+        service.SetLanguage("en");
+        service.SetLanguage("en");
+
+        Assert.Equal("en-US", CultureInfo.CurrentCulture.Name);
+        Assert.Equal("en-US", CultureInfo.CurrentUICulture.Name);
+        Assert.Equal(1, eventCount);
     }
 
     [Fact]

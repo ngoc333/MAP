@@ -1,6 +1,5 @@
 {
   "HomePage": {
-    "headerTitle": "Trang chủ",
     "intro": "Giới thiệu",
     "welcome": "Chào mừng đến với DSF WASM",
     "description": "Đây là ứng dụng Blazor WebAssembly với kiến trúc module động. Mỗi trang là một DLL riêng biệt, được tải về khi bạn click vào menu.",

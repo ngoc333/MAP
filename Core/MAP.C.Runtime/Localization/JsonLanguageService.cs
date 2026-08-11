@@ -63,18 +63,22 @@ public sealed class JsonLanguageService : ILanguageService
 
     public void SetLanguage(string language)
     {
-        if (_currentLanguage == language) return;
-
-        // Validate language is in AvailableLanguages
         if (!AvailableLanguages.Any(l => l.Code == language))
         {
-            throw new ArgumentException($"Language '{language}' is not available. Available: {string.Join(", ", AvailableLanguages.Select(l => l.Code))}", nameof(language));
+            throw new ArgumentException(
+                $"Language '{language}' is not available. Available: {string.Join(", ", AvailableLanguages.Select(l => l.Code))}",
+                nameof(language));
         }
 
+        var changed = _currentLanguage != language;
         _currentLanguage = language;
-        CultureInfo.CurrentUICulture = new CultureInfo(language == "vi" ? "vi-VN" : "en-US");
-        CultureInfo.CurrentCulture = CultureInfo.CurrentUICulture;
-        LanguageChanged?.Invoke();
+
+        var culture = new CultureInfo(language == "vi" ? "vi-VN" : "en-US");
+        CultureInfo.CurrentUICulture = culture;
+        CultureInfo.CurrentCulture = culture;
+
+        if (changed)
+            LanguageChanged?.Invoke();
     }
 
     private static string? ResolveNested(string key, Dictionary<string, Dictionary<string, object>> dict)

@@ -54,7 +54,7 @@
 
                             <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem" Wrap="FlexWrap.Wrap">
                                 <RadzenLabel Component="menuSource" Text="@Lang.T("AppConfig.menuSource")" Style="min-width: 150px;" />
-                                <RadzenDropDown TValue="string" Data="_menuSources" TextProperty="Text" ValueProperty="Value"
+                                <RadzenDropDown TValue="string" Data="@MenuSources" TextProperty="Text" ValueProperty="Value"
                                                 @bind-Value="_model.MenuSource" Style="width: 100%;" />
                             </RadzenStack>
 
@@ -113,18 +113,22 @@
     private SystemInfo _systemInfo = new();
     private IReadOnlyList<DisplayInfo> _displays = Array.Empty<DisplayInfo>();
     private IReadOnlyList<LanguageInfo> _languages = Array.Empty<LanguageInfo>();
-    private IReadOnlyList<MenuSourceOption> _menuSources = Array.Empty<MenuSourceOption>();
-
     protected override string HeaderTitleKey => "AppConfig.title";
+
+    private IReadOnlyList<MenuSourceOption> MenuSources =>
+    [
+        new("db", Lang.T("AppConfig.menuSourceDb")),
+        new("local", Lang.T("AppConfig.menuSourceLocal"))
+    ];
 
     protected override void OnInitialized()
     {
+        base.OnInitialized();
+
         _model = ConfigService.Current ?? new AppConfig();
         _systemInfo = ConfigService.GetSystemInfo();
         _displays = ConfigService.GetDisplays();
         _languages = Lang.AvailableLanguages;
-        _menuSources = GetMenuSources();
-        RefreshHeader();
     }
 
     private async Task OnSaveAsync()
@@ -134,15 +138,6 @@
         var message = Lang.T("AppConfig.saveSuccess") + "\n" + Lang.T("AppConfig.restartRequired");
         await DialogService.Alert(message, Lang.T("AppConfig.title"));
         ConfigService.RestartApp();
-    }
-
-    private IReadOnlyList<MenuSourceOption> GetMenuSources()
-    {
-        return new List<MenuSourceOption>
-        {
-            new("db", Lang.T("AppConfig.menuSourceDb")),
-            new("local", Lang.T("AppConfig.menuSourceLocal"))
-        };
     }
 
     private record MenuSourceOption(string Value, string Text);

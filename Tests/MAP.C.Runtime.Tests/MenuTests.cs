@@ -368,7 +368,14 @@ public class PostRefactorMenuConfigResolverTests
     {
         var menu = JsonSerializer.Serialize(new PageConfig
         {
-            Menus = [new() { Id = menuId }]
+            Menus =
+            [
+                new()
+                {
+                    Id = menuId,
+                    Titles = new Dictionary<string, string> { ["vi"] = "Menu" }
+                }
+            ]
         });
 
         return JsonSerializer.SerializeToElement(new

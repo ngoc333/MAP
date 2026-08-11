@@ -1,6 +1,5 @@
 {
   "HomePage": {
-    "headerTitle": "Home",
     "intro": "Introduction",
     "welcome": "Welcome to DSF WASM",
     "description": "This is a Blazor WebAssembly application with dynamic module architecture. Each page is a separate DLL, loaded when you click a menu item.",
