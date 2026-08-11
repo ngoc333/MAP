@@ -41,7 +41,6 @@ public static class MenuConfigResolver
         {
             config = await DatabaseMenuLoader.LoadAsync(
                 dbClient, localConfig.DbName!, localConfig.DbFunction!);
-            logger.LogInformation("Database menu loaded. MenuCount={MenuCount}", config.Menus.Count);
         }
         else
         {
@@ -51,8 +50,11 @@ public static class MenuConfigResolver
 
         MenuConfigValidator.Validate(config);
 
-        logger.LogInformation("Menu ready. MenuCount={MenuCount} DurationMs={DurationMs}",
-            config.Menus.Count, Stopwatch.GetElapsedTime(started).TotalMilliseconds);
+        logger.LogInformation(
+            "Menu ready. Source={Source} MenuCount={MenuCount} DurationMs={DurationMs}",
+            source,
+            config.Menus.Count,
+            Stopwatch.GetElapsedTime(started).TotalMilliseconds);
 
         return config;
     }

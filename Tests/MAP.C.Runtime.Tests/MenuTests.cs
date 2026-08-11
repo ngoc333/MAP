@@ -393,6 +393,30 @@ public class PostRefactorMenuConfigResolverTests
     }
 
     [Fact]
+    public async Task ResolveAsync_DatabaseInvalidMenu_NullMenus_ThrowsClearConfigurationError()
+    {
+        var localConfig = new PageConfig
+        {
+            Source = "db",
+            DbName = "mes",
+            DbFunction = "mes.fn_get_map_menu"
+        };
+
+        var dbClient = new FakeDbApiClient(CreateNullMenusResponse());
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            MenuConfigResolver.ResolveAsync(
+                localConfig, null, dbClient,
+                Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance,
+                System.Diagnostics.Stopwatch.GetTimestamp()));
+
+        Assert.Contains(
+            "menu collection",
+            exception.Message,
+            StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public async Task ResolveAsync_UnknownSource_ThrowsConfigurationError()
     {
         var localConfig = new PageConfig
@@ -409,6 +433,24 @@ public class PostRefactorMenuConfigResolverTests
 
         Assert.Contains("Unsupported menu source", exception.Message);
         Assert.Contains("abc", exception.Message);
+    }
+
+    private static JsonElement CreateNullMenusResponse()
+    {
+        // Payload with menus=null - will fail validation before NullReferenceException
+        var menu = JsonSerializer.Serialize(new PageConfig
+        {
+            Menus = null!
+        });
+
+        return JsonSerializer.SerializeToElement(new
+        {
+            success = true,
+            data = new[]
+            {
+                new Dictionary<string, string> { ["fn_get_map_menu"] = menu }
+            }
+        });
     }
 
     private static JsonElement CreateMenuResponse(string menuId)
