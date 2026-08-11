@@ -2,6 +2,7 @@ using System.Diagnostics;
 using MAP.C.Contract.Config;
 using MAP.C.Contract.Database;
 using MAP.C.Contract.Models;
+using MAP.C.Contract.Menus;
 using MAP.C.Runtime.Database;
 using Microsoft.Extensions.Logging;
 
@@ -47,6 +48,8 @@ public static class MenuConfigResolver
             throw new InvalidOperationException(
                 $"Unsupported menu source: '{source}'. Expected 'local' or 'db'.");
         }
+
+        MenuConfigValidator.Validate(config);
 
         logger.LogInformation("Menu ready. MenuCount={MenuCount} DurationMs={DurationMs}",
             config.Menus.Count, Stopwatch.GetElapsedTime(started).TotalMilliseconds);

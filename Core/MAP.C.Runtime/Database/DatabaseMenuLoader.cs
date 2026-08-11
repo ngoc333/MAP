@@ -1,7 +1,6 @@
 using System.Text.Json;
 using MAP.C.Contract.Database;
 using MAP.C.Contract.Models;
-using MAP.C.Contract.Menus;
 
 namespace MAP.C.Runtime.Database;
 
@@ -42,7 +41,6 @@ public static class DatabaseMenuLoader
         if (config is null)
             throw new InvalidOperationException("Database menu payload could not be deserialized.");
 
-        MenuConfigValidator.Validate(config);
         return config;
     }
 }

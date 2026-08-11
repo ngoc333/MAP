@@ -293,7 +293,7 @@ public class PostRefactorMenuConfigResolverTests
         var localConfig = new PageConfig
         {
             Source = "local",
-            Menus = [new() { Id = "local-menu", Titles = new Dictionary<string, string> { ["vi"] = "Local" } }]
+            Menus = [new() { Id = "local-menu", Titles = new Dictionary<string, string> { ["vi"] = "Local" }, Assembly = "Test.dll", Component = "Test.Page" }]
         };
 
         var result = await MenuConfigResolver.ResolveAsync(
@@ -322,6 +322,53 @@ public class PostRefactorMenuConfigResolverTests
 
         Assert.Single(result.Menus);
         Assert.Equal("db-menu", result.Menus[0].Id);
+    }
+
+    // Local invalid menu (duplicate IDs) must fail
+    [Fact]
+    public async Task ResolveAsync_LocalInvalidMenu_DuplicateIds_ThrowsInvalidOperationException()
+    {
+        var localConfig = new PageConfig
+        {
+            Source = "local",
+            Menus =
+            [
+                new() { Id = "page1", Titles = new Dictionary<string, string> { ["vi"] = "Page 1" }, Assembly = "Test.dll", Component = "Test.Page1" },
+                new() { Id = "page1", Titles = new Dictionary<string, string> { ["vi"] = "Page 1 Dup" }, Assembly = "Test.dll", Component = "Test.Page1Dup" }
+            ]
+        };
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            MenuConfigResolver.ResolveAsync(
+                localConfig, null, null!,
+                Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance,
+                System.Diagnostics.Stopwatch.GetTimestamp()));
+
+        Assert.Contains("page1", exception.Message);
+        Assert.Contains("Duplicate", exception.Message);
+    }
+
+    // DB invalid menu (missing Titles) must fail
+    [Fact]
+    public async Task ResolveAsync_DatabaseInvalidMenu_MissingTitles_ThrowsInvalidOperationException()
+    {
+        var localConfig = new PageConfig
+        {
+            Source = "db",
+            DbName = "mes",
+            DbFunction = "mes.fn_get_map_menu",
+            Menus = [new() { Id = "local-menu" }]
+        };
+        var dbClient = new FakeDbApiClient(CreateInvalidMenuResponse("db-menu"));
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            MenuConfigResolver.ResolveAsync(
+                localConfig, null, dbClient,
+                Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance,
+                System.Diagnostics.Stopwatch.GetTimestamp()));
+
+        Assert.Contains("db-menu", exception.Message);
+        Assert.Contains("localized title", exception.Message);
     }
 
     [Fact]
@@ -373,7 +420,36 @@ public class PostRefactorMenuConfigResolverTests
                 new()
                 {
                     Id = menuId,
-                    Titles = new Dictionary<string, string> { ["vi"] = "Menu" }
+                    Titles = new Dictionary<string, string> { ["vi"] = "Menu" },
+                    Assembly = "Test.dll",
+                    Component = "Test.Page"
+                }
+            ]
+        });
+
+        return JsonSerializer.SerializeToElement(new
+        {
+            success = true,
+            data = new[]
+            {
+                new Dictionary<string, string> { ["fn_get_map_menu"] = menu }
+            }
+        });
+    }
+
+    private static JsonElement CreateInvalidMenuResponse(string menuId)
+    {
+        // Menu with empty titles - will fail validation
+        var menu = JsonSerializer.Serialize(new PageConfig
+        {
+            Menus =
+            [
+                new()
+                {
+                    Id = menuId,
+                    Titles = new Dictionary<string, string>(),
+                    Assembly = "Test.dll",
+                    Component = "Test.Page"
                 }
             ]
         });
