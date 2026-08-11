@@ -6,9 +6,10 @@ namespace MAP.C.Wpf.Logging;
 
 public sealed class FileLogStore : ILogStore
 {
-    private const int RetentionDays = 30;
+    private const int RetentionDays = 7;
     private readonly string _logDirectory = Path.Combine(AppContext.BaseDirectory, "log");
     private readonly Lock _writeLock = new();
+    private DateOnly _lastCleanupDay;
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
     public FileLogStore()
@@ -16,6 +17,7 @@ public sealed class FileLogStore : ILogStore
         try
         {
             Directory.CreateDirectory(_logDirectory);
+            _lastCleanupDay = DateOnly.FromDateTime(DateTime.Today);
             DeleteExpiredFiles();
         }
         catch (Exception ex)
@@ -29,6 +31,13 @@ public sealed class FileLogStore : ILogStore
         cancellationToken.ThrowIfCancellationRequested();
         lock (_writeLock)
         {
+            var today = DateOnly.FromDateTime(DateTime.Today);
+            if (today != _lastCleanupDay)
+            {
+                DeleteExpiredFiles();
+                _lastCleanupDay = today;
+            }
+
             Directory.CreateDirectory(_logDirectory);
             var path = Path.Combine(_logDirectory, $"{entry.Timestamp:yyyy-MM-dd}.log");
             File.AppendAllText(path, JsonSerializer.Serialize(entry, JsonOptions) + Environment.NewLine);
@@ -85,7 +94,8 @@ public sealed class FileLogStore : ILogStore
     {
         if (!Directory.Exists(_logDirectory)) return;
 
-        var cutoff = DateOnly.FromDateTime(DateTime.Today.AddDays(-RetentionDays));
+        var cutoff = DateOnly.FromDateTime(
+            DateTime.Today.AddDays(-(RetentionDays - 1)));
         var files = Directory.EnumerateFiles(_logDirectory, "????-??-??.log")
             .Select(f => new
             {

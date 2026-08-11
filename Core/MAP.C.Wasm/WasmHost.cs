@@ -75,9 +75,7 @@ public static class WasmHost
                 langService.SetLanguage(config.DefaultLanguage);
             }
 
-            await ValidateStartupAsync(
-                host.Services,
-                logger);
+            await ValidateStartupAsync(host.Services);
 
             logger.LogInformation(
                 "Application started. DurationMs={DurationMs}",
@@ -99,8 +97,7 @@ public static class WasmHost
     }
 
     private static async Task ValidateStartupAsync(
-        IServiceProvider services,
-        ILogger logger)
+        IServiceProvider services)
     {
         var menuService =
             services.GetRequiredService<IMenuService>();
