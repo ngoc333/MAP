@@ -1,13 +1,11 @@
-@inject IPageHeaderState HeaderState
-
 <header class="map-header">
-    <div class="map-header__title">@(HeaderState.Active?.Title ?? "MAP")</div>
+    <div class="map-header__title">@Title</div>
 
     <div class="map-header__content">
-        @HeaderState.Active?.Content
+        @Content
     </div>
 
-    @if (CanBack && (HeaderState.Active?.ShowBack ?? true))
+    @if (CanBack && ShowBack)
     {
         <button
             type="button"
@@ -26,7 +24,16 @@
 
 @code {
     [Parameter]
+    public string Title { get; set; } = "MAP";
+
+    [Parameter]
+    public RenderFragment? Content { get; set; }
+
+    [Parameter]
     public bool CanBack { get; set; }
+
+    [Parameter]
+    public bool ShowBack { get; set; } = true;
 
     [Parameter]
     public EventCallback OnBack { get; set; }

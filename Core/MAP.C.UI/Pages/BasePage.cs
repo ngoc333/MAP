@@ -29,7 +29,7 @@ public abstract class BasePage : ComponentBase, IDisposable
 
     protected string? FromPageId => Navigator.Current?.FromPageId;
 
-    protected virtual string HeaderTitleKey => string.Empty;
+    protected virtual string? HeaderTitleKey => null;
 
     protected virtual HeaderKind HeaderKind => HeaderKind.Default;
 
@@ -37,14 +37,12 @@ public abstract class BasePage : ComponentBase, IDisposable
 
     protected virtual bool ShowBack => true;
 
-    protected string HeaderTitle =>
-        string.IsNullOrEmpty(HeaderTitleKey) ? string.Empty : Lang.T(HeaderTitleKey);
-
     protected void RefreshHeader()
     {
         Header.Set(new PageHeader(
+            Navigator.Current?.PageId ?? string.Empty,
             HeaderKind,
-            HeaderTitle,
+            HeaderTitleKey,
             HeaderContent,
             ShowBack));
     }
@@ -62,7 +60,6 @@ public abstract class BasePage : ComponentBase, IDisposable
 
     private void OnLanguageChanged()
     {
-        RefreshHeader();
         InvokeAsync(StateHasChanged);
     }
 

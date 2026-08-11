@@ -1,21 +1,4 @@
 {
-  "menu": {
-    "home": "Trang chủ",
-    "dashboard": "Dashboard",
-    "welcome": "Giới thiệu",
-    "products": "Sản phẩm",
-    "productList": "Danh sách",
-    "productAdd": "Thêm mới",
-    "customers": "Khách hàng",
-    "customerList": "Danh sách",
-    "customerDetail": "Chi tiết",
-    "reports": "Báo cáo",
-    "sales": "Doanh số",
-    "revenueChart": "Biểu đồ doanh thu",
-    "system": "Hệ thống",
-    "systemConfig": "Cấu hình",
-    "systemLogs": "Nhật ký"
-  },
   "layout": {
     "loading": "Đang tải module...",
     "selectMenu": "Chọn một menu để bắt đầu",

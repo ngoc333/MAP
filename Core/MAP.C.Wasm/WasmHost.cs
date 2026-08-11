@@ -100,20 +100,14 @@ public static class WasmHost
         var configService =
             services.GetRequiredService<IAppConfigService>();
 
-        var pageId = !configService.Exists
-            ? "system-config"
-            : configService.Current?.DefaultPageId;
-
-        if (string.IsNullOrWhiteSpace(pageId))
-            return;
-
-        var item = menuService.FindById(pageId)
+        // Find first navigable page using menu order
+        var item = MAP.C.Runtime.Menus.MenuTree.FindFirstPage(menuService.Menus)
             ?? throw new InvalidOperationException(
-                $"Startup page '{pageId}' was not found.");
+                "Menu does not contain any navigable page.");
 
         if (!item.IsPage)
             throw new InvalidOperationException(
-                $"Startup page '{pageId}' is not a page.");
+                $"Startup page '{item.Id}' is not a page.");
 
         await services
             .GetRequiredService<IModuleLoader>()
@@ -121,6 +115,6 @@ public static class WasmHost
 
         logger.LogInformation(
             "Startup page validated. PageId={PageId}",
-            pageId);
+            item.Id);
     }
 }

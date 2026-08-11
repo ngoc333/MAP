@@ -4,22 +4,28 @@
   "menus": [
     {
       "id": "home",
-      "title": "Trang chủ",
-      "titleKey": "menu.home",
+      "titles": {
+        "vi": "Trang chủ",
+        "en": "Home"
+      },
       "icon": "home",
       "children": [
         {
           "id": "home-dashboard",
-          "title": "Dashboard",
-          "titleKey": "menu.dashboard",
+          "titles": {
+            "vi": "Dashboard",
+            "en": "Dashboard"
+          },
           "icon": "dashboard",
           "assembly": "MAP.M.Home.dll",
           "component": "MAP.M.Home.Pages.DashboardPage"
         },
         {
           "id": "home-welcome",
-          "title": "Giới thiệu",
-          "titleKey": "menu.welcome",
+          "titles": {
+            "vi": "Giới thiệu",
+            "en": "Welcome"
+          },
           "icon": "info",
           "assembly": "MAP.M.Home.dll",
           "component": "MAP.M.Home.Pages.HomePage"
@@ -28,22 +34,28 @@
     },
     {
       "id": "products",
-      "title": "Sản phẩm",
-      "titleKey": "menu.products",
+      "titles": {
+        "vi": "Sản phẩm",
+        "en": "Products"
+      },
       "icon": "inventory_2",
       "children": [
         {
           "id": "product-list",
-          "title": "Danh sách",
-          "titleKey": "menu.productList",
+          "titles": {
+            "vi": "Danh sách",
+            "en": "List"
+          },
           "icon": "list",
           "assembly": "MAP.M.Products.dll",
           "component": "MAP.M.Products.Pages.ProductList"
         },
         {
           "id": "product-add",
-          "title": "Thêm mới",
-          "titleKey": "menu.productAdd",
+          "titles": {
+            "vi": "Thêm mới",
+            "en": "Add New"
+          },
           "icon": "add_circle",
           "assembly": "MAP.M.Products.dll",
           "component": "MAP.M.Products.Pages.ProductAdd"
@@ -52,22 +64,28 @@
     },
     {
       "id": "customers",
-      "title": "Khách hàng",
-      "titleKey": "menu.customers",
+      "titles": {
+        "vi": "Khách hàng",
+        "en": "Customers"
+      },
       "icon": "people",
       "children": [
         {
           "id": "customer-list",
-          "title": "Danh sách",
-          "titleKey": "menu.customerList",
+          "titles": {
+            "vi": "Danh sách",
+            "en": "List"
+          },
           "icon": "list_alt",
           "assembly": "MAP.M.Customers.dll",
           "component": "MAP.M.Customers.Pages.CustomerList"
         },
         {
           "id": "customer-detail",
-          "title": "Chi tiết",
-          "titleKey": "menu.customerDetail",
+          "titles": {
+            "vi": "Chi tiết",
+            "en": "Detail"
+          },
           "icon": "person",
           "assembly": "MAP.M.Customers.dll",
           "component": "MAP.M.Customers.Pages.CustomerDetail"
@@ -76,25 +94,61 @@
     },
     {
       "id": "reports",
-      "title": "Báo cáo",
-      "titleKey": "menu.reports",
+      "titles": {
+        "vi": "Báo cáo",
+        "en": "Reports"
+      },
       "icon": "bar_chart",
       "children": [
         {
           "id": "report-sales",
-          "title": "Doanh số",
-          "titleKey": "menu.sales",
+          "titles": {
+            "vi": "Doanh số",
+            "en": "Sales"
+          },
           "icon": "trending_up",
           "assembly": "MAP.M.Reports.dll",
           "component": "MAP.M.Reports.Pages.SalesReport"
         },
         {
           "id": "report-revenue",
-          "title": "Biểu đồ doanh thu",
-          "titleKey": "menu.revenueChart",
+          "titles": {
+            "vi": "Biểu đồ doanh thu",
+            "en": "Revenue Chart"
+          },
           "icon": "pie_chart",
           "assembly": "MAP.M.Reports.dll",
           "component": "MAP.M.Reports.Pages.RevenueChart"
+        }
+      ]
+    },
+    {
+      "id": "system",
+      "titles": {
+        "vi": "Hệ thống",
+        "en": "System"
+      },
+      "icon": "settings",
+      "children": [
+        {
+          "id": "system-config",
+          "titles": {
+            "vi": "Cấu hình",
+            "en": "Configuration"
+          },
+          "icon": "settings",
+          "assembly": "MAP.M.System.dll",
+          "component": "MAP.M.System.Pages.AppConfigPage"
+        },
+        {
+          "id": "system-logs",
+          "titles": {
+            "vi": "Nhật ký",
+            "en": "Logs"
+          },
+          "icon": "article",
+          "assembly": "MAP.M.System.dll",
+          "component": "MAP.M.System.Pages.SystemLogsPage"
         }
       ]
     }

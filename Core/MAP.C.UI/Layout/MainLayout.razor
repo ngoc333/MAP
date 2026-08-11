@@ -7,12 +7,17 @@
 @inject IAppConfigService ConfigService
 @inject IUiStateService UiState
 @inject ModuleErrorNotifier ErrorNotifier
+@inject ILanguageService Lang
 @using MAP.C.Contract.Diagnostics
+@using MAP.C.Runtime.Menus
 
 <div class="flex flex-col h-screen w-screen overflow-hidden">
     @if (UiState.ShowHeader)
     {
-        <AppHeader CanBack="Navigator.CanBack"
+        <AppHeader Title="@CurrentHeaderTitle"
+                   Content="@CurrentPageHeader?.Content"
+                   CanBack="Navigator.CanBack"
+                   ShowBack="@(CurrentPageHeader?.ShowBack ?? true)"
                    OnBack="@(() => Navigator.BackAsync())" />
     }
 
@@ -42,11 +47,48 @@
     private Action? _navigatorChanged;
     private Action? _headerChanged;
     private Action? _uiStateChanged;
+    private Action? _langChanged;
     private DotNetObjectReference<MainLayout>? _shortcutReference;
     private DotNetObjectReference<MainLayout>? _uiShortcutReference;
     private const string EmptyPageKey = "__empty";
     private string? FaultedPageId { get; set; }
     private int _pageGeneration;
+
+    private PageHeader? CurrentPageHeader
+    {
+        get
+        {
+            var current = Navigator.Current;
+            var header = HeaderState.Active;
+
+            if (current is null || header is null)
+                return null;
+
+            return header.PageId == current.PageId
+                ? header
+                : null;
+        }
+    }
+
+    private string CurrentHeaderTitle
+    {
+        get
+        {
+            var current = Navigator.Current;
+
+            if (current is null)
+                return ConfigService.Current?.AppTitle ?? "MAP";
+
+            var menuTitle = MenuTitle.Get(
+                current.MenuItem,
+                Lang.CurrentLanguage);
+
+            if (CurrentPageHeader?.TitleKey is { Length: > 0 } key)
+                return Lang.T(key, menuTitle);
+
+            return menuTitle;
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -56,16 +98,23 @@
         HeaderState.Changed += _headerChanged;
         _uiStateChanged = () => InvokeAsync(StateHasChanged);
         UiState.Changed += _uiStateChanged;
+        _langChanged = () => InvokeAsync(StateHasChanged);
+        Lang.LanguageChanged += _langChanged;
+
         await MenuService.LoadMenusAsync();
 
-        if (!ConfigService.Exists)
+        // Find first navigable page using menu order
+        if (Navigator.Current is null)
         {
-            await OpenPageSafeAsync("system-config");
-        }
-        else if (ConfigService.Current?.DefaultPageId is { Length: > 0 } defaultPage
-                 && Navigator.Current is null)
-        {
-            await OpenPageSafeAsync(defaultPage);
+            var firstPage = MenuTree.FindFirstPage(MenuService.Menus);
+
+            if (firstPage is null)
+            {
+                throw new InvalidOperationException(
+                    "Menu does not contain any navigable page.");
+            }
+
+            await OpenPageSafeAsync(firstPage.Id);
         }
     }
 
@@ -142,6 +191,8 @@
             HeaderState.Changed -= _headerChanged;
         if (_uiStateChanged is not null)
             UiState.Changed -= _uiStateChanged;
+        if (_langChanged is not null)
+            Lang.LanguageChanged -= _langChanged;
         _shortcutReference?.Dispose();
         _uiShortcutReference?.Dispose();
     }

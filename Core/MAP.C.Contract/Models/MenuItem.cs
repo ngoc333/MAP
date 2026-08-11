@@ -3,15 +3,22 @@ namespace MAP.C.Contract.Models;
 public class MenuItem
 {
     public string Id { get; set; } = string.Empty;
-    public string Title { get; set; } = string.Empty;
-    public string? TitleKey { get; set; }
-    public string Icon { get; set; } = string.Empty;
-    public string? Assembly { get; set; }
-    public string? Component { get; set; }
-    public List<MenuItem>? Children { get; set; }
 
-    public bool HasChildren => Children is { Count: > 0 };
-    public bool IsPage => !string.IsNullOrEmpty(Assembly) && !string.IsNullOrEmpty(Component);
+    public Dictionary<string, string> Titles { get; set; } = [];
+
+    public string? Icon { get; set; }
+
+    public string? Assembly { get; set; }
+
+    public string? Component { get; set; }
+
+    public List<MenuItem> Children { get; set; } = [];
+
+    public bool HasChildren => Children.Count > 0;
+
+    public bool IsPage =>
+        !string.IsNullOrWhiteSpace(Assembly) &&
+        !string.IsNullOrWhiteSpace(Component);
 }
 
 public class PageConfig

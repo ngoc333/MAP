@@ -9,7 +9,7 @@ namespace MAP.C.Runtime.Menus;
 
 /// <summary>
 /// Shared menu resolution logic used by both WPF and Wasm MenuService.
-/// Handles: effective menu source → optional database load → DB failure fallback → SystemMenus registration.
+/// Handles: effective menu source → optional database load → DB failure fallback.
 /// </summary>
 public static class MenuConfigResolver
 {
@@ -21,7 +21,7 @@ public static class MenuConfigResolver
     /// <param name="dbClient">Database API client for DB menu loading.</param>
     /// <param name="logger">Logger instance.</param>
     /// <param name="started">Timestamp from Stopwatch.GetTimestamp() for duration tracking.</param>
-    /// <returns>The resolved PageConfig with SystemMenus ensured.</returns>
+    /// <returns>The resolved PageConfig.</returns>
     public static async Task<PageConfig> ResolveAsync(
         PageConfig localConfig,
         IAppConfigService? configService,
@@ -47,38 +47,9 @@ public static class MenuConfigResolver
             }
         }
 
-        FillMissingTitleKeys(config.Menus, localConfig.Menus);
-
-        SystemMenus.EnsureRegistered(config);
         logger.LogInformation("Menu ready. MenuCount={MenuCount} DurationMs={DurationMs}",
             config.Menus.Count, Stopwatch.GetElapsedTime(started).TotalMilliseconds);
 
         return config;
-    }
-
-    /// <summary>
-    /// Fills missing TitleKey values in target menus from fallback menus matched by Id.
-    /// Does not overwrite existing TitleKey values. Recursively processes children.
-    /// </summary>
-    internal static void FillMissingTitleKeys(
-        IEnumerable<MenuItem> target,
-        IEnumerable<MenuItem> fallback)
-    {
-        foreach (var targetItem in target)
-        {
-            if (string.IsNullOrEmpty(targetItem.TitleKey))
-            {
-                var fallbackItem = MenuTree.Find(fallback, targetItem.Id);
-                if (fallbackItem is not null && !string.IsNullOrEmpty(fallbackItem.TitleKey))
-                {
-                    targetItem.TitleKey = fallbackItem.TitleKey;
-                }
-            }
-
-            if (targetItem.Children is not null)
-            {
-                FillMissingTitleKeys(targetItem.Children, fallback);
-            }
-        }
     }
 }

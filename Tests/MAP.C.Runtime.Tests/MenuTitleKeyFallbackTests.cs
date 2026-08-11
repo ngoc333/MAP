@@ -3,174 +3,300 @@ using MAP.C.Runtime.Menus;
 
 namespace MAP.C.Runtime.Tests;
 
-public class MenuTitleKeyFallbackTests
+public class MenuTitleTests
 {
-    // TEST01: Local has TitleKey, DB has null → resolved TitleKey comes from local
+    // TEST01: Current language title is returned
     [Fact]
-    public void FillMissingTitleKeys_LocalHasKey_DbNull_CopiesFromLocal()
+    public void Get_CurrentLanguage_ReturnsTitle()
     {
-        var local = new List<MenuItem>
+        var item = new MenuItem
         {
-            new() { Id = "products", Title = "Sản phẩm", TitleKey = "menu.products" }
-        };
-        var db = new List<MenuItem>
-        {
-            new() { Id = "products", Title = "Sản phẩm" }
-        };
-
-        MenuConfigResolver.FillMissingTitleKeys(db, local);
-
-        Assert.Equal("menu.products", db[0].TitleKey);
-    }
-
-    // TEST02: DB has its own TitleKey → preserved, not overwritten
-    [Fact]
-    public void FillMissingTitleKeys_DbHasKey_PreservesDbKey()
-    {
-        var local = new List<MenuItem>
-        {
-            new() { Id = "products", Title = "Sản phẩm", TitleKey = "menu.products" }
-        };
-        var db = new List<MenuItem>
-        {
-            new() { Id = "products", Title = "Sản phẩm", TitleKey = "custom.products" }
-        };
-
-        MenuConfigResolver.FillMissingTitleKeys(db, local);
-
-        Assert.Equal("custom.products", db[0].TitleKey);
-    }
-
-    // TEST03: Nested child TitleKey merged recursively
-    [Fact]
-    public void FillMissingTitleKeys_NestedChild_MergesRecursively()
-    {
-        var local = new List<MenuItem>
-        {
-            new()
+            Id = "product-list",
+            Titles = new Dictionary<string, string>
             {
-                Id = "products", Title = "Sản phẩm", TitleKey = "menu.products",
-                Children =
-                [
-                    new() { Id = "product-list", Title = "Danh sách", TitleKey = "menu.productList" }
-                ]
-            }
-        };
-        var db = new List<MenuItem>
-        {
-            new()
-            {
-                Id = "products", Title = "Sản phẩm",
-                Children =
-                [
-                    new() { Id = "product-list", Title = "Danh sách" }
-                ]
+                ["vi"] = "Danh sách",
+                ["en"] = "List"
             }
         };
 
-        MenuConfigResolver.FillMissingTitleKeys(db, local);
+        var result = MenuTitle.Get(item, "en");
 
-        Assert.Equal("menu.products", db[0].TitleKey);
-        Assert.Equal("menu.productList", db[0].Children![0].TitleKey);
+        Assert.Equal("List", result);
     }
 
-    // TEST04: Unknown DB menu with no local counterpart → TitleKey remains null
+    // TEST02: Fallback to "vi" when current language not found
     [Fact]
-    public void FillMissingTitleKeys_UnknownMenu_RemainsNull()
+    public void Get_CurrentLanguageNotAvailable_FallbackToVi()
     {
-        var local = new List<MenuItem>();
-        var db = new List<MenuItem>
+        var item = new MenuItem
         {
-            new() { Id = "unknown", Title = "Unknown" }
+            Id = "product-list",
+            Titles = new Dictionary<string, string>
+            {
+                ["vi"] = "Danh sách",
+                ["en"] = "List"
+            }
         };
 
-        MenuConfigResolver.FillMissingTitleKeys(db, local);
+        var result = MenuTitle.Get(item, "fr");
 
-        Assert.Null(db[0].TitleKey);
+        Assert.Equal("Danh sách", result);
+    }
+
+    // TEST03: Fallback to first available non-empty title
+    [Fact]
+    public void Get_ViNotAvailable_FallbackToFirstAvailable()
+    {
+        var item = new MenuItem
+        {
+            Id = "product-list",
+            Titles = new Dictionary<string, string>
+            {
+                ["en"] = "List"
+            }
+        };
+
+        var result = MenuTitle.Get(item, "fr");
+
+        Assert.Equal("List", result);
+    }
+
+    // TEST04: Fallback to menu id when no titles available
+    [Fact]
+    public void Get_NoTitles_FallbackToId()
+    {
+        var item = new MenuItem
+        {
+            Id = "product-list",
+            Titles = new Dictionary<string, string>()
+        };
+
+        var result = MenuTitle.Get(item, "vi");
+
+        Assert.Equal("product-list", result);
+    }
+
+    // TEST05: Fallback to menu id when all titles are empty
+    [Fact]
+    public void Get_AllTitlesEmpty_FallbackToId()
+    {
+        var item = new MenuItem
+        {
+            Id = "product-list",
+            Titles = new Dictionary<string, string>
+            {
+                ["vi"] = "",
+                ["en"] = "  "
+            }
+        };
+
+        var result = MenuTitle.Get(item, "vi");
+
+        Assert.Equal("product-list", result);
+    }
+
+    // TEST06: Custom default language
+    [Fact]
+    public void Get_CustomDefaultLanguage_UsesCustomDefault()
+    {
+        var item = new MenuItem
+        {
+            Id = "product-list",
+            Titles = new Dictionary<string, string>
+            {
+                ["fr"] = "Liste",
+                ["en"] = "List"
+            }
+        };
+
+        var result = MenuTitle.Get(item, "de", "fr");
+
+        Assert.Equal("Liste", result);
     }
 }
 
-public class SystemMenusTests
+public class MenuTreeTests
 {
-    // TEST05: New system menus get TitleKey
+    // TEST07: Root navigable page
     [Fact]
-    public void EnsureRegistered_NewMenus_SetsTitleKey()
+    public void FindFirstPage_RootPage_ReturnsFirstPage()
     {
-        var config = new PageConfig { Menus = [] };
-
-        SystemMenus.EnsureRegistered(config);
-
-        var system = config.Menus.First(x => x.Id == "system");
-        Assert.Equal("menu.system", system.TitleKey);
-
-        var systemConfig = system.Children!.First(x => x.Id == SystemMenus.SystemConfigPageId);
-        Assert.Equal("menu.systemConfig", systemConfig.TitleKey);
-
-        var systemLogs = system.Children.First(x => x.Id == SystemMenus.SystemLogsPageId);
-        Assert.Equal("menu.systemLogs", systemLogs.TitleKey);
-    }
-
-    // TEST06: Existing system menus from DB get TitleKey filled
-    [Fact]
-    public void EnsureRegistered_ExistingMenus_FillsMissingTitleKey()
-    {
-        var config = new PageConfig
+        var menus = new List<MenuItem>
         {
-            Menus =
-            [
-                new MenuItem
-                {
-                    Id = "system", Title = "System",
-                    Children =
-                    [
-                        new() { Id = SystemMenus.SystemConfigPageId, Title = "Config" },
-                        new() { Id = SystemMenus.SystemLogsPageId, Title = "Logs" }
-                    ]
-                }
-            ]
+            new() { Id = "page1", Assembly = "Test.dll", Component = "Test.Page1" },
+            new() { Id = "page2", Assembly = "Test.dll", Component = "Test.Page2" }
         };
 
-        SystemMenus.EnsureRegistered(config);
+        var result = MenuTree.FindFirstPage(menus);
 
-        var system = config.Menus.First(x => x.Id == "system");
-        Assert.Equal("menu.system", system.TitleKey);
-
-        var systemConfig = system.Children!.First(x => x.Id == SystemMenus.SystemConfigPageId);
-        Assert.Equal("menu.systemConfig", systemConfig.TitleKey);
-
-        var systemLogs = system.Children.First(x => x.Id == SystemMenus.SystemLogsPageId);
-        Assert.Equal("menu.systemLogs", systemLogs.TitleKey);
+        Assert.NotNull(result);
+        Assert.Equal("page1", result.Id);
     }
 
-    // TEST07: DB TitleKey is never overwritten
+    // TEST08: Nested page depth-first
     [Fact]
-    public void EnsureRegistered_ExistingMenus_DoesNotOverwriteTitleKey()
+    public void FindFirstPage_NestedPage_ReturnsFirstNestedPage()
     {
-        var config = new PageConfig
+        var menus = new List<MenuItem>
         {
-            Menus =
-            [
-                new MenuItem
-                {
-                    Id = "system", Title = "System", TitleKey = "custom.system",
-                    Children =
-                    [
-                        new() { Id = SystemMenus.SystemConfigPageId, Title = "Config", TitleKey = "custom.config" },
-                        new() { Id = SystemMenus.SystemLogsPageId, Title = "Logs", TitleKey = "custom.logs" }
-                    ]
-                }
-            ]
+            new()
+            {
+                Id = "parent",
+                Children =
+                [
+                    new() { Id = "child-page", Assembly = "Test.dll", Component = "Test.ChildPage" }
+                ]
+            }
         };
 
-        SystemMenus.EnsureRegistered(config);
+        var result = MenuTree.FindFirstPage(menus);
 
-        var system = config.Menus.First(x => x.Id == "system");
-        Assert.Equal("custom.system", system.TitleKey);
+        Assert.NotNull(result);
+        Assert.Equal("child-page", result.Id);
+    }
 
-        var systemConfig = system.Children!.First(x => x.Id == SystemMenus.SystemConfigPageId);
-        Assert.Equal("custom.config", systemConfig.TitleKey);
+    // TEST09: List order controls first page
+    [Fact]
+    public void FindFirstPage_MultiplePages_ReturnsFirstInOrder()
+    {
+        var menus = new List<MenuItem>
+        {
+            new() { Id = "second", Assembly = "Test.dll", Component = "Test.Second" },
+            new() { Id = "first", Assembly = "Test.dll", Component = "Test.First" }
+        };
 
-        var systemLogs = system.Children.First(x => x.Id == SystemMenus.SystemLogsPageId);
-        Assert.Equal("custom.logs", systemLogs.TitleKey);
+        var result = MenuTree.FindFirstPage(menus);
+
+        Assert.NotNull(result);
+        Assert.Equal("second", result.Id);
+    }
+
+    // TEST10: No navigable page returns null
+    [Fact]
+    public void FindFirstPage_NoNavigablePage_ReturnsNull()
+    {
+        var menus = new List<MenuItem>
+        {
+            new() { Id = "parent", Children = [] }
+        };
+
+        var result = MenuTree.FindFirstPage(menus);
+
+        Assert.Null(result);
+    }
+
+    // TEST11: Empty list returns null
+    [Fact]
+    public void FindFirstPage_EmptyList_ReturnsNull()
+    {
+        var menus = new List<MenuItem>();
+
+        var result = MenuTree.FindFirstPage(menus);
+
+        Assert.Null(result);
+    }
+}
+
+public class MenuItemTests
+{
+    // TEST12: Titles deserialization
+    [Fact]
+    public void MenuItem_Titles_DeserializesCorrectly()
+    {
+        var item = new MenuItem
+        {
+            Id = "test",
+            Titles = new Dictionary<string, string>
+            {
+                ["vi"] = "Tiếng Việt",
+                ["en"] = "English"
+            }
+        };
+
+        Assert.Equal(2, item.Titles.Count);
+        Assert.Equal("Tiếng Việt", item.Titles["vi"]);
+        Assert.Equal("English", item.Titles["en"]);
+    }
+
+    // TEST13: HasChildren returns true when children exist
+    [Fact]
+    public void MenuItem_HasChildren_WithChildren_ReturnsTrue()
+    {
+        var item = new MenuItem
+        {
+            Id = "parent",
+            Children = [new() { Id = "child" }]
+        };
+
+        Assert.True(item.HasChildren);
+    }
+
+    // TEST14: HasChildren returns false when no children
+    [Fact]
+    public void MenuItem_HasChildren_NoChildren_ReturnsFalse()
+    {
+        var item = new MenuItem { Id = "parent" };
+
+        Assert.False(item.HasChildren);
+    }
+
+    // TEST15: IsPage returns true when Assembly and Component are set
+    [Fact]
+    public void MenuItem_IsPage_WithAssemblyAndComponent_ReturnsTrue()
+    {
+        var item = new MenuItem
+        {
+            Id = "page",
+            Assembly = "Test.dll",
+            Component = "Test.Page"
+        };
+
+        Assert.True(item.IsPage);
+    }
+
+    // TEST16: IsPage returns false when Assembly is missing
+    [Fact]
+    public void MenuItem_IsPage_MissingAssembly_ReturnsFalse()
+    {
+        var item = new MenuItem
+        {
+            Id = "page",
+            Component = "Test.Page"
+        };
+
+        Assert.False(item.IsPage);
+    }
+
+    // TEST17: IsPage returns false when Component is missing
+    [Fact]
+    public void MenuItem_IsPage_MissingComponent_ReturnsFalse()
+    {
+        var item = new MenuItem
+        {
+            Id = "page",
+            Assembly = "Test.dll"
+        };
+
+        Assert.False(item.IsPage);
+    }
+}
+
+public class MenuConfigResolverTests
+{
+    // TEST18: Local mode uses local config
+    [Fact]
+    public async Task ResolveAsync_LocalMode_UsesLocalConfig()
+    {
+        var localConfig = new PageConfig
+        {
+            Source = "local",
+            Menus = [new() { Id = "local-menu", Titles = new Dictionary<string, string> { ["vi"] = "Local" } }]
+        };
+
+        var result = await MenuConfigResolver.ResolveAsync(
+            localConfig, null, null!, Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance, System.Diagnostics.Stopwatch.GetTimestamp());
+
+        Assert.Single(result.Menus);
+        Assert.Equal("local-menu", result.Menus[0].Id);
     }
 }

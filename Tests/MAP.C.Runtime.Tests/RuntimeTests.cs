@@ -29,17 +29,24 @@ public sealed class RuntimeTests
     }
 
     [Fact]
-    public void SystemMenus_RegistersSystemLogsOnlyOnce()
+    public void MenuTree_FindFirstPage_ReturnsFirstNavigablePage()
     {
-        var config = new PageConfig();
+        var menus = new List<MenuItem>
+        {
+            new()
+            {
+                Id = "parent",
+                Children =
+                [
+                    new() { Id = "child-page", Assembly = "Test.dll", Component = "Test.ChildPage" }
+                ]
+            }
+        };
 
-        SystemMenus.EnsureRegistered(config);
-        SystemMenus.EnsureRegistered(config);
+        var result = MenuTree.FindFirstPage(menus);
 
-        var system = Assert.Single(config.Menus);
-        Assert.Equal(2, system.Children!.Count);
-        Assert.Contains(system.Children, c => c.Id == SystemMenus.SystemLogsPageId);
-        Assert.Contains(system.Children, c => c.Id == SystemMenus.SystemConfigPageId);
+        Assert.NotNull(result);
+        Assert.Equal("child-page", result.Id);
     }
 
     [Fact]

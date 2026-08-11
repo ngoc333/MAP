@@ -8,7 +8,6 @@ public class AppConfig
     public bool ShowMenu { get; set; } = true;
     public string AppTitle { get; set; } = "MAP";
     public string DefaultLanguage { get; set; } = "vi";
-    public string DefaultPageId { get; set; } = "home-dashboard";
     public string MenuSource { get; set; } = "db";
     public bool ShowModuleErrorNotification { get; set; } = true;
     public string? ModuleErrorMessage { get; set; }

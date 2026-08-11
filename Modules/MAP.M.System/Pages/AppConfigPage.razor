@@ -72,12 +72,6 @@
                                                Style="width: 100%;" />
                             </RadzenStack>
 
-                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem" Wrap="FlexWrap.Wrap">
-                                <RadzenLabel Component="defaultPage" Text="@Lang.T("AppConfig.defaultPage")" Style="min-width: 150px;" />
-                                <RadzenDropDown TValue="string" Data="_pages" TextProperty="Text" ValueProperty="Id"
-                                                @bind-Value="_model.DefaultPageId" Style="width: 100%;" />
-                            </RadzenStack>
-
                             <RadzenButton Text="@Lang.T("AppConfig.save")" Icon="save" ButtonStyle="ButtonStyle.Primary"
                                           Click="OnSaveAsync" />
                         </RadzenStack>
@@ -121,7 +115,6 @@
     private bool _wasExisting;
     private IReadOnlyList<DisplayInfo> _displays = Array.Empty<DisplayInfo>();
     private IReadOnlyList<LanguageInfo> _languages = Array.Empty<LanguageInfo>();
-    private IReadOnlyList<PageOption> _pages = Array.Empty<PageOption>();
     private IReadOnlyList<MenuSourceOption> _menuSources = Array.Empty<MenuSourceOption>();
 
     protected override string HeaderTitleKey => "AppConfig.title";
@@ -134,27 +127,7 @@
         _displays = ConfigService.GetDisplays();
         _languages = Lang.AvailableLanguages;
         _menuSources = GetMenuSources();
-        _pages = GetPageOptions();
         RefreshHeader();
-    }
-
-    private IReadOnlyList<PageOption> GetPageOptions()
-    {
-        var pages = new List<PageOption>();
-        CollectPages(MenuService.Menus, pages);
-        return pages;
-    }
-
-    private static void CollectPages(List<MenuItem> menus, List<PageOption> result, string prefix = "")
-    {
-        foreach (var menu in menus)
-        {
-            var label = string.IsNullOrEmpty(prefix) ? menu.Title : $"{prefix} / {menu.Title}";
-            if (menu.IsPage)
-                result.Add(new PageOption(menu.Id, label));
-            if (menu.HasChildren)
-                CollectPages(menu.Children!, result, label);
-        }
     }
 
     private async Task OnSaveAsync()
@@ -175,6 +148,5 @@
         };
     }
 
-    private record PageOption(string Id, string Text);
     private record MenuSourceOption(string Value, string Text);
 }

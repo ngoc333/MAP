@@ -29,8 +29,8 @@
 
 	font-size: var(--map-header-title-size);
 	font-weight: 700;
-	line-height: 1;
-
+	line-height: 1.2;
+	padding: 0 ;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;

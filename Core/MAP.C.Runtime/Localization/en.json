@@ -1,21 +1,4 @@
 {
-  "menu": {
-    "home": "Home",
-    "dashboard": "Dashboard",
-    "welcome": "Welcome",
-    "products": "Products",
-    "productList": "List",
-    "productAdd": "Add New",
-    "customers": "Customers",
-    "customerList": "List",
-    "customerDetail": "Detail",
-    "reports": "Reports",
-    "sales": "Sales",
-    "revenueChart": "Revenue Chart",
-    "system": "System",
-    "systemConfig": "Configuration",
-    "systemLogs": "Logs"
-  },
   "layout": {
     "loading": "Loading module...",
     "selectMenu": "Select a menu to get started",
