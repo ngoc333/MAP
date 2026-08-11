@@ -107,7 +107,7 @@ public static class WpfHost
                 }
 
                 // Validate all required startup resources before showing the window
-                await ValidateStartupAsync(host.Services, logger);
+                await ValidateStartupAsync(host.Services);
 
                 window.Show();
                 window.Activate();
@@ -148,7 +148,7 @@ public static class WpfHost
     /// Validates all required startup resources before showing the main window.
     /// Throws if any required resource is missing or invalid.
     /// </summary>
-    private static async Task ValidateStartupAsync(IServiceProvider services, ILogger logger)
+    private static async Task ValidateStartupAsync(IServiceProvider services)
     {
         var menuService =
             services.GetRequiredService<IMenuService>();

@@ -50,7 +50,7 @@
 </div>
 
 @code {
-    private static readonly string[] Levels = ["", "Information", "Warning", "Error", "Critical"];
+    private static readonly string[] Levels = ["", "Debug", "Information", "Warning", "Error", "Critical"];
     private IReadOnlyList<DateOnly> _days = [];
     private IReadOnlyList<LogEntry> _entries = [];
     private IReadOnlyList<LogEntry> _filteredEntries = [];
@@ -104,7 +104,14 @@
     private async Task LoadAsync()
     {
         _days = await LogStore.GetDaysAsync();
-        _selectedDay ??= _days.Count > 0 ? _days[0] : null;
+
+        if (_selectedDay is null ||
+            !_days.Contains(_selectedDay.Value))
+        {
+            _selectedDay =
+                _days.Count > 0 ? _days[0] : null;
+        }
+
         _entries = _selectedDay is { } day
             ? await LogStore.GetAsync(day)
             : [];

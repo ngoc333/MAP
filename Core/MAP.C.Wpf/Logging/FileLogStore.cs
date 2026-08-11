@@ -6,7 +6,7 @@ namespace MAP.C.Wpf.Logging;
 
 public sealed class FileLogStore : ILogStore
 {
-    private const int RetentionDays = 30;
+    private const int RetentionDays = 7;
     private readonly string _logDirectory = Path.Combine(AppContext.BaseDirectory, "log");
     private readonly Lock _writeLock = new();
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
@@ -85,7 +85,8 @@ public sealed class FileLogStore : ILogStore
     {
         if (!Directory.Exists(_logDirectory)) return;
 
-        var cutoff = DateOnly.FromDateTime(DateTime.Today.AddDays(-RetentionDays));
+        var cutoff = DateOnly.FromDateTime(
+            DateTime.Today.AddDays(-(RetentionDays - 1)));
         var files = Directory.EnumerateFiles(_logDirectory, "????-??-??.log")
             .Select(f => new
             {
