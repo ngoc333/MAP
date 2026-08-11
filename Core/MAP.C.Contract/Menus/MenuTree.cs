@@ -1,6 +1,6 @@
 using MAP.C.Contract.Models;
 
-namespace MAP.C.Runtime.Menus;
+namespace MAP.C.Contract.Menus;
 
 public static class MenuTree
 {

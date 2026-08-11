@@ -23,7 +23,6 @@
     "menuSource": "Nguồn menu",
     "menuSourceDb": "Từ database",
     "menuSourceLocal": "Từ file",
-    "defaultPage": "Trang mặc định",
     "showModuleErrorNotification": "Thông báo khi chức năng lỗi",
     "moduleErrorMessage": "Nội dung thông báo lỗi",
     "moduleErrorMessagePlaceholder": "Chức năng tạm thời không khả dụng.",

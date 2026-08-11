@@ -14,7 +14,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\MAP.C.Contract\MAP.C.Contract.csproj" />
-    <ProjectReference Include="..\MAP.C.Runtime\MAP.C.Runtime.csproj" />
   </ItemGroup>
 
 </Project>

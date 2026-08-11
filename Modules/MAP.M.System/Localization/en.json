@@ -23,7 +23,6 @@
     "menuSource": "Menu source",
     "menuSourceDb": "From database",
     "menuSourceLocal": "From file",
-    "defaultPage": "Default page",
     "showModuleErrorNotification": "Show notification on module error",
     "moduleErrorMessage": "Error notification message",
     "moduleErrorMessagePlaceholder": "Feature temporarily unavailable.",

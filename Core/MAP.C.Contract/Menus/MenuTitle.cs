@@ -1,10 +1,10 @@
 using MAP.C.Contract.Models;
 
-namespace MAP.C.Runtime.Menus;
+namespace MAP.C.Contract.Menus;
 
 /// <summary>
 /// Resolves the display title for a menu item based on the current language.
-/// Resolution order: current language -> "vi" -> first available non-empty title -> menu id.
+/// Resolution order: current language -> default language -> first available non-empty title -> menu id.
 /// </summary>
 public static class MenuTitle
 {
@@ -27,7 +27,7 @@ public static class MenuTitle
             return title;
         }
 
-        // Try default language (vi)
+        // Try default language
         if (item.Titles.TryGetValue(defaultLanguage, out title) &&
             !string.IsNullOrWhiteSpace(title))
         {

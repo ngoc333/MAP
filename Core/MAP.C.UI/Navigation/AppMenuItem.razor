@@ -1,0 +1,28 @@
+@inject ILanguageService Lang
+
+@if (Item.HasChildren)
+{
+    <RadzenPanelMenuItem Text="@GetMenuTitle()" Icon="@Item.Icon">
+        @foreach (var child in Item.Children)
+        {
+            <AppMenuItem Item="@child" OnMenuSelected="@OnMenuSelected" />
+        }
+    </RadzenPanelMenuItem>
+}
+else if (Item.IsPage)
+{
+    <RadzenPanelMenuItem Text="@GetMenuTitle()" Icon="@Item.Icon" Click="OnMenuClick" />
+}
+else
+{
+    <RadzenPanelMenuItem Text="@GetMenuTitle()" Icon="@Item.Icon" />
+}
+
+@code {
+    [Parameter, EditorRequired] public MenuItem Item { get; set; } = default!;
+    [Parameter] public EventCallback<MenuItem> OnMenuSelected { get; set; }
+
+    private string GetMenuTitle() => MenuTitle.Get(Item, Lang.CurrentLanguage);
+
+    private Task OnMenuClick() => OnMenuSelected.InvokeAsync(Item);
+}

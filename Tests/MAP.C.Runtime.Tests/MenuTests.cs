@@ -1,9 +1,12 @@
+using System.Text.Json;
+using MAP.C.Contract.Database;
+using MAP.C.Contract.Menus;
 using MAP.C.Contract.Models;
 using MAP.C.Runtime.Menus;
 
 namespace MAP.C.Runtime.Tests;
 
-public class MenuTitleTests
+public class MenuTitleContractTests
 {
     // TEST01: Current language title is returned
     [Fact]
@@ -115,7 +118,7 @@ public class MenuTitleTests
     }
 }
 
-public class MenuTreeTests
+public class MenuTreeContractTests
 {
     // TEST07: Root navigable page
     [Fact]
@@ -197,7 +200,7 @@ public class MenuTreeTests
     }
 }
 
-public class MenuItemTests
+public class MenuItemContractTests
 {
     // TEST12: Titles deserialization
     [Fact]
@@ -281,7 +284,7 @@ public class MenuItemTests
     }
 }
 
-public class MenuConfigResolverTests
+public class PostRefactorMenuConfigResolverTests
 {
     // TEST18: Local mode uses local config
     [Fact]
@@ -298,5 +301,111 @@ public class MenuConfigResolverTests
 
         Assert.Single(result.Menus);
         Assert.Equal("local-menu", result.Menus[0].Id);
+    }
+
+    [Fact]
+    public async Task ResolveAsync_DatabaseMode_UsesDatabaseConfig()
+    {
+        var localConfig = new PageConfig
+        {
+            Source = "db",
+            DbName = "mes",
+            DbFunction = "mes.fn_get_map_menu",
+            Menus = [new() { Id = "local-menu" }]
+        };
+        var dbClient = new FakeDbApiClient(CreateMenuResponse("db-menu"));
+
+        var result = await MenuConfigResolver.ResolveAsync(
+            localConfig, null, dbClient,
+            Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance,
+            System.Diagnostics.Stopwatch.GetTimestamp());
+
+        Assert.Single(result.Menus);
+        Assert.Equal("db-menu", result.Menus[0].Id);
+    }
+
+    [Fact]
+    public async Task ResolveAsync_DatabaseFailure_PropagatesWithoutLocalFallback()
+    {
+        var localConfig = new PageConfig
+        {
+            Source = "db",
+            DbName = "mes",
+            DbFunction = "mes.fn_get_map_menu",
+            Menus = [new() { Id = "local-menu" }]
+        };
+        var dbClient = new FakeDbApiClient(new InvalidOperationException("database unavailable"));
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            MenuConfigResolver.ResolveAsync(
+                localConfig, null, dbClient,
+                Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance,
+                System.Diagnostics.Stopwatch.GetTimestamp()));
+
+        Assert.Equal("database unavailable", exception.Message);
+    }
+
+    [Fact]
+    public async Task ResolveAsync_UnknownSource_ThrowsConfigurationError()
+    {
+        var localConfig = new PageConfig
+        {
+            Source = "abc",
+            Menus = [new() { Id = "local-menu" }]
+        };
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            MenuConfigResolver.ResolveAsync(
+                localConfig, null, null!,
+                Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance,
+                System.Diagnostics.Stopwatch.GetTimestamp()));
+
+        Assert.Contains("Unsupported menu source", exception.Message);
+        Assert.Contains("abc", exception.Message);
+    }
+
+    private static JsonElement CreateMenuResponse(string menuId)
+    {
+        var menu = JsonSerializer.Serialize(new PageConfig
+        {
+            Menus = [new() { Id = menuId }]
+        });
+
+        return JsonSerializer.SerializeToElement(new
+        {
+            success = true,
+            data = new[]
+            {
+                new Dictionary<string, string> { ["fn_get_map_menu"] = menu }
+            }
+        });
+    }
+
+    private sealed class FakeDbApiClient : IDbApiClient
+    {
+        private readonly JsonElement? _response;
+        private readonly Exception? _exception;
+
+        public FakeDbApiClient(JsonElement response) => _response = response;
+        public FakeDbApiClient(Exception exception) => _exception = exception;
+
+        public Task<JsonElement> CallPostgreSqlFunctionAsync(
+            string dbName, string commandName, JsonElement parameters,
+            CancellationToken cancellationToken = default)
+        {
+            if (_exception is not null)
+                return Task.FromException<JsonElement>(_exception);
+
+            return Task.FromResult(_response!.Value);
+        }
+
+        public Task<JsonElement> CallOracleAsync(
+            JsonElement requestBody, CancellationToken cancellationToken = default) =>
+            throw new NotSupportedException();
+
+        public Task<JsonElement> CallPostgreSqlProcedureAsync(
+            string dbName, string commandName, JsonElement parameters,
+            CancellationToken cancellationToken = default) =>
+            throw new NotSupportedException();
     }
 }

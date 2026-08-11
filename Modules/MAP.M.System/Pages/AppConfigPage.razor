@@ -2,7 +2,6 @@
 @namespace MAP.M.System.Pages
 @inject IAppConfigService ConfigService
 @inject IPlatformCapabilities Platform
-@inject IMenuService MenuService
 @inject DialogService DialogService
 
 <div class="flex flex-col h-full">
@@ -112,16 +111,14 @@
 @code {
     private AppConfig _model = new();
     private SystemInfo _systemInfo = new();
-    private bool _wasExisting;
     private IReadOnlyList<DisplayInfo> _displays = Array.Empty<DisplayInfo>();
     private IReadOnlyList<LanguageInfo> _languages = Array.Empty<LanguageInfo>();
     private IReadOnlyList<MenuSourceOption> _menuSources = Array.Empty<MenuSourceOption>();
 
     protected override string HeaderTitleKey => "AppConfig.title";
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        _wasExisting = ConfigService.Exists;
         _model = ConfigService.Current ?? new AppConfig();
         _systemInfo = ConfigService.GetSystemInfo();
         _displays = ConfigService.GetDisplays();

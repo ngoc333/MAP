@@ -1,42 +1,11 @@
 @inject IMenuService MenuService
 @inject ILanguageService Lang
-@using MAP.C.Runtime.Menus
 
 <aside class="w-64 bg-white border-r border-gray-200 overflow-y-auto flex-shrink-0 pt-4">
     <RadzenPanelMenu>
         @foreach (var menu in MenuService.Menus)
         {
-            <RadzenPanelMenuItem Text="@GetMenuTitle(menu)" Icon="@menu.Icon" Expanded="@(menu.Id == "home")">
-                @if (menu.HasChildren)
-                {
-                    @foreach (var child in menu.Children)
-                    {
-                        @if (child.HasChildren)
-                        {
-                            <RadzenPanelMenuItem Text="@GetMenuTitle(child)" Icon="@child.Icon">
-                                @foreach (var grandChild in child.Children)
-                                {
-                                    @if (grandChild.IsPage)
-                                    {
-                                        <RadzenPanelMenuItem Text="@GetMenuTitle(grandChild)" Icon="@grandChild.Icon"
-                                            Click="@(async () => await OnMenuItemClick(grandChild))" />
-                                    }
-                                }
-                            </RadzenPanelMenuItem>
-                        }
-                        else if (child.IsPage)
-                        {
-                            <RadzenPanelMenuItem Text="@GetMenuTitle(child)" Icon="@child.Icon"
-                                Click="@(async () => await OnMenuItemClick(child))" />
-                        }
-                    }
-                }
-                else if (menu.IsPage)
-                {
-                    <RadzenPanelMenuItem Text="@GetMenuTitle(menu)" Icon="@menu.Icon"
-                        Click="@(async () => await OnMenuItemClick(menu))" />
-                }
-            </RadzenPanelMenuItem>
+            <AppMenuItem Item="@menu" OnMenuSelected="@OnMenuSelected" />
         }
     </RadzenPanelMenu>
 </aside>
@@ -50,17 +19,6 @@
     {
         MenuService.OnMenusLoaded += OnStateChanged;
         Lang.LanguageChanged += OnStateChanged;
-    }
-
-    private string GetMenuTitle(MenuItem menu)
-    {
-        return MenuTitle.Get(menu, Lang.CurrentLanguage);
-    }
-
-    private async Task OnMenuItemClick(MenuItem item)
-    {
-        if (!item.IsPage) return;
-        await OnMenuSelected.InvokeAsync(item);
     }
 
     private void OnStateChanged() => InvokeAsync(StateHasChanged);

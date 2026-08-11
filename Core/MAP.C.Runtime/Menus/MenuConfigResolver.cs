@@ -9,7 +9,7 @@ namespace MAP.C.Runtime.Menus;
 
 /// <summary>
 /// Shared menu resolution logic used by both WPF and Wasm MenuService.
-/// Handles: effective menu source → optional database load → DB failure fallback.
+/// Handles the effective menu source and loads the selected menu configuration.
 /// </summary>
 public static class MenuConfigResolver
 {
@@ -29,22 +29,23 @@ public static class MenuConfigResolver
         ILogger logger,
         long started)
     {
-        var config = localConfig;
-        var source = configService?.Current?.MenuSource ?? config.Source;
+        var source = configService?.Current?.MenuSource ?? localConfig.Source;
+        PageConfig config;
 
-        if (string.Equals(source, "db", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(source, "local", StringComparison.OrdinalIgnoreCase))
         {
-            try
-            {
-                config = await DatabaseMenuLoader.LoadAsync(
-                    dbClient, config.DbName!, config.DbFunction!);
-                logger.LogInformation("Database menu loaded. MenuCount={MenuCount}", config.Menus.Count);
-            }
-            catch (Exception ex)
-            {
-                logger.LogWarning(ex, "Database menu load failed; preserving local menu.");
-                // Preserve the local menu if the remote source is unavailable or invalid.
-            }
+            config = localConfig;
+        }
+        else if (string.Equals(source, "db", StringComparison.OrdinalIgnoreCase))
+        {
+            config = await DatabaseMenuLoader.LoadAsync(
+                dbClient, localConfig.DbName!, localConfig.DbFunction!);
+            logger.LogInformation("Database menu loaded. MenuCount={MenuCount}", config.Menus.Count);
+        }
+        else
+        {
+            throw new InvalidOperationException(
+                $"Unsupported menu source: '{source}'. Expected 'local' or 'db'.");
         }
 
         logger.LogInformation("Menu ready. MenuCount={MenuCount} DurationMs={DurationMs}",

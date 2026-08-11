@@ -166,7 +166,7 @@ public static class WpfHost
             services.GetRequiredService<IAppConfigService>();
 
         // Find first navigable page using menu order
-        var item = MAP.C.Runtime.Menus.MenuTree.FindFirstPage(menuService.Menus)
+        var item = MAP.C.Contract.Menus.MenuTree.FindFirstPage(menuService.Menus)
             ?? throw new InvalidOperationException(
                 "Menu does not contain any navigable page.");
 
