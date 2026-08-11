@@ -19,22 +19,14 @@
                 var sid = (string?)group.Data.Key ?? "—";
                 var shortId = sid.Length >= 8 ? sid[..8] : sid;
                 var entries = ((IEnumerable<LogEntry>?)group.Data.Items)?.ToList() ?? [];
-                var (first, last, info, warn, error, critical) = GetGroupStats(entries);
-                var span = last - first;
+                var (first, last) = GetGroupRange(entries);
             }
             <div title="@sid" class="flex items-center gap-2 py-1.5 px-2 text-sm bg-gray-50 border-b border-gray-200 hover:bg-gray-100">
                 <span class="font-mono text-xs font-bold text-gray-700 bg-gray-200 rounded px-1.5 py-0.5">@shortId</span>
                 <span class="text-gray-300">|</span>
                 <span class="text-gray-500 text-xs font-mono">
-                    @first.ToString("HH:mm:ss") → @last.ToString("HH:mm:ss")
-                    <span class="text-gray-400 ml-1">(@span.TotalMinutes.ToString("F0")m)</span>
+                    Session @shortId: @first.ToString("HH:mm:ss") -> @last.ToString("HH:mm:ss")
                 </span>
-                <span class="text-gray-300">|</span>
-                <span class="text-gray-600 font-medium">@entries.Count @Lang.T("SystemLogs.total")</span>
-                @if (info > 0) { <span class="text-blue-600 text-xs font-mono">I:@info</span> }
-                @if (warn > 0) { <span class="text-yellow-600 text-xs font-mono">W:@warn</span> }
-                @if (error > 0) { <span class="text-red-600 text-xs font-mono">E:@error</span> }
-                @if (critical > 0) { <span class="text-red-800 text-xs font-bold font-mono">C:@critical</span> }
             </div>
         </GroupHeaderTemplate>
         <Columns>
@@ -49,12 +41,6 @@
                         @if (!string.IsNullOrEmpty(entry.Exception))
                         {
                             <pre class="text-red-600 whitespace-pre-wrap text-xs m-0">@entry.Exception</pre>
-                        }
-                        @if (!string.IsNullOrEmpty(entry.OperationId))
-                        {
-                            <div class="text-gray-400 text-xs">
-                                <span>OperationId: @entry.OperationId</span>
-                            </div>
                         }
                     </div>
                 </Template>
@@ -94,44 +80,34 @@
         _filteredEntries = _entries
             .Where(entry =>
                 (string.IsNullOrEmpty(_level) || entry.Level == _level) &&
-                (string.IsNullOrWhiteSpace(_search) || Contains(entry.Message, _search) || Contains(entry.Category, _search) || Contains(entry.SessionId, _search) || Contains(entry.OperationId, _search)))
+                (string.IsNullOrWhiteSpace(_search) || Contains(entry.Message, _search) || Contains(entry.Category, _search) || Contains(entry.SessionId, _search)))
             .ToList();
     }
 
-    private static (DateTimeOffset First, DateTimeOffset Last, int Info, int Warn, int Error, int Critical) GetGroupStats(IEnumerable<LogEntry> entries)
+    private static (DateTimeOffset First, DateTimeOffset Last) GetGroupRange(IEnumerable<LogEntry> entries)
     {
         var list = entries as IReadOnlyList<LogEntry> ?? entries.ToList();
         if (list.Count == 0)
-            return (DateTimeOffset.MinValue, DateTimeOffset.MinValue, 0, 0, 0, 0);
+            return (DateTimeOffset.MinValue, DateTimeOffset.MinValue);
 
         var first = list[0].Timestamp;
         var last = list[0].Timestamp;
-        var info = 0;
-        var warn = 0;
-        var error = 0;
-        var critical = 0;
-
         foreach (var entry in list)
         {
             if (entry.Timestamp < first) first = entry.Timestamp;
             if (entry.Timestamp > last) last = entry.Timestamp;
-            switch (entry.Level)
-            {
-                case "Information": info++; break;
-                case "Warning": warn++; break;
-                case "Error": error++; break;
-                case "Critical": critical++; break;
-            }
         }
 
-        return (first, last, info, warn, error, critical);
+        return (first, last);
     }
 
     private async Task LoadAsync()
     {
         _days = await LogStore.GetDaysAsync();
-        _selectedDay ??= _days.FirstOrDefault();
-        _entries = await LogStore.GetAsync(_selectedDay);
+        _selectedDay ??= _days.Count > 0 ? _days[0] : null;
+        _entries = _selectedDay is { } day
+            ? await LogStore.GetAsync(day)
+            : [];
         ApplyFilter();
     }
 
@@ -139,7 +115,7 @@
     {
         if (_selectedDay is not null)
         {
-            _entries = await LogStore.GetAsync(_selectedDay);
+            _entries = await LogStore.GetAsync(_selectedDay.Value);
             ApplyFilter();
         }
     }
@@ -147,7 +123,7 @@
     private async Task ClearAsync()
     {
         if (_selectedDay is null) return;
-        await LogStore.ClearAsync(_selectedDay);
+        await LogStore.ClearAsync(_selectedDay.Value);
         await LoadAsync();
     }
 
@@ -156,7 +132,7 @@
         _selectedDay = (DateOnly?)value;
         if (_selectedDay is not null)
         {
-            _entries = await LogStore.GetAsync(_selectedDay);
+            _entries = await LogStore.GetAsync(_selectedDay.Value);
             ApplyFilter();
         }
     }

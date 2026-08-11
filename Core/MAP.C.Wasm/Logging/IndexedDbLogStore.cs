@@ -10,9 +10,9 @@ public sealed class IndexedDbLogStore(IJSRuntime js) : ILogStore
         await js.InvokeVoidAsync("mapLog.write", cancellationToken, entry);
     }
 
-    public async Task<IReadOnlyList<LogEntry>> GetAsync(DateOnly? day = null, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<LogEntry>> GetAsync(DateOnly day, CancellationToken cancellationToken = default)
     {
-        var result = await js.InvokeAsync<LogEntry[]>("mapLog.get", cancellationToken, day?.ToString("yyyy-MM-dd"));
+        var result = await js.InvokeAsync<LogEntry[]>("mapLog.get", cancellationToken, day.ToString("yyyy-MM-dd"));
         return result;
     }
 
@@ -22,6 +22,6 @@ public sealed class IndexedDbLogStore(IJSRuntime js) : ILogStore
         return result.Select(DateOnly.Parse).ToList();
     }
 
-    public Task ClearAsync(DateOnly? day = null, CancellationToken cancellationToken = default) =>
-        js.InvokeVoidAsync("mapLog.clear", cancellationToken, day?.ToString("yyyy-MM-dd")).AsTask();
+    public Task ClearAsync(DateOnly day, CancellationToken cancellationToken = default) =>
+        js.InvokeVoidAsync("mapLog.clear", cancellationToken, day.ToString("yyyy-MM-dd")).AsTask();
 }

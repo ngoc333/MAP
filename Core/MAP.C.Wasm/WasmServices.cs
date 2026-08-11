@@ -40,7 +40,11 @@ public static class WasmServices
         services.AddLogging(logging =>
         {
             logging.ClearProviders();
-            logging.SetMinimumLevel(LogLevel.Information);
+            logging.SetMinimumLevel(LogLevel.Warning);
+            logging.AddFilter("MAP", LogLevel.Information);
+#if DEBUG
+            logging.AddFilter("MAP", LogLevel.Debug);
+#endif
             logging.Services.AddSingleton<IndexedDbLogStore>();
             logging.Services.AddSingleton<ILoggerProvider, LogStoreLoggerProvider>();
         });

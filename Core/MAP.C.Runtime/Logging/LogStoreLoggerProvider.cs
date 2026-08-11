@@ -14,8 +14,8 @@ public sealed class LogStoreLoggerProvider(ILogStore store) : ILoggerProvider
 
     private sealed class LogStoreLogger(string category, ILogStore store) : ILogger
     {
-        public IDisposable? BeginScope<TState>(TState state) where TState : notnull => NullScope.Instance;
-        public bool IsEnabled(LogLevel logLevel) => logLevel >= LogLevel.Information;
+        public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
+        public bool IsEnabled(LogLevel logLevel) => logLevel != LogLevel.None;
 
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception,
             Func<TState, Exception?, string> formatter)
@@ -26,11 +26,9 @@ public sealed class LogStoreLoggerProvider(ILogStore store) : ILoggerProvider
                 Timestamp = DateTimeOffset.Now,
                 Level = logLevel.ToString(),
                 Category = category,
-                EventName = eventId.Name ?? string.Empty,
                 Message = formatter(state, exception),
                 Exception = exception?.ToString(),
-                SessionId = DiagnosticContext.SessionId,
-                OperationId = DiagnosticContext.OperationId
+                SessionId = AppSession.Id
             });
         }
 
@@ -41,9 +39,4 @@ public sealed class LogStoreLoggerProvider(ILogStore store) : ILoggerProvider
         }
     }
 
-    private sealed class NullScope : IDisposable
-    {
-        public static NullScope Instance { get; } = new();
-        public void Dispose() { }
-    }
 }

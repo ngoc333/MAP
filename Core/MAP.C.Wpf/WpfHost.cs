@@ -46,11 +46,7 @@ public static class WpfHost
             })
             .Build();
 
-        var logger = host.Services.GetRequiredService<ILoggerFactory>().CreateLogger("AppStartup");
-        logger.LogInformation("Application starting. SessionId={SessionId} BaseDirectory={BaseDirectory} CurrentDirectory={CurrentDirectory} ProcessId={ProcessId} Framework={Framework} OS={OS}",
-            DiagnosticContext.SessionId, AppContext.BaseDirectory, Environment.CurrentDirectory,
-            Environment.ProcessId, System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription,
-            System.Runtime.InteropServices.RuntimeInformation.OSDescription);
+        var logger = host.Services.GetRequiredService<ILoggerFactory>().CreateLogger("MAP.Startup");
 
         application.DispatcherUnhandledException += (_, e) =>
         {
@@ -69,9 +65,7 @@ public static class WpfHost
         {
             try
             {
-                logger.LogInformation("Host starting");
                 await host.StartAsync();
-                logger.LogInformation("Host started. DurationMs={DurationMs}", Stopwatch.GetElapsedTime(started).TotalMilliseconds);
 
                 // Initialize localization
                 var langService = host.Services.GetRequiredService<ILanguageService>();
@@ -118,7 +112,7 @@ public static class WpfHost
                 window.Show();
                 window.Activate();
                 window.Focus();
-                logger.LogInformation("MainWindow shown. StartupDurationMs={DurationMs}", Stopwatch.GetElapsedTime(started).TotalMilliseconds);
+                logger.LogInformation("Application started. DurationMs={DurationMs}", Stopwatch.GetElapsedTime(started).TotalMilliseconds);
             }
             catch (Exception ex)
             {
@@ -134,7 +128,6 @@ public static class WpfHost
 
         application.Exit += (_, _) =>
         {
-            logger.LogInformation("Application shutting down. SessionId={SessionId}", DiagnosticContext.SessionId);
             try
             {
                 host.StopAsync().GetAwaiter().GetResult();
@@ -145,8 +138,8 @@ public static class WpfHost
             }
             finally
             {
-                host.Dispose();
                 logger.LogInformation("Application stopped");
+                host.Dispose();
             }
         };
     }
@@ -175,9 +168,6 @@ public static class WpfHost
             .GetRequiredService<IModuleLoader>()
             .LoadComponentAsync(item);
 
-        logger.LogInformation(
-            "Startup page validated. PageId={PageId}",
-            item.Id);
     }
 
     private static string BuildStartupErrorMessage(Exception exception)
@@ -200,7 +190,7 @@ public static class WpfHost
         sb.AppendLine(inner.Message);
         sb.AppendLine();
         sb.AppendLine("Session:");
-        sb.AppendLine(DiagnosticContext.SessionId);
+        sb.AppendLine(AppSession.Id);
         sb.AppendLine();
         sb.AppendLine("The application cannot continue.");
 

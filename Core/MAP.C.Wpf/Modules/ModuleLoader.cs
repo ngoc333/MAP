@@ -44,7 +44,7 @@ public sealed class ModuleLoader : IModuleLoader
 
         if (_cachedTypes.TryGetValue(cacheKey, out var cachedType))
         {
-            _logger.LogInformation("Module cache hit. Assembly={Assembly} Component={Component}", menuItem.Assembly, menuItem.Component);
+            _logger.LogDebug("Module cache hit. Assembly={Assembly} Component={Component}", menuItem.Assembly, menuItem.Component);
             return cachedType;
         }
 
@@ -63,7 +63,7 @@ public sealed class ModuleLoader : IModuleLoader
             }
 
             _cachedTypes[cacheKey] = type;
-            _logger.LogInformation("WPF module loaded. Assembly={Assembly} Component={Component} DurationMs={DurationMs}",
+            _logger.LogInformation("Module loaded. Assembly={Assembly} Component={Component} DurationMs={DurationMs}",
                 menuItem.Assembly, menuItem.Component, Stopwatch.GetElapsedTime(started).TotalMilliseconds);
             return type;
         }
@@ -147,7 +147,7 @@ public sealed class ModuleLoader : IModuleLoader
                 path);
         }
 
-        _logger.LogInformation("Loading WPF module. Assembly={Assembly} Path={Path}", assemblyName, path);
+        _logger.LogDebug("Loading WPF module. Assembly={Assembly}", assemblyName);
         var assembly = Assembly.LoadFrom(path);
 
         // Localization must succeed before we consider the assembly ready.

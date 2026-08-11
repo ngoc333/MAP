@@ -27,50 +27,36 @@ public sealed class FileLogStore : ILogStore
     public Task WriteAsync(LogEntry entry, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        try
+        lock (_writeLock)
         {
-            lock (_writeLock)
-            {
-                Directory.CreateDirectory(_logDirectory);
-                var path = Path.Combine(_logDirectory, $"{entry.Timestamp:yyyy-MM-dd}.log");
-                File.AppendAllText(path, JsonSerializer.Serialize(entry, JsonOptions) + Environment.NewLine);
-            }
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"[FileLogStore] Write failed: {ex.Message}");
+            Directory.CreateDirectory(_logDirectory);
+            var path = Path.Combine(_logDirectory, $"{entry.Timestamp:yyyy-MM-dd}.log");
+            File.AppendAllText(path, JsonSerializer.Serialize(entry, JsonOptions) + Environment.NewLine);
         }
         return Task.CompletedTask;
     }
 
-    public async Task<IReadOnlyList<LogEntry>> GetAsync(DateOnly? day = null, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<LogEntry>> GetAsync(DateOnly day, CancellationToken cancellationToken = default)
     {
-        var days = day is null ? await GetDaysAsync(cancellationToken) : [day.Value];
         var entries = new List<LogEntry>();
-        foreach (var item in days)
+        var path = Path.Combine(_logDirectory, $"{day:yyyy-MM-dd}.log");
+        if (!File.Exists(path)) return entries;
+
+        var malformedCount = 0;
+        using var reader = new StreamReader(path);
+        string? line;
+        while ((line = await reader.ReadLineAsync(cancellationToken)) is not null)
         {
-            var path = Path.Combine(_logDirectory, $"{item:yyyy-MM-dd}.log");
-            if (!File.Exists(path)) continue;
-
-            var malformedCount = 0;
-            using var reader = new StreamReader(path);
-            string? line;
-            while ((line = await reader.ReadLineAsync(cancellationToken)) is not null)
+            try
             {
-                try
-                {
-                    var entry = JsonSerializer.Deserialize<LogEntry>(line, JsonOptions);
-                    if (entry is not null) entries.Add(entry);
-                }
-                catch (JsonException)
-                {
-                    malformedCount++;
-                }
+                var entry = JsonSerializer.Deserialize<LogEntry>(line, JsonOptions);
+                if (entry is not null) entries.Add(entry);
             }
-
-            if (malformedCount > 0)
-                System.Diagnostics.Debug.WriteLine($"[FileLogStore] Skipped {malformedCount} malformed log lines in {path}");
+            catch (JsonException) { malformedCount++; }
         }
+
+        if (malformedCount > 0)
+            System.Diagnostics.Debug.WriteLine($"[FileLogStore] Skipped {malformedCount} malformed log lines in {path}");
         return entries.OrderByDescending(x => x.Timestamp).ToList();
     }
 
@@ -87,31 +73,11 @@ public sealed class FileLogStore : ILogStore
         return Task.FromResult<IReadOnlyList<DateOnly>>(days.ToList());
     }
 
-    public Task ClearAsync(DateOnly? day = null, CancellationToken cancellationToken = default)
+    public Task ClearAsync(DateOnly day, CancellationToken cancellationToken = default)
     {
-        try
-        {
-            if (day is not null)
-            {
-                var path = Path.Combine(_logDirectory, $"{day:yyyy-MM-dd}.log");
-                if (File.Exists(path)) File.Delete(path);
-            }
-            else
-            {
-                // Clear all log files
-                if (Directory.Exists(_logDirectory))
-                {
-                    foreach (var file in Directory.EnumerateFiles(_logDirectory, "????-??-??.log"))
-                    {
-                        File.Delete(file);
-                    }
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"[FileLogStore] Clear failed: {ex.Message}");
-        }
+        cancellationToken.ThrowIfCancellationRequested();
+        var path = Path.Combine(_logDirectory, $"{day:yyyy-MM-dd}.log");
+        if (File.Exists(path)) File.Delete(path);
         return Task.CompletedTask;
     }
 

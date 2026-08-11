@@ -33,7 +33,7 @@ public sealed class MenuService : IMenuService
 
         var started = Stopwatch.GetTimestamp();
         var path = Path.Combine(AppContext.BaseDirectory, "page.json");
-        _logger.LogInformation("Loading WPF menu. Path={Path} Exists={Exists}", path, File.Exists(path));
+        _logger.LogDebug("Loading WPF menu. Path={Path} Exists={Exists}", path, File.Exists(path));
 
         PageConfig localConfig;
         try

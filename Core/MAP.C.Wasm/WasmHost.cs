@@ -49,7 +49,7 @@ public static class WasmHost
 
             logger = host.Services
                 .GetRequiredService<ILoggerFactory>()
-                .CreateLogger("AppStartup");
+                .CreateLogger("MAP.Startup");
 
             var langService =
                 host.Services.GetRequiredService<ILanguageService>();
@@ -80,8 +80,7 @@ public static class WasmHost
                 logger);
 
             logger.LogInformation(
-                "Web application started. SessionId={SessionId} DurationMs={DurationMs}",
-                DiagnosticContext.SessionId,
+                "Application started. DurationMs={DurationMs}",
                 Stopwatch.GetElapsedTime(started).TotalMilliseconds);
         }
         catch (Exception ex)
@@ -89,7 +88,7 @@ public static class WasmHost
             logger?.LogError(ex, "Startup failed");
 
             Console.Error.WriteLine(
-                $"[MAP Startup Error] SessionId={DiagnosticContext.SessionId}");
+                $"[MAP Startup Error] SessionId={AppSession.Id}");
 
             Console.Error.WriteLine(ex);
 
@@ -121,8 +120,5 @@ public static class WasmHost
             .GetRequiredService<IModuleLoader>()
             .LoadComponentAsync(item);
 
-        logger.LogInformation(
-            "Startup page validated. PageId={PageId}",
-            item.Id);
     }
 }

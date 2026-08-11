@@ -43,7 +43,7 @@ public class ModuleLoader : IModuleLoader
 
         if (_cachedTypes.TryGetValue(cacheKey, out var cachedType))
         {
-            _logger.LogInformation("Module cache hit. Assembly={Assembly} Component={Component}", menuItem.Assembly, menuItem.Component);
+            _logger.LogDebug("Module cache hit. Assembly={Assembly} Component={Component}", menuItem.Assembly, menuItem.Component);
             return cachedType;
         }
 
@@ -62,7 +62,7 @@ public class ModuleLoader : IModuleLoader
             }
 
             _cachedTypes[cacheKey] = type;
-            _logger.LogInformation("Web module loaded. Assembly={Assembly} Component={Component} DurationMs={DurationMs}",
+            _logger.LogInformation("Module loaded. Assembly={Assembly} Component={Component} DurationMs={DurationMs}",
                 menuItem.Assembly, menuItem.Component, Stopwatch.GetElapsedTime(started).TotalMilliseconds);
             return type;
         }
@@ -138,7 +138,7 @@ public class ModuleLoader : IModuleLoader
 
     private async Task<Assembly> LoadAssemblyInternalAsync(string assemblyName)
     {
-        _logger.LogInformation("Lazy loading web module. Assembly={Assembly}", assemblyName);
+        _logger.LogDebug("Lazy loading web module. Assembly={Assembly}", assemblyName);
         var assemblies = (await _assemblyLoader
             .LoadAssembliesAsync(new[] { assemblyName }))
             .ToList();
