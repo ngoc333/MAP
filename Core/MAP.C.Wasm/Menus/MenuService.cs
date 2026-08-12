@@ -53,7 +53,7 @@ public class MenuService : IMenuService
         }
 
         _config = await MenuConfigResolver.ResolveAsync(
-            localConfig, _configService, _dbClient, _logger, started);
+            localConfig, _configService, _dbClient, _logger, started, "MAP");
 
         OnMenusLoaded?.Invoke();
     }

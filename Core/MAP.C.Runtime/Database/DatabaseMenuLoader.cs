@@ -10,6 +10,7 @@ public static class DatabaseMenuLoader
         IDbApiClient dbClient,
         string dbName,
         string dbFunction,
+        string? programId = null,
         CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(dbName))
@@ -17,7 +18,7 @@ public static class DatabaseMenuLoader
         if (string.IsNullOrWhiteSpace(dbFunction))
             throw new InvalidOperationException("Database menu configuration requires DbFunction.");
 
-        var parameters = JsonSerializer.SerializeToElement(new { });
+        var parameters = JsonSerializer.SerializeToElement(new { p_program_id = programId });
         var response = await dbClient.CallPostgreSqlFunctionAsync(
             dbName, dbFunction, parameters, cancellationToken);
 

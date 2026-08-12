@@ -12,8 +12,8 @@
                     <div class="p-2">
                         <RadzenStack Gap="1rem">
                             <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem" Wrap="FlexWrap.Wrap">
-                                <RadzenLabel Component="appTitle" Text="@Lang.T("AppConfig.appTitle")" Style="min-width: 150px;" />
-                                <RadzenTextBox Name="appTitle" @bind-Value="_model.AppTitle" Style="width: 100%;" />
+                                <RadzenLabel Component="programId" Text="@Lang.T("AppConfig.programId")" Style="min-width: 150px;" />
+                                <RadzenTextBox Name="programId" @bind-Value="_model.ProgramId" Style="width: 100%;" />
                             </RadzenStack>
 
                             @if (Platform.SupportsFullscreen)
@@ -125,7 +125,7 @@
     {
         base.OnInitialized();
 
-        _model = ConfigService.Current ?? new AppConfig();
+        _model = ConfigService.Current ?? new AppConfig { ProgramId = "MAP" };
         _systemInfo = ConfigService.GetSystemInfo();
         _displays = ConfigService.GetDisplays();
         _languages = Lang.AvailableLanguages;
@@ -133,6 +133,13 @@
 
     private async Task OnSaveAsync()
     {
+        _model.ProgramId = _model.ProgramId?.Trim().ToUpperInvariant();
+        if (string.IsNullOrWhiteSpace(_model.ProgramId))
+        {
+            await DialogService.Alert(Lang.T("AppConfig.programIdRequired"), Lang.T("AppConfig.title"));
+            return;
+        }
+
         await ConfigService.SaveAsync(_model);
 
         var message = Lang.T("AppConfig.saveSuccess") + "\n" + Lang.T("AppConfig.restartRequired");

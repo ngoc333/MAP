@@ -1,6 +1,6 @@
 {
   "dbName": "mes_edu",
-  "dbFunction": "mes.fn_get_map_menu",
+  "dbFunction": "mes.map_get_menu_f",
   "menus": [
     {
       "id": "home",

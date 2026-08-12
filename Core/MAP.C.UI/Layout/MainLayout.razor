@@ -60,7 +60,7 @@
             var current = Navigator.Current;
 
             if (current is null)
-                return ConfigService.Current?.AppTitle ?? "MAP";
+                return ConfigService.Current?.ProgramId ?? "MAP";
 
             return PageHeaderResolver.ResolveTitle(
                 current,

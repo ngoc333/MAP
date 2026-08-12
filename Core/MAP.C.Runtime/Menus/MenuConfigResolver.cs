@@ -28,9 +28,11 @@ public static class MenuConfigResolver
         IAppConfigService? configService,
         IDbApiClient dbClient,
         ILogger logger,
-        long started)
+        long started,
+        string? defaultProgramId = null)
     {
         var source = configService?.Current?.MenuSource ?? localConfig.Source;
+        var programId = configService?.Current?.ProgramId ?? defaultProgramId;
         PageConfig config;
 
         if (string.Equals(source, "local", StringComparison.OrdinalIgnoreCase))
@@ -40,7 +42,7 @@ public static class MenuConfigResolver
         else if (string.Equals(source, "db", StringComparison.OrdinalIgnoreCase))
         {
             config = await DatabaseMenuLoader.LoadAsync(
-                dbClient, localConfig.DbName!, localConfig.DbFunction!);
+                dbClient, localConfig.DbName!, localConfig.DbFunction!, programId);
         }
         else
         {

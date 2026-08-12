@@ -310,7 +310,7 @@ public class PostRefactorMenuConfigResolverTests
         {
             Source = "db",
             DbName = "mes",
-            DbFunction = "mes.fn_get_map_menu",
+            DbFunction = "mes.map_get_menu_f",
             Menus = [new() { Id = "local-menu" }]
         };
         var dbClient = new FakeDbApiClient(CreateMenuResponse("db-menu"));
@@ -356,7 +356,7 @@ public class PostRefactorMenuConfigResolverTests
         {
             Source = "db",
             DbName = "mes",
-            DbFunction = "mes.fn_get_map_menu",
+            DbFunction = "mes.map_get_menu_f",
             Menus = [new() { Id = "local-menu" }]
         };
         var dbClient = new FakeDbApiClient(CreateInvalidMenuResponse("db-menu"));
@@ -378,7 +378,7 @@ public class PostRefactorMenuConfigResolverTests
         {
             Source = "db",
             DbName = "mes",
-            DbFunction = "mes.fn_get_map_menu",
+            DbFunction = "mes.map_get_menu_f",
             Menus = [new() { Id = "local-menu" }]
         };
         var dbClient = new FakeDbApiClient(new InvalidOperationException("database unavailable"));
@@ -399,7 +399,7 @@ public class PostRefactorMenuConfigResolverTests
         {
             Source = "db",
             DbName = "mes",
-            DbFunction = "mes.fn_get_map_menu"
+            DbFunction = "mes.map_get_menu_f"
         };
 
         var dbClient = new FakeDbApiClient(CreateNullMenusResponse());
@@ -448,7 +448,7 @@ public class PostRefactorMenuConfigResolverTests
             success = true,
             data = new[]
             {
-                new Dictionary<string, string> { ["fn_get_map_menu"] = menu }
+                new Dictionary<string, string> { ["map_get_menu_f"] = menu }
             }
         });
     }
@@ -474,7 +474,7 @@ public class PostRefactorMenuConfigResolverTests
             success = true,
             data = new[]
             {
-                new Dictionary<string, string> { ["fn_get_map_menu"] = menu }
+                new Dictionary<string, string> { ["map_get_menu_f"] = menu }
             }
         });
     }
@@ -501,7 +501,7 @@ public class PostRefactorMenuConfigResolverTests
             success = true,
             data = new[]
             {
-                new Dictionary<string, string> { ["fn_get_map_menu"] = menu }
+                new Dictionary<string, string> { ["map_get_menu_f"] = menu }
             }
         });
     }
