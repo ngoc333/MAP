@@ -1,4 +1,7 @@
 {
+  "Common": {
+    "confirm": "Xác nhận"
+  },
   "SystemLogs": {
     "title": "Nhật ký hệ thống",
     "selectDay": "Chọn ngày",

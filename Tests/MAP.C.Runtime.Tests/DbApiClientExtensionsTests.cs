@@ -48,13 +48,15 @@ public sealed class DbApiClientExtensionsTests
         }, JsonOptions));
 
         await fakeClient.QueryPostgreSqlFunctionAsync<object>("db", "func",
-            new { PSearch = "abc", PIncludeInactive = true });
+            new { PSearch = "abc", PIncludeInactive = true, PNote = (string?)null });
 
         var sentParams = fakeClient.LastParameters!.Value;
         Assert.True(sentParams.TryGetProperty("p_search", out var search));
         Assert.Equal("abc", search.GetString());
         Assert.True(sentParams.TryGetProperty("p_include_inactive", out var inactive));
         Assert.True(inactive.GetBoolean());
+        Assert.True(sentParams.TryGetProperty("p_note", out var note));
+        Assert.Equal(JsonValueKind.Null, note.ValueKind);
     }
 
     [Fact]
@@ -118,7 +120,7 @@ public sealed class DbApiClientExtensionsTests
         var client = CreateClient(response);
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(
             () => client.QueryPostgreSqlFunctionAsync<object>("db", "func", new { }));
-        Assert.Contains("no data array", ex.Message);
+        Assert.Contains("no data", ex.Message);
     }
 
     [Fact]
@@ -133,7 +135,25 @@ public sealed class DbApiClientExtensionsTests
         var client = CreateClient(response);
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(
             () => client.QueryPostgreSqlFunctionAsync<object>("db", "func", new { }));
-        Assert.Contains("no data array", ex.Message);
+        Assert.Contains("not an array", ex.Message);
+    }
+
+    [Fact]
+    public async Task QueryPostgreSqlFunctionAsync_InvalidModelMapping_ThrowsWithFunctionAndModel()
+    {
+        var response = JsonSerializer.SerializeToElement(new
+        {
+            success = true,
+            data = new[] { new { page_id = 42 } }
+        }, JsonOptions);
+
+        var client = CreateClient(response);
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => client.QueryPostgreSqlFunctionAsync<TestPage>("db", "mes.map_page_list_f", new { }));
+
+        Assert.Contains("mes.map_page_list_f", exception.Message);
+        Assert.Contains(nameof(TestPage), exception.Message);
+        Assert.IsType<JsonException>(exception.InnerException);
     }
 
     [Fact]

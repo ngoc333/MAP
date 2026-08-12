@@ -1,10 +1,5 @@
 @inherits BasePage
 @namespace MAP.M.System.Pages
-@inject IDbApiClient DbClient
-@inject IMenuService MenuService
-@inject IClientContextService ClientContext
-@inject DialogService DialogService
-@inject NotificationService Notifications
 
 <RadzenTabs>
     <Tabs>
@@ -20,7 +15,6 @@
                     {
                         <RadzenButton Text="@Lang.T("MenuRegistration.save")" Icon="save" Click="SavePageAsync" />
                     }
-                    <RadzenButton Text="Test Bulk Save" Icon="science" ButtonStyle="ButtonStyle.Info" Click="RunBulkSaveTestAsync" />
                 </RadzenStack>
                 @if (_editingPage is not null)
                 {
@@ -97,7 +91,6 @@
 </RadzenTabs>
 
 @code {
-    private MenuRegistrationDb Db => new(DbClient);
     private List<PageRegistration> _pages = [];
     private List<ProgramRegistration> _programs = [];
     private List<MenuRegistrationRow> _menuRows = [];
@@ -108,7 +101,7 @@
     private bool _useDefaultMenu;
     private PageRegistration? _editingPage;
     private bool _isNewPage;
-    private string DbName => MenuService.DbName ?? throw new InvalidOperationException("Database menu name is not configured.");
+
     protected override string HeaderTitleKey => "MenuRegistration.title";
 
     protected override async Task OnInitializedAsync()
@@ -118,123 +111,135 @@
         await LoadProgramsAsync();
     }
 
-    private async Task LoadPagesAsync() => _pages = await Db.PagesAsync(DbName, _search, _includeInactive);
+    private async Task LoadPagesAsync()
+    {
+        _pages = await DbClient.QueryPostgreSqlFunctionAsync<PageRegistration>(
+            DbName,
+            "mes.map_page_list_f",
+            new
+            {
+                PSearch = _search,
+                PIncludeInactive = _includeInactive
+            });
+    }
+
     private async Task LoadProgramsAsync()
     {
-        _programs = await Db.ProgramsAsync(DbName);
+        _programs = await DbClient.QueryPostgreSqlFunctionAsync<ProgramRegistration>(
+            DbName,
+            "mes.map_program_list_f",
+            new { });
+
         _selectedProgramId ??= _programs.FirstOrDefault()?.ProgramId;
-        if (_selectedProgramId is not null) await LoadProgramAsync(_selectedProgramId);
+
+        if (_selectedProgramId is not null)
+            await LoadProgramAsync(_selectedProgramId);
     }
+
     private async Task LoadProgramAsync(object? value = null)
     {
         _selectedProgramId = value?.ToString() ?? _selectedProgramId;
         _program = _programs.FirstOrDefault(x => x.ProgramId == _selectedProgramId);
-        if (_program is null) return;
-        _menuRows = await Db.MenuAsync(DbName, _program.ProgramId);
+
+        if (_program is null)
+            return;
+
+        _menuRows = await DbClient.QueryPostgreSqlFunctionAsync<MenuRegistrationRow>(
+            DbName,
+            "mes.map_program_menu_list_f",
+            new
+            {
+                PProgramId = _program.ProgramId
+            });
         _useDefaultMenu = _menuRows.Count == 0;
     }
+
     private void NewProgram() => (_program, _menuRows, _useDefaultMenu) = (new ProgramRegistration(), [], true);
+
     private void DefaultMenuChanged(bool value) => _useDefaultMenu = value;
+
     private void AddPage()
     {
         _editingPage = new PageRegistration();
         _isNewPage = true;
     }
+
     private void EditPage(PageRegistration page)
     {
         _editingPage = new PageRegistration
         {
-            PageId = page.PageId, TitleVi = page.TitleVi, TitleEn = page.TitleEn,
-            Icon = page.Icon, AssemblyName = page.AssemblyName, ComponentName = page.ComponentName,
-            IsActive = page.IsActive, Note = page.Note
+            PageId = page.PageId,
+            TitleVi = page.TitleVi,
+            TitleEn = page.TitleEn,
+            Icon = page.Icon,
+            AssemblyName = page.AssemblyName,
+            ComponentName = page.ComponentName,
+            IsActive = page.IsActive,
+            Note = page.Note
         };
         _isNewPage = false;
     }
+
     private async Task SavePageAsync()
     {
-        if (_editingPage is null) return;
-        await Db.SavePagesAsync(DbName, [_editingPage], ClientContext.Current.UserName, ClientContext.Current.IpAddress);
+        if (_editingPage is null)
+            return;
+
+        await DbClient.ExecutePostgreSqlProcedureAsync(
+            DbName,
+            "mes.map_page_save_p",
+            new
+            {
+                PRows = new[] { _editingPage },
+                PUserName = UserName,
+                PIpAddress = IpAddress
+            });
+
         _editingPage = null;
         await LoadPagesAsync();
         Notifications.Notify(NotificationSeverity.Success, Lang.T("MenuRegistration.saveSuccess"));
     }
+
     private async Task DeletePageAsync(PageRegistration page)
     {
-        await Db.DeletePageAsync(DbName, page.PageId);
+        var confirmed = await Dialogs.Confirm(
+            $"Delete {page.PageId}?",
+            Lang.T("Common.confirm"));
+
+        if (confirmed != true)
+            return;
+
+        await DbClient.ExecutePostgreSqlProcedureAsync(
+            DbName,
+            "mes.map_page_delete_p",
+            new
+            {
+                PPageId = page.PageId
+            });
+
         await LoadPagesAsync();
     }
+
     private async Task SaveProgramAsync()
     {
-        if (_program is null) return;
-        await Db.SaveProgramAsync(DbName, _program, _useDefaultMenu ? [] : _menuRows,
-            ClientContext.Current.UserName, ClientContext.Current.IpAddress);
+        if (_program is null)
+            return;
+
+        await DbClient.ExecutePostgreSqlProcedureAsync(
+            DbName,
+            "mes.map_program_save_p",
+            new
+            {
+                PProgramId = _program.ProgramId,
+                PStartPageId = _program.StartPageId,
+                PIsActive = _program.IsActive,
+                PNote = _program.Note,
+                PMenuItems = _useDefaultMenu ? [] : _menuRows,
+                PUserName = UserName,
+                PIpAddress = IpAddress
+            });
+
         await LoadProgramsAsync();
         Notifications.Notify(NotificationSeverity.Success, Lang.T("MenuRegistration.saveSuccess"));
-    }
-
-    private async Task RunBulkSaveTestAsync()
-    {
-        try
-        {
-            var testPages = new[]
-            {
-                new PageRegistration
-                {
-                    PageId = "MAP-CORE-TEST-001",
-                    TitleVi = "Test Bulk 001",
-                    TitleEn = "Test Bulk 001 EN",
-                    AssemblyName = "MAP.M.Test.dll",
-                    ComponentName = "MAP.M.Test.Pages.TestPage001",
-                    IsActive = true
-                },
-                new PageRegistration
-                {
-                    PageId = "MAP-CORE-TEST-002",
-                    TitleVi = "Test Bulk 002",
-                    TitleEn = "Test Bulk 002 EN",
-                    AssemblyName = "MAP.M.Test.dll",
-                    ComponentName = "MAP.M.Test.Pages.TestPage002",
-                    IsActive = true
-                }
-            };
-
-            await Db.SavePagesAsync(DbName, testPages, ClientContext.Current.UserName, ClientContext.Current.IpAddress);
-            var afterInsert = await Db.PagesAsync(DbName, "MAP-CORE-TEST", true);
-            var inserted1 = afterInsert.FirstOrDefault(p => p.PageId == "MAP-CORE-TEST-001");
-            var inserted2 = afterInsert.FirstOrDefault(p => p.PageId == "MAP-CORE-TEST-002");
-
-            if (inserted1 is null || inserted2 is null)
-            {
-                Notifications.Notify(NotificationSeverity.Error, "Bulk Insert Failed", "Could not find test rows after insert.");
-                return;
-            }
-
-            Notifications.Notify(NotificationSeverity.Info, "Bulk Insert OK",
-                $"Inserted: {inserted1.PageId} / {inserted2.PageId}");
-
-            inserted1.TitleVi = "Updated Bulk 001";
-            inserted2.TitleVi = "Updated Bulk 002";
-            await Db.SavePagesAsync(DbName, afterInsert.Where(p => p.PageId.StartsWith("MAP-CORE-TEST")),
-                ClientContext.Current.UserName, ClientContext.Current.IpAddress);
-
-            var afterUpdate = await Db.PagesAsync(DbName, "MAP-CORE-TEST", true);
-            var updated1 = afterUpdate.FirstOrDefault(p => p.PageId == "MAP-CORE-TEST-001");
-            var updated2 = afterUpdate.FirstOrDefault(p => p.PageId == "MAP-CORE-TEST-002");
-
-            if (updated1?.TitleVi == "Updated Bulk 001" && updated2?.TitleVi == "Updated Bulk 002")
-            {
-                Notifications.Notify(NotificationSeverity.Success, "Bulk Update OK",
-                    "ON CONFLICT DO UPDATE works correctly.");
-            }
-            else
-            {
-                Notifications.Notify(NotificationSeverity.Error, "Bulk Update Failed",
-                    $"Expected updated titles but got: {updated1?.TitleVi} / {updated2?.TitleVi}");
-            }
-        }
-        catch (Exception ex)
-        {
-            Notifications.Notify(NotificationSeverity.Error, "Bulk Save Test Failed", ex.Message);
-        }
     }
 }

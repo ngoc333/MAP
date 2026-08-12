@@ -16,11 +16,22 @@ public static class DbApiClientExtensions
 
         ValidateResponse(element, commandName);
 
-        if (!element.TryGetProperty("data", out var data) || data.ValueKind != JsonValueKind.Array)
-            throw new InvalidOperationException($"Database function {commandName} returned no data array.");
+        if (!element.TryGetProperty("data", out var data))
+            throw new InvalidOperationException($"Database function {commandName} returned no data.");
 
-        return data.Deserialize<List<T>>(DbJson.Options)
-            ?? throw new InvalidOperationException($"Failed to deserialize response from {commandName} to {typeof(T).Name}.");
+        if (data.ValueKind != JsonValueKind.Array)
+            throw new InvalidOperationException($"Database function {commandName} returned data that is not an array.");
+
+        try
+        {
+            return data.Deserialize<List<T>>(DbJson.Options) ?? [];
+        }
+        catch (JsonException exception)
+        {
+            throw new InvalidOperationException(
+                $"Failed to map database function {commandName} to {typeof(T).Name}.",
+                exception);
+        }
     }
 
     public static async Task ExecutePostgreSqlProcedureAsync(

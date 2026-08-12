@@ -1,10 +1,14 @@
 using MAP.C.Contract.Config;
-using MAP.C.Contract.Localization;
-using MAP.C.Contract.Navigation;
+using MAP.C.Contract.Context;
+using MAP.C.Contract.Database;
 using MAP.C.Contract.Diagnostics;
+using MAP.C.Contract.Localization;
+using MAP.C.Contract.Menus;
+using MAP.C.Contract.Navigation;
 using MAP.C.UI.Errors;
-using Microsoft.AspNetCore.Components;
 using MAP.C.UI.Headers;
+using Microsoft.AspNetCore.Components;
+using Radzen;
 
 namespace MAP.C.UI.Pages;
 
@@ -23,11 +27,34 @@ public abstract class BasePage : ComponentBase, IDisposable
     protected IUiStateService UiState { get; private set; } = default!;
 
     [Inject]
+    protected IDbApiClient DbClient { get; private set; } = default!;
+
+    [Inject]
+    protected IClientContextService ClientContext { get; private set; } = default!;
+
+    [Inject]
+    protected IMenuService MenuService { get; private set; } = default!;
+
+    [Inject]
+    protected DialogService Dialogs { get; private set; } = default!;
+
+    [Inject]
+    protected NotificationService Notifications { get; private set; } = default!;
+
+    [Inject]
     protected ModuleErrorNotifier ErrorNotifier { get; private set; } = default!;
 
     protected object? PageParameters => Navigator.Current?.RawParameters;
 
     protected string? FromPageId => Navigator.Current?.FromPageId;
+
+    protected string DbName =>
+        MenuService.DbName
+        ?? throw new InvalidOperationException("Database name is not configured.");
+
+    protected string? UserName => ClientContext.Current.UserName;
+
+    protected string? IpAddress => ClientContext.Current.IpAddress;
 
     protected virtual string? HeaderTitleKey => null;
 

@@ -45,6 +45,9 @@ LANGUAGE sql STABLE AS $function$
      ORDER BY m.sort_order, m.menu_id;
 $function$;
 
+DROP PROCEDURE IF EXISTS mes.map_page_save_p(
+    text, text, text, text, text, text, boolean, text, text, text);
+
 CREATE OR REPLACE PROCEDURE mes.map_page_save_p(
     p_rows jsonb, p_user_name text DEFAULT NULL, p_ip_address text DEFAULT NULL)
 LANGUAGE plpgsql AS $procedure$
