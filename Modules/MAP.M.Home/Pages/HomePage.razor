@@ -1,5 +1,6 @@
 @inherits BasePage
 @namespace MAP.M.Home.Pages
+@inject IUiStateService UiState
 
 <div class="p-2">
     <h2 class="text-2xl font-bold text-gray-800 mb-4">@Lang.T("HomePage.intro")</h2>
@@ -53,25 +54,25 @@
             <h4 class="font-semibold text-gray-700 mb-3">@Lang.T("HomePage.toggleDemo")</h4>
             <p class="text-sm text-gray-500 mb-3">@Lang.T("HomePage.toggleDemoDesc")</p>
             <div class="flex flex-wrap gap-3 mb-3">
-                <RadzenButton Text="@(IsMenuVisible ? Lang.T("HomePage.hideMenu") : Lang.T("HomePage.showMenu"))"
-                    Icon="@(IsMenuVisible ? "visibility_off" : "visibility")"
-                    ButtonStyle="@(IsMenuVisible ? ButtonStyle.Warning : ButtonStyle.Success)"
-                    Click="@(() => ToggleMenu())" />
-                <RadzenButton Text="@(IsHeaderVisible ? Lang.T("HomePage.hideHeader") : Lang.T("HomePage.showHeader"))"
-                    Icon="@(IsHeaderVisible ? "visibility_off" : "visibility")"
-                    ButtonStyle="@(IsHeaderVisible ? ButtonStyle.Warning : ButtonStyle.Success)"
-                    Click="@(() => ToggleHeader())" />
+                <RadzenButton Text="@(UiState.ShowMenu ? Lang.T("HomePage.hideMenu") : Lang.T("HomePage.showMenu"))"
+                    Icon="@(UiState.ShowMenu ? "visibility_off" : "visibility")"
+                    ButtonStyle="@(UiState.ShowMenu ? ButtonStyle.Warning : ButtonStyle.Success)"
+                    Click="@(() => UiState.ToggleMenu())" />
+                <RadzenButton Text="@(UiState.ShowHeader ? Lang.T("HomePage.hideHeader") : Lang.T("HomePage.showHeader"))"
+                    Icon="@(UiState.ShowHeader ? "visibility_off" : "visibility")"
+                    ButtonStyle="@(UiState.ShowHeader ? ButtonStyle.Warning : ButtonStyle.Success)"
+                    Click="@(() => UiState.ToggleHeader())" />
             </div>
             <div class="flex flex-wrap gap-3">
                 <RadzenButton Text="@Lang.T("HomePage.hideAll")" Icon="fullscreen_exit" ButtonStyle="ButtonStyle.Danger"
-                    Click="@(() => { SetMenuVisible(false); SetHeaderVisible(false); })" />
+                    Click="@(() => { UiState.SetMenu(false); UiState.SetHeader(false); })" />
                 <RadzenButton Text="@Lang.T("HomePage.showAll")" Icon="fullscreen" ButtonStyle="ButtonStyle.Info"
-                    Click="@(() => { SetMenuVisible(true); SetHeaderVisible(true); })" />
+                    Click="@(() => { UiState.SetMenu(true); UiState.SetHeader(true); })" />
             </div>
             <div class="mt-3 text-sm text-gray-500">
                 @Lang.T("HomePage.currentState"):
-                <span class="font-medium text-gray-700">Menu: @(IsMenuVisible ? "ON" : "OFF")</span> |
-                <span class="font-medium text-gray-700">Header: @(IsHeaderVisible ? "ON" : "OFF")</span>
+                <span class="font-medium text-gray-700">Menu: @(UiState.ShowMenu ? "ON" : "OFF")</span> |
+                <span class="font-medium text-gray-700">Header: @(UiState.ShowHeader ? "ON" : "OFF")</span>
             </div>
         </div>
     </RadzenCard>

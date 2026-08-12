@@ -1,4 +1,8 @@
 {
+  "Common": {
+    "confirm": "Confirm",
+    "deleteConfirm": "Are you sure you want to delete page"
+  },
   "layout": {
     "loading": "Loading module...",
     "selectMenu": "Select a menu to get started",

@@ -16,7 +16,7 @@ public sealed class PageRegistration
 public sealed class ProgramRegistration
 {
     public string ProgramId { get; set; } = "";
-    public string StartPageId { get; set; } = "";
+    public string? StartPageId { get; set; }
     public bool IsActive { get; set; } = true;
     public string? Note { get; set; }
 }

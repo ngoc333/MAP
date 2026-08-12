@@ -203,7 +203,7 @@
     private async Task DeletePageAsync(PageRegistration page)
     {
         var confirmed = await Dialogs.Confirm(
-            $"Delete {page.PageId}?",
+            $"{Lang.T("Common.deleteConfirm")} {page.PageId}?",
             Lang.T("Common.confirm"));
 
         if (confirmed != true)

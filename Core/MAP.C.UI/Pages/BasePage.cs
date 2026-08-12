@@ -1,4 +1,3 @@
-using MAP.C.Contract.Config;
 using MAP.C.Contract.Context;
 using MAP.C.Contract.Database;
 using MAP.C.Contract.Diagnostics;
@@ -22,9 +21,6 @@ public abstract class BasePage : ComponentBase, IDisposable
 
     [Inject]
     protected ILanguageService Lang { get; private set; } = default!;
-
-    [Inject]
-    protected IUiStateService UiState { get; private set; } = default!;
 
     [Inject]
     protected IDbApiClient DbClient { get; private set; } = default!;
@@ -89,14 +85,6 @@ public abstract class BasePage : ComponentBase, IDisposable
     {
         InvokeAsync(StateHasChanged);
     }
-
-    protected bool IsMenuVisible => UiState.ShowMenu;
-    protected bool IsHeaderVisible => UiState.ShowHeader;
-
-    protected void SetMenuVisible(bool visible) => UiState.SetMenu(visible);
-    protected void SetHeaderVisible(bool visible) => UiState.SetHeader(visible);
-    protected void ToggleMenu() => UiState.ToggleMenu();
-    protected void ToggleHeader() => UiState.ToggleHeader();
 
     /// <summary>
     /// Safe navigation method for Module pages.

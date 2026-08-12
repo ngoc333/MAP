@@ -1,8 +1,4 @@
-{
-  "Common": {
-    "confirm": "Xác nhận"
-  },
-  "SystemLogs": {
+{  "SystemLogs": {
     "title": "Nhật ký hệ thống",
     "selectDay": "Chọn ngày",
     "level": "Mức log",

@@ -1,8 +1,4 @@
-{
-  "Common": {
-    "confirm": "Confirm"
-  },
-  "SystemLogs": {
+{  "SystemLogs": {
     "title": "System logs",
     "selectDay": "Select day",
     "level": "Log level",

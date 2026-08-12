@@ -1,4 +1,8 @@
 {
+  "Common": {
+    "confirm": "Xác nhận",
+    "deleteConfirm": "Bạn có chắc muốn xóa trang"
+  },
   "layout": {
     "loading": "Đang tải module...",
     "selectMenu": "Chọn một menu để bắt đầu",
