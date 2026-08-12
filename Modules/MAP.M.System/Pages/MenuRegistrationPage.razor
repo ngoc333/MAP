@@ -20,6 +20,7 @@
                     {
                         <RadzenButton Text="@Lang.T("MenuRegistration.save")" Icon="save" Click="SavePageAsync" />
                     }
+                    <RadzenButton Text="Test Bulk Save" Icon="science" ButtonStyle="ButtonStyle.Info" Click="RunBulkSaveTestAsync" />
                 </RadzenStack>
                 @if (_editingPage is not null)
                 {
@@ -152,7 +153,7 @@
     private async Task SavePageAsync()
     {
         if (_editingPage is null) return;
-        await Db.SavePageAsync(DbName, _editingPage, ClientContext.Current.UserName, ClientContext.Current.IpAddress);
+        await Db.SavePagesAsync(DbName, [_editingPage], ClientContext.Current.UserName, ClientContext.Current.IpAddress);
         _editingPage = null;
         await LoadPagesAsync();
         Notifications.Notify(NotificationSeverity.Success, Lang.T("MenuRegistration.saveSuccess"));
@@ -169,5 +170,71 @@
             ClientContext.Current.UserName, ClientContext.Current.IpAddress);
         await LoadProgramsAsync();
         Notifications.Notify(NotificationSeverity.Success, Lang.T("MenuRegistration.saveSuccess"));
+    }
+
+    private async Task RunBulkSaveTestAsync()
+    {
+        try
+        {
+            var testPages = new[]
+            {
+                new PageRegistration
+                {
+                    PageId = "MAP-CORE-TEST-001",
+                    TitleVi = "Test Bulk 001",
+                    TitleEn = "Test Bulk 001 EN",
+                    AssemblyName = "MAP.M.Test.dll",
+                    ComponentName = "MAP.M.Test.Pages.TestPage001",
+                    IsActive = true
+                },
+                new PageRegistration
+                {
+                    PageId = "MAP-CORE-TEST-002",
+                    TitleVi = "Test Bulk 002",
+                    TitleEn = "Test Bulk 002 EN",
+                    AssemblyName = "MAP.M.Test.dll",
+                    ComponentName = "MAP.M.Test.Pages.TestPage002",
+                    IsActive = true
+                }
+            };
+
+            await Db.SavePagesAsync(DbName, testPages, ClientContext.Current.UserName, ClientContext.Current.IpAddress);
+            var afterInsert = await Db.PagesAsync(DbName, "MAP-CORE-TEST", true);
+            var inserted1 = afterInsert.FirstOrDefault(p => p.PageId == "MAP-CORE-TEST-001");
+            var inserted2 = afterInsert.FirstOrDefault(p => p.PageId == "MAP-CORE-TEST-002");
+
+            if (inserted1 is null || inserted2 is null)
+            {
+                Notifications.Notify(NotificationSeverity.Error, "Bulk Insert Failed", "Could not find test rows after insert.");
+                return;
+            }
+
+            Notifications.Notify(NotificationSeverity.Info, "Bulk Insert OK",
+                $"Inserted: {inserted1.PageId} / {inserted2.PageId}");
+
+            inserted1.TitleVi = "Updated Bulk 001";
+            inserted2.TitleVi = "Updated Bulk 002";
+            await Db.SavePagesAsync(DbName, afterInsert.Where(p => p.PageId.StartsWith("MAP-CORE-TEST")),
+                ClientContext.Current.UserName, ClientContext.Current.IpAddress);
+
+            var afterUpdate = await Db.PagesAsync(DbName, "MAP-CORE-TEST", true);
+            var updated1 = afterUpdate.FirstOrDefault(p => p.PageId == "MAP-CORE-TEST-001");
+            var updated2 = afterUpdate.FirstOrDefault(p => p.PageId == "MAP-CORE-TEST-002");
+
+            if (updated1?.TitleVi == "Updated Bulk 001" && updated2?.TitleVi == "Updated Bulk 002")
+            {
+                Notifications.Notify(NotificationSeverity.Success, "Bulk Update OK",
+                    "ON CONFLICT DO UPDATE works correctly.");
+            }
+            else
+            {
+                Notifications.Notify(NotificationSeverity.Error, "Bulk Update Failed",
+                    $"Expected updated titles but got: {updated1?.TitleVi} / {updated2?.TitleVi}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Notifications.Notify(NotificationSeverity.Error, "Bulk Save Test Failed", ex.Message);
+        }
     }
 }

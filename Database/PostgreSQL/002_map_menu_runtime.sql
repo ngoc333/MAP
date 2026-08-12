@@ -16,7 +16,6 @@ DECLARE
     v_children_map jsonb := '{}'::jsonb;
     v_root_nodes jsonb := '[]'::jsonb;
     v_rec record;
-    v_parent_id text;
     v_child_array jsonb;
 BEGIN
     -- ========================================================================
@@ -111,7 +110,11 @@ BEGIN
                    p.icon AS page_icon,
                    p.assembly_name, p.component_name
             FROM menu_tree mt
-            LEFT JOIN mes.map_page_t p ON p.page_id = mt.page_id AND p.is_active = true
+            LEFT JOIN mes.map_page_t p
+                ON p.page_id = mt.page_id
+               AND p.is_active = true
+            WHERE mt.page_id IS NULL
+               OR p.page_id IS NOT NULL
             ORDER BY mt.depth DESC, mt.sort_order, mt.menu_id
         LOOP
             -- Build node JSON
@@ -120,9 +123,9 @@ BEGIN
                 v_node := jsonb_strip_nulls(jsonb_build_object(
                     'id', v_rec.menu_id,
                     'titles', jsonb_strip_nulls(jsonb_build_object(
-                        'vi', COALESCE(v_rec.title_vi, v_rec.page_title_vi),
-                        'en', COALESCE(v_rec.title_en, v_rec.page_title_en))),
-                    'icon', COALESCE(v_rec.icon, v_rec.page_icon),
+                        'vi', COALESCE(NULLIF(btrim(v_rec.title_vi), ''), v_rec.page_title_vi),
+                        'en', COALESCE(NULLIF(btrim(v_rec.title_en), ''), v_rec.page_title_en))),
+                    'icon', COALESCE(NULLIF(btrim(v_rec.icon), ''), v_rec.page_icon),
                     'assembly', v_rec.assembly_name,
                     'component', v_rec.component_name));
             ELSE
@@ -154,11 +157,6 @@ BEGIN
             END IF;
         END LOOP;
 
-        -- Check if effective menu is empty
-        IF jsonb_array_length(v_root_nodes) = 0 THEN
-            RAISE EXCEPTION 'Program % has no active menu pages', v_program_id;
-        END IF;
-
         v_menus := v_root_nodes;
     ELSE
         -- ====================================================================
@@ -174,6 +172,11 @@ BEGIN
         INTO v_menus
         FROM mes.map_page_t p
         WHERE p.is_active = true;
+    END IF;
+
+    IF v_menus IS NULL
+       OR jsonb_array_length(v_menus) = 0 THEN
+        RAISE EXCEPTION 'Program % has no active menu pages', v_program_id;
     END IF;
 
     -- ========================================================================

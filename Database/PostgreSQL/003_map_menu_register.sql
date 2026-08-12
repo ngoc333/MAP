@@ -46,21 +46,41 @@ LANGUAGE sql STABLE AS $function$
 $function$;
 
 CREATE OR REPLACE PROCEDURE mes.map_page_save_p(
-    p_page_id text, p_title_vi text, p_title_en text, p_icon text,
-    p_assembly_name text, p_component_name text, p_is_active boolean,
-    p_note text, p_user_name text DEFAULT NULL, p_ip_address text DEFAULT NULL)
+    p_rows jsonb, p_user_name text DEFAULT NULL, p_ip_address text DEFAULT NULL)
 LANGUAGE plpgsql AS $procedure$
 BEGIN
-    IF NULLIF(btrim(p_page_id), '') IS NULL OR NULLIF(btrim(p_title_vi), '') IS NULL
-       OR NULLIF(btrim(p_assembly_name), '') IS NULL
-       OR NULLIF(btrim(p_component_name), '') IS NULL THEN
-        RAISE EXCEPTION 'PageId, Vietnamese title, AssemblyName and ComponentName are required';
+    IF jsonb_typeof(COALESCE(p_rows, '[]')) <> 'array' THEN
+        RAISE EXCEPTION 'p_rows must be a JSON array';
     END IF;
+    IF EXISTS (SELECT 1 FROM jsonb_array_elements(p_rows) e
+               WHERE NULLIF(btrim(e.value->>'page_id'), '') IS NULL) THEN
+        RAISE EXCEPTION 'PageId is required';
+    END IF;
+    IF EXISTS (SELECT 1 FROM jsonb_array_elements(p_rows) e
+               WHERE NULLIF(btrim(e.value->>'title_vi'), '') IS NULL) THEN
+        RAISE EXCEPTION 'TitleVi is required';
+    END IF;
+    IF EXISTS (SELECT 1 FROM jsonb_array_elements(p_rows) e
+               WHERE NULLIF(btrim(e.value->>'assembly_name'), '') IS NULL) THEN
+        RAISE EXCEPTION 'AssemblyName is required';
+    END IF;
+    IF EXISTS (SELECT 1 FROM jsonb_array_elements(p_rows) e
+               WHERE NULLIF(btrim(e.value->>'component_name'), '') IS NULL) THEN
+        RAISE EXCEPTION 'ComponentName is required';
+    END IF;
+    IF (SELECT count(*) FROM jsonb_array_elements(p_rows))
+       <> (SELECT count(DISTINCT btrim(value->>'page_id')) FROM jsonb_array_elements(p_rows)) THEN
+        RAISE EXCEPTION 'Duplicate PageId in payload';
+    END IF;
+
     INSERT INTO mes.map_page_t(page_id, title_vi, title_en, icon, assembly_name,
                                component_name, is_active, note, add_user, add_ip)
-    VALUES (btrim(p_page_id), btrim(p_title_vi), p_title_en, p_icon,
-            btrim(p_assembly_name), btrim(p_component_name), COALESCE(p_is_active, true),
-            p_note, p_user_name, p_ip_address)
+    SELECT btrim(r.page_id), btrim(r.title_vi), NULLIF(r.title_en, ''), NULLIF(r.icon, ''),
+           btrim(r.assembly_name), btrim(r.component_name), COALESCE(r.is_active, true),
+           NULLIF(r.note, ''), p_user_name, p_ip_address
+      FROM jsonb_to_recordset(p_rows) AS r(
+          page_id text, title_vi text, title_en text, icon text,
+          assembly_name text, component_name text, is_active boolean, note text)
     ON CONFLICT (page_id) DO UPDATE SET title_vi = EXCLUDED.title_vi,
         title_en = EXCLUDED.title_en, icon = EXCLUDED.icon,
         assembly_name = EXCLUDED.assembly_name, component_name = EXCLUDED.component_name,
