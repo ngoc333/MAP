@@ -35,5 +35,19 @@
     "userName": "Người dùng",
     "saveSuccess": "Đã lưu cấu hình thành công",
     "restartRequired": "Vui lòng tắt và mở lại chương trình để áp dụng cấu hình mới"
+  },
+  "MenuRegistration": {
+    "title": "Đăng ký menu",
+    "pagesTab": "Trang",
+    "programsTab": "Chương trình",
+    "search": "Tìm kiếm",
+    "includeInactive": "Bao gồm không hoạt động",
+    "refresh": "Làm mới",
+    "add": "Thêm",
+    "newProgram": "Chương trình mới",
+    "save": "Lưu",
+    "useDefault": "Dùng menu mặc định",
+    "defaultInfo": "Chương trình sử dụng tất cả trang đang hoạt động.",
+    "saveSuccess": "Đã lưu thành công"
   }
 }

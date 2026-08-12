@@ -4,6 +4,7 @@ using System.Diagnostics;
 using MAP.C.Contract.Config;
 using MAP.C.Contract.Database;
 using MAP.C.Contract.Models;
+using MAP.C.Contract.Context;
 using MAP.C.Contract.Menus;
 using MAP.C.Runtime.Menus;
 using Microsoft.Extensions.Logging;
@@ -16,17 +17,23 @@ public class MenuService : IMenuService
     private readonly IDbApiClient _dbClient;
     private readonly IAppConfigService? _configService;
     private readonly ILogger<MenuService> _logger;
+    private readonly IClientContextService _context;
     private PageConfig? _config;
 
     public List<MenuItem> Menus => _config?.Menus ?? new();
+    public string? StartPageId => _config?.StartPageId;
+    public MenuItem? StartPage => _config?.StartPage;
+    public string? DbName => _config?.DbName;
 
     public event Action? OnMenusLoaded;
 
-    public MenuService(HttpClient http, IDbApiClient dbClient, IAppConfigService? configService, ILogger<MenuService> logger)
+    public MenuService(HttpClient http, IDbApiClient dbClient, IAppConfigService? configService,
+        IClientContextService context, ILogger<MenuService> logger)
     {
         _http = http;
         _dbClient = dbClient;
         _configService = configService;
+        _context = context;
         _logger = logger;
     }
 
@@ -53,7 +60,8 @@ public class MenuService : IMenuService
         }
 
         _config = await MenuConfigResolver.ResolveAsync(
-            localConfig, _configService, _dbClient, _logger, started, "MAP");
+            localConfig, _configService, _dbClient, _logger, started,
+            _context.Current);
 
         OnMenusLoaded?.Invoke();
     }

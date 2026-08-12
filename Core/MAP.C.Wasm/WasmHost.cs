@@ -105,7 +105,12 @@ public static class WasmHost
         await menuService.LoadMenusAsync();
 
         // Find first navigable page using menu order
-        var item = MAP.C.Contract.Menus.MenuTree.FindFirstPage(menuService.Menus)
+        var item = MAP.C.Contract.Menus.MenuTree.ResolveStartupPage(new MAP.C.Contract.Models.PageConfig
+        {
+            StartPageId = menuService.StartPageId,
+            StartPage = menuService.StartPage,
+            Menus = menuService.Menus
+        })
             ?? throw new InvalidOperationException(
                 "Menu does not contain any navigable page.");
 

@@ -35,5 +35,19 @@
     "userName": "Username",
     "saveSuccess": "Configuration saved successfully",
     "restartRequired": "Please restart the application to apply the new configuration"
+  },
+  "MenuRegistration": {
+    "title": "Menu Registration",
+    "pagesTab": "Pages",
+    "programsTab": "Programs",
+    "search": "Search",
+    "includeInactive": "Include inactive",
+    "refresh": "Refresh",
+    "add": "Add",
+    "newProgram": "New program",
+    "save": "Save",
+    "useDefault": "Use default menu",
+    "defaultInfo": "This program uses all active registered pages.",
+    "saveSuccess": "Saved successfully"
   }
 }

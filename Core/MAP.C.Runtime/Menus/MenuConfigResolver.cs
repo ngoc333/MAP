@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using MAP.C.Contract.Config;
+using MAP.C.Contract.Context;
 using MAP.C.Contract.Database;
 using MAP.C.Contract.Models;
 using MAP.C.Contract.Menus;
@@ -29,10 +30,10 @@ public static class MenuConfigResolver
         IDbApiClient dbClient,
         ILogger logger,
         long started,
-        string? defaultProgramId = null)
+        ClientContext? context = null)
     {
         var source = configService?.Current?.MenuSource ?? localConfig.Source;
-        var programId = configService?.Current?.ProgramId ?? defaultProgramId;
+        var programId = configService?.Current?.ProgramId ?? context?.ProgramId;
         PageConfig config;
 
         if (string.Equals(source, "local", StringComparison.OrdinalIgnoreCase))
@@ -42,7 +43,8 @@ public static class MenuConfigResolver
         else if (string.Equals(source, "db", StringComparison.OrdinalIgnoreCase))
         {
             config = await DatabaseMenuLoader.LoadAsync(
-                dbClient, localConfig.DbName!, localConfig.DbFunction!, programId);
+                dbClient, localConfig.DbName!, localConfig.DbFunction!,
+                context is null ? new ClientContext(programId, null, null, null) : context with { ProgramId = programId });
         }
         else
         {

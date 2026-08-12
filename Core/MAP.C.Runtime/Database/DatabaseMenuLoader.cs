@@ -1,6 +1,7 @@
 using System.Text.Json;
 using MAP.C.Contract.Database;
 using MAP.C.Contract.Models;
+using MAP.C.Contract.Context;
 
 namespace MAP.C.Runtime.Database;
 
@@ -10,7 +11,7 @@ public static class DatabaseMenuLoader
         IDbApiClient dbClient,
         string dbName,
         string dbFunction,
-        string? programId = null,
+        ClientContext? context = null,
         CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(dbName))
@@ -18,7 +19,13 @@ public static class DatabaseMenuLoader
         if (string.IsNullOrWhiteSpace(dbFunction))
             throw new InvalidOperationException("Database menu configuration requires DbFunction.");
 
-        var parameters = JsonSerializer.SerializeToElement(new { p_program_id = programId });
+        var parameters = JsonSerializer.SerializeToElement(new
+        {
+            p_program_id = context?.ProgramId,
+            p_ip_address = context?.IpAddress,
+            p_user_name = context?.UserName,
+            p_local_path = context?.LocalPath
+        });
         var response = await dbClient.CallPostgreSqlFunctionAsync(
             dbName, dbFunction, parameters, cancellationToken);
 
@@ -42,6 +49,9 @@ public static class DatabaseMenuLoader
         if (config is null)
             throw new InvalidOperationException("Database menu payload could not be deserialized.");
 
+        config.Source = "db";
+        config.DbName ??= dbName;
+        config.DbFunction ??= dbFunction;
         return config;
     }
 }

@@ -2,6 +2,7 @@ using System.Net.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MAP.C.Contract.Config;
+using MAP.C.Contract.Context;
 using MAP.C.Contract.Localization;
 using MAP.C.Contract.Navigation;
 using MAP.C.Contract.Menus;
@@ -14,6 +15,7 @@ using MAP.C.Runtime.Navigation;
 using MAP.C.Runtime.Config;
 using MAP.C.Runtime.Localization;
 using MAP.C.Wasm.Config;
+using MAP.C.Wasm.Context;
 using MAP.C.Wasm.Logging;
 using MAP.C.Wasm.Menus;
 using MAP.C.Wasm.Modules;
@@ -53,6 +55,7 @@ public static class WasmServices
         // Register Wasm platform implementations
         services.AddSingleton<AppConfigService>();
         services.AddSingleton<IAppConfigService>(sp => sp.GetRequiredService<AppConfigService>());
+        services.AddSingleton<IClientContextService, WasmClientContextService>();
         services.AddSingleton<IPlatformCapabilities, PlatformCapabilities>();
 
         // Register common runtime services

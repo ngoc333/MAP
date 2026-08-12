@@ -1,4 +1,5 @@
 {
+  "source": "db",
   "dbName": "mes_edu",
   "dbFunction": "mes.map_get_menu_f",
   "menus": [
@@ -149,6 +150,16 @@
           "icon": "article",
           "assembly": "MAP.M.System.dll",
           "component": "MAP.M.System.Pages.SystemLogsPage"
+        },
+        {
+          "id": "system-menu-registration",
+          "titles": {
+            "vi": "Đăng ký menu",
+            "en": "Menu registration"
+          },
+          "icon": "account_tree",
+          "assembly": "MAP.M.System.dll",
+          "component": "MAP.M.System.Pages.MenuRegistrationPage"
         }
       ]
     }

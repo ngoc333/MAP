@@ -10,11 +10,13 @@ using MAP.C.Contract.Modules;
 using MAP.C.Contract.Database;
 using MAP.C.Contract.Logging;
 using MAP.C.Contract.Config;
+using MAP.C.Contract.Context;
 using MAP.C.Runtime.Logging;
 using MAP.C.Wpf.Logging;
 using MAP.C.Wpf.Menus;
 using MAP.C.Wpf.Modules;
 using MAP.C.Wpf.Config;
+using MAP.C.Wpf.Context;
 using MAP.C.Runtime.Database;
 using MAP.C.Runtime.Navigation;
 using MAP.C.Runtime.Config;
@@ -65,6 +67,7 @@ internal static class WpfServices
             Path.Combine(baseDir, "app-config.json"),
             sp.GetRequiredService<ILogger<AppConfigService>>()));
         services.AddSingleton<IPlatformCapabilities, PlatformCapabilities>();
+        services.AddSingleton<IClientContextService, WpfClientContextService>();
         services.AddSingleton<IDbApiClient>(sp =>
         {
             var configPath = Path.Combine(baseDir, "db-api.json");
@@ -83,6 +86,7 @@ internal static class WpfServices
         services.AddSingleton<IMenuService>(sp => new MenuService(
             sp.GetRequiredService<IDbApiClient>(),
             sp.GetRequiredService<IAppConfigService>(),
+            sp.GetRequiredService<IClientContextService>(),
             sp.GetRequiredService<ILogger<MenuService>>()));
         services.AddSingleton(sp => new MainWindow(sp, rootComponentType));
         services.AddScoped<ModuleErrorNotifier>();
