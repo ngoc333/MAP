@@ -4,26 +4,24 @@ namespace MAP.C.Contract.Menus;
 
 public static class MenuTree
 {
-    public static MenuItem? ResolveStartupPage(PageConfig config)
+    public static MenuItem? ResolveStartupPage(
+        IEnumerable<MenuItem> menus,
+        string? startPageId)
     {
-        ArgumentNullException.ThrowIfNull(config);
-
-        if (config.StartPage is { } startPage)
+        if (!string.IsNullOrWhiteSpace(startPageId))
         {
-            if (!startPage.IsPage)
-                throw new InvalidOperationException($"Startup page '{startPage.Id}' is not a page.");
-            return startPage;
-        }
+            var page = Find(menus, startPageId);
 
-        if (!string.IsNullOrWhiteSpace(config.StartPageId))
-        {
-            var page = Find(config.Menus, config.StartPageId);
             if (page is null || !page.IsPage)
-                throw new InvalidOperationException($"Startup page '{config.StartPageId}' was not found in the menu.");
+            {
+                throw new InvalidOperationException(
+                    $"Startup page '{startPageId}' was not found in the menu.");
+            }
+
             return page;
         }
 
-        return FindFirstPage(config.Menus);
+        return FindFirstPage(menus);
     }
 
     public static MenuItem? Find(IEnumerable<MenuItem> items, string id)

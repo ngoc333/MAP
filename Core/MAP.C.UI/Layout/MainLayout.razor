@@ -86,12 +86,9 @@
         // Find first navigable page using menu order
         if (Navigator.Current is null)
         {
-            var firstPage = MenuTree.ResolveStartupPage(new PageConfig
-            {
-                StartPageId = MenuService.StartPageId,
-                StartPage = MenuService.StartPage,
-                Menus = MenuService.Menus
-            });
+            var firstPage = MenuTree.ResolveStartupPage(
+                MenuService.Menus,
+                MenuService.StartPageId);
 
             if (firstPage is null)
             {

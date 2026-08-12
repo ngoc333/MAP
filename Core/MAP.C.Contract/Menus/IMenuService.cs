@@ -6,7 +6,6 @@ public interface IMenuService
 {
     List<MenuItem> Menus { get; }
     string? StartPageId => null;
-    MenuItem? StartPage => null;
     string? DbName => null;
     event Action? OnMenusLoaded;
     Task LoadMenusAsync();

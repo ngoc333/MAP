@@ -21,7 +21,6 @@ public sealed class MenuService : IMenuService
 
     public List<MenuItem> Menus => _config?.Menus ?? new();
     public string? StartPageId => _config?.StartPageId;
-    public MenuItem? StartPage => _config?.StartPage;
     public string? DbName => _config?.DbName;
     public event Action? OnMenusLoaded;
 

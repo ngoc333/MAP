@@ -85,16 +85,17 @@ CREATE OR REPLACE PROCEDURE mes.map_program_save_p(
     p_menu_items jsonb, p_user_name text DEFAULT NULL, p_ip_address text DEFAULT NULL)
 LANGUAGE plpgsql AS $procedure$
 DECLARE
-    v_program_id text := upper(btrim(p_program_id));
-    v_start_page_id text := btrim(p_start_page_id);
+    v_program_id text := NULLIF(upper(btrim(p_program_id)), '');
+    v_start_page_id text := NULLIF(btrim(p_start_page_id), '');
     v_item jsonb;
     v_parent text;
     v_cursor text;
 BEGIN
-    IF v_program_id = '' OR v_start_page_id = '' THEN
-        RAISE EXCEPTION 'ProgramId and StartPageId are required';
+    IF v_program_id IS NULL THEN
+        RAISE EXCEPTION 'ProgramId is required';
     END IF;
-    IF NOT EXISTS (SELECT 1 FROM mes.map_page_t WHERE page_id = v_start_page_id AND is_active) THEN
+    IF v_start_page_id IS NOT NULL
+       AND NOT EXISTS (SELECT 1 FROM mes.map_page_t WHERE page_id = v_start_page_id AND is_active) THEN
         RAISE EXCEPTION 'Startup page % does not exist or is inactive', v_start_page_id;
     END IF;
     IF jsonb_typeof(COALESCE(p_menu_items, '[]')) <> 'array' THEN

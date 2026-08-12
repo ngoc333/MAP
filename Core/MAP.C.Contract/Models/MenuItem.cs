@@ -26,7 +26,8 @@ public class PageConfig
     public string Source { get; set; } = "local";
     public string? DbName { get; set; }
     public string? DbFunction { get; set; }
+
     public string? StartPageId { get; set; }
-    public MenuItem? StartPage { get; set; }
+
     public List<MenuItem> Menus { get; set; } = new();
 }

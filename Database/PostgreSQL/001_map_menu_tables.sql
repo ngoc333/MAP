@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS mes.map_page_t
 CREATE TABLE IF NOT EXISTS mes.map_program_t
 (
     program_id      varchar(100) PRIMARY KEY,
-    start_page_id   varchar(100) NOT NULL
+    start_page_id   varchar(100)
         REFERENCES mes.map_page_t(page_id),
     is_active       boolean NOT NULL DEFAULT true,
     note            text,
