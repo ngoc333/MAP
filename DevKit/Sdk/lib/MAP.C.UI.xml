@@ -1,0 +1,97 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>MAP.C.UI</name>
+    </assembly>
+    <members>
+        <member name="T:MAP.C.UI.Errors.ModuleErrorBoundary">
+            <summary>
+            Custom ErrorBoundary for module render/lifecycle errors.
+            Uses OnErrorAsync (proper hook) instead of side-effects in ErrorContent.
+            Logs full exception with module context and notifies via ModuleErrorNotifier.
+            </summary>
+        </member>
+        <member name="P:MAP.C.UI.Errors.ModuleErrorBoundary.OnFaulted">
+            <summary>
+            Callback invoked when a module error is caught.
+            Used by PageContainer/MainLayout to track faulted page state.
+            </summary>
+        </member>
+        <member name="T:MAP.C.UI.Errors.ModuleErrorNotifier">
+            <summary>
+            Centralized module error notification service.
+            Shows Radzen Notification for module errors based on configuration.
+            Does NOT log exceptions — logging is owned by PageNavigator or ModuleErrorBoundary.
+            </summary>
+        </member>
+        <member name="M:MAP.C.UI.Errors.ModuleErrorNotifier.Notify(System.String)">
+            <summary>
+            Shows a notification for a module error if configured to do so.
+            </summary>
+            <param name="errorId">Short error ID for user reference (e.g., "A83F28C1").</param>
+        </member>
+        <member name="T:MAP.C.UI.Headers.PageHeaderResolver">
+            <summary>
+            Resolves the header belonging to the current page without retaining UI state.
+            </summary>
+        </member>
+        <member name="T:MAP.C.UI.Pages.BasePage">
+            <summary>
+            Base component for MAP module pages. Inherit from this type to access navigation,
+            localization, notifications, confirmation dialogs, and the configured database API.
+            </summary>
+        </member>
+        <member name="P:MAP.C.UI.Pages.BasePage.PageParameters">
+            <summary>Gets the raw parameters supplied when the current page was opened.</summary>
+        </member>
+        <member name="P:MAP.C.UI.Pages.BasePage.FromPageId">
+            <summary>Gets the page identifier that opened the current page.</summary>
+        </member>
+        <member name="P:MAP.C.UI.Pages.BasePage.DbName">
+            <summary>Gets the configured database name for the current menu.</summary>
+        </member>
+        <member name="P:MAP.C.UI.Pages.BasePage.UserName">
+            <summary>Gets the user name supplied by the current client context.</summary>
+        </member>
+        <member name="P:MAP.C.UI.Pages.BasePage.IpAddress">
+            <summary>Gets the client IP address supplied by the current client context.</summary>
+        </member>
+        <member name="M:MAP.C.UI.Pages.BasePage.GetParameter``1(System.String)">
+            <summary>
+            Gets an optional navigation parameter converted to <typeparamref name="T"/>.
+            Returns <see langword="default"/> when the parameter is absent or cannot be converted.
+            </summary>
+        </member>
+        <member name="M:MAP.C.UI.Pages.BasePage.RequireParameter``1(System.String)">
+            <summary>
+            Gets a required navigation parameter converted to <typeparamref name="T"/>.
+            </summary>
+            <exception cref="T:System.InvalidOperationException">Thrown when the parameter is absent or cannot be converted.</exception>
+        </member>
+        <member name="M:MAP.C.UI.Pages.BasePage.NotifySuccess(System.String)">
+            <summary>Shows a success notification.</summary>
+        </member>
+        <member name="M:MAP.C.UI.Pages.BasePage.NotifyWarning(System.String)">
+            <summary>Shows a warning notification.</summary>
+        </member>
+        <member name="M:MAP.C.UI.Pages.BasePage.NotifyError(System.String)">
+            <summary>Shows an error notification.</summary>
+        </member>
+        <member name="M:MAP.C.UI.Pages.BasePage.ConfirmAsync(System.String)">
+            <summary>Shows a confirmation dialog and returns <see langword="true"/> only when confirmed.</summary>
+        </member>
+        <member name="M:MAP.C.UI.Pages.BasePage.QueryAsync``1(System.String,System.Object,System.Threading.CancellationToken)">
+            <summary>Queries a PostgreSQL function using the current menu database.</summary>
+        </member>
+        <member name="M:MAP.C.UI.Pages.BasePage.ExecuteAsync(System.String,System.Object,System.Threading.CancellationToken)">
+            <summary>Executes a PostgreSQL procedure using the current menu database.</summary>
+        </member>
+        <member name="M:MAP.C.UI.Pages.BasePage.OpenPageAsync(System.String,System.Object)">
+            <summary>
+            Safe navigation method for Module pages.
+            Catches navigation exceptions and shows notification instead of
+            letting the error propagate to the Module's ErrorBoundary.
+            </summary>
+        </member>
+    </members>
+</doc>

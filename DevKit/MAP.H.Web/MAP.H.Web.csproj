@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <OverrideHtmlAssetPlaceholders>true</OverrideHtmlAssetPlaceholders>
+    <BlazorWebAssemblyLoadAllGlobalizationData>true</BlazorWebAssemblyLoadAllGlobalizationData>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" PrivateAssets="all" />
+    <PackageReference Include="Radzen.Blazor" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="MAP.C.Contract"><HintPath>..\Sdk\lib\MAP.C.Contract.dll</HintPath></Reference>
+    <Reference Include="MAP.C.UI"><HintPath>..\Sdk\lib\MAP.C.UI.dll</HintPath></Reference>
+    <Reference Include="MAP.C.Runtime"><HintPath>..\Sdk\lib\MAP.C.Runtime.dll</HintPath></Reference>
+    <Reference Include="MAP.C.Wasm"><HintPath>..\Sdk\lib\MAP.C.Wasm.dll</HintPath></Reference>
+    <ModuleProject Include="$(MSBuildProjectDirectory)\..\Modules\*\*.csproj" />
+    <ProjectReference Include="@(ModuleProject)" />
+    <BlazorWebAssemblyLazyLoad Include="@(ModuleProject->'%(Filename).dll')" />
+  </ItemGroup>
+</Project>

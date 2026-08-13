@@ -1,0 +1,35 @@
+@inherits BasePage
+@namespace MAP.M.Template.Pages
+
+<div class="p-4">
+    <h2 class="text-2xl font-bold">@Lang.T("TemplateDetail.Title")</h2>
+    <RadzenCard class="mt-4 p-4">
+        <p>@Lang.T("TemplateDetail.CustomerId"): @_customerId</p>
+        <RadzenButton Text="@Lang.T("TemplateDetail.Confirm")" ButtonStyle="ButtonStyle.Warning" Click="ConfirmDeleteAsync" />
+        <RadzenButton class="ml-2" Text="@Lang.T("TemplateDetail.Back")" Click="GoBackAsync" />
+    </RadzenCard>
+</div>
+
+@code {
+    private int _customerId;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        // GetParameter keeps the template page renderable when opened directly from the menu.
+        // Use RequireParameter in action handlers when the parameter is mandatory for that action.
+        _customerId = GetParameter<int>("CustomerId");
+    }
+
+    private async Task ConfirmDeleteAsync()
+    {
+        var customerId = RequireParameter<int>("CustomerId");
+        if (await ConfirmAsync($"{Lang.T("TemplateDetail.ConfirmMessage")} (ID: {customerId})"))
+            NotifyWarning(Lang.T("TemplateDetail.Confirmed"));
+    }
+
+    private Task GoBackAsync() => Navigator.BackAsync();
+
+    // Example database call when a command exists for the configured DbName:
+    // var rows = await QueryAsync<CustomerDto>("schema.fn_get_customer", new { customer_id = _customerId });
+}

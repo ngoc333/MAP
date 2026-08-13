@@ -1,0 +1,17 @@
+{
+  "TemplateHome": {
+    "Title": "MAP Module Template",
+    "Description": "A starter page for module development.",
+    "Notify": "Show success",
+    "Success": "The operation completed.",
+    "OpenDetail": "Open detail"
+  },
+  "TemplateDetail": {
+    "Title": "Template detail",
+    "CustomerId": "Customer ID",
+    "Confirm": "Confirm",
+    "Back": "Back",
+    "ConfirmMessage": "Do you want to continue?",
+    "Confirmed": "Confirmed."
+  }
+}

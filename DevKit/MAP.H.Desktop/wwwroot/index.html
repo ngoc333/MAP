@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MAP</title>
+    <base href="/" />
+    <link href="_content/Radzen.Blazor/css/material.css" rel="stylesheet" />
+    <link href="css/inter.css" rel="stylesheet" />
+    <link rel="stylesheet" href="css/tailwind.css" />
+    <link rel="stylesheet" href="css/app.css" />
+    <style>
+      #blazor-error-ui {
+        display: none;
+      }
+
+      #blazor-error-ui.show {
+        display: block;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 12px;
+        background: #f44336;
+        color: #fff;
+        font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+        z-index: 9999;
+      }
+
+      #splash {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+        color: #555;
+        background: #fafafa;
+        z-index: 100;
+        transition: opacity 0.3s ease;
+      }
+
+      #splash .dot {
+        width: 10px;
+        height: 10px;
+        margin: 0 4px;
+        background: #594ae2;
+        border-radius: 50%;
+        animation: bounce 0.6s infinite alternate;
+      }
+
+      #splash .dot:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+      #splash .dot:nth-child(3) {
+        animation-delay: 0.4s;
+      }
+
+      #splash .error-msg {
+        margin-top: 24px;
+        font-size: 14px;
+        color: #888;
+        display: none;
+      }
+
+      #splash .error-msg.show {
+        display: block;
+      }
+
+      @keyframes bounce {
+        to {
+          transform: translateY(-8px);
+          opacity: 0.3;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="app">
+      <div id="splash">
+        <div style="display: flex">
+          <span class="dot"></span><span class="dot"></span
+          ><span class="dot"></span>
+        </div>
+        <div class="error-msg" id="blazor-load-error"></div>
+      </div>
+    </div>
+    <div id="blazor-error-ui">
+      An unhandled error has occurred.
+      <a href="" class="reload">Reload</a>
+      <a class="dismiss">&#x1F5D9;</a>
+    </div>
+
+    <script src="_framework/blazor.webview.js"></script>
+    <script src="_content/Radzen.Blazor/Radzen.Blazor.js"></script>
+    <script>
+      (function () {
+        var appEl = document.getElementById("app");
+        var errorEl = document.getElementById("blazor-load-error");
+        var errorUi = document.getElementById("blazor-error-ui");
+
+        if (!appEl) return;
+
+        var loadTimer = setTimeout(function () {
+          var splash = document.getElementById("splash");
+          if (splash && splash.parentNode === appEl) {
+            errorEl.textContent =
+              "MAP is taking longer than expected to start. " +
+              "Ensure WebView2 Runtime is installed and try restarting the application.";
+            errorEl.className = "error-msg show";
+          }
+        }, 30000);
+
+        var observer = new MutationObserver(function () {
+          clearTimeout(loadTimer);
+          observer.disconnect();
+        });
+
+        observer.observe(appEl, { childList: true, subtree: true });
+
+        if (errorUi) {
+          window.addEventListener("unhandledrejection", function (e) {
+            errorUi.className = "show";
+            if (errorEl) {
+              errorEl.textContent = String(e.reason || "Unknown Blazor error");
+              errorEl.className = "error-msg show";
+            }
+          });
+        }
+      })();
+    </script>
+  </body>
+</html>

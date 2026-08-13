@@ -1,21 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk.Razor">
-
+  <Import Project="..\..\Sdk\MAP.ModuleSdk.props" />
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <RootNamespace>MAP.C.UI</RootNamespace>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <NoWarn>$(NoWarn);1591</NoWarn>
+    <RootNamespace>MAP.M.Template</RootNamespace>
   </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" />
     <PackageReference Include="Radzen.Blazor" />
   </ItemGroup>
-
   <ItemGroup>
-    <ProjectReference Include="..\MAP.C.Contract\MAP.C.Contract.csproj" />
+    <EmbeddedResource Include="Localization\vi.json" LogicalName="MAP.M.Template.Localization.vi.json" />
+    <EmbeddedResource Include="Localization\en.json" LogicalName="MAP.M.Template.Localization.en.json" />
+    <Content Remove="Localization\**" />
   </ItemGroup>
-
 </Project>

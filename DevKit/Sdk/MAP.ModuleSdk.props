@@ -1,0 +1,12 @@
+<Project>
+  <ItemGroup>
+    <Reference Include="MAP.C.Contract">
+      <HintPath>$(MSBuildThisFileDirectory)lib\MAP.C.Contract.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="MAP.C.UI">
+      <HintPath>$(MSBuildThisFileDirectory)lib\MAP.C.UI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+</Project>

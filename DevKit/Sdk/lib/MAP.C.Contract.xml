@@ -1,0 +1,158 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>MAP.C.Contract</name>
+    </assembly>
+    <members>
+        <member name="T:MAP.C.Contract.Config.IUiStateService">
+            <summary>Controls the shared menu and header visibility.</summary>
+        </member>
+        <member name="P:MAP.C.Contract.Config.IUiStateService.ShowMenu">
+            <summary>Gets whether the menu is visible.</summary>
+        </member>
+        <member name="P:MAP.C.Contract.Config.IUiStateService.ShowHeader">
+            <summary>Gets whether the header is visible.</summary>
+        </member>
+        <member name="E:MAP.C.Contract.Config.IUiStateService.Changed">
+            <summary>Raised when UI visibility changes.</summary>
+        </member>
+        <member name="M:MAP.C.Contract.Config.IUiStateService.ToggleMenu">
+            <summary>Toggles menu visibility.</summary>
+        </member>
+        <member name="M:MAP.C.Contract.Config.IUiStateService.ToggleHeader">
+            <summary>Toggles header visibility.</summary>
+        </member>
+        <member name="M:MAP.C.Contract.Config.IUiStateService.SetMenu(System.Boolean)">
+            <summary>Sets menu visibility.</summary>
+        </member>
+        <member name="M:MAP.C.Contract.Config.IUiStateService.SetHeader(System.Boolean)">
+            <summary>Sets header visibility.</summary>
+        </member>
+        <member name="T:MAP.C.Contract.Database.DbApiClientExtensions">
+            <summary>Typed convenience methods for PostgreSQL database API calls.</summary>
+        </member>
+        <member name="M:MAP.C.Contract.Database.DbApiClientExtensions.QueryPostgreSqlFunctionAsync``1(MAP.C.Contract.Database.IDbApiClient,System.String,System.String,System.Object,System.Threading.CancellationToken)">
+            <summary>Calls a PostgreSQL function and maps its array response to a list.</summary>
+        </member>
+        <member name="M:MAP.C.Contract.Database.DbApiClientExtensions.ExecutePostgreSqlProcedureAsync(MAP.C.Contract.Database.IDbApiClient,System.String,System.String,System.Object,System.Threading.CancellationToken)">
+            <summary>Calls a PostgreSQL procedure and validates its response.</summary>
+        </member>
+        <member name="T:MAP.C.Contract.Database.IDbApiClient">
+            <summary>Low-level client for configured MAP database API endpoints.</summary>
+        </member>
+        <member name="M:MAP.C.Contract.Database.IDbApiClient.CallOracleAsync(System.Text.Json.JsonElement,System.Threading.CancellationToken)">
+            <summary>Calls an Oracle endpoint with its protocol request body.</summary>
+        </member>
+        <member name="M:MAP.C.Contract.Database.IDbApiClient.CallPostgreSqlFunctionAsync(System.String,System.String,System.Text.Json.JsonElement,System.Threading.CancellationToken)">
+            <summary>Calls a PostgreSQL function in the specified database.</summary>
+        </member>
+        <member name="M:MAP.C.Contract.Database.IDbApiClient.CallPostgreSqlProcedureAsync(System.String,System.String,System.Text.Json.JsonElement,System.Threading.CancellationToken)">
+            <summary>Calls a PostgreSQL procedure in the specified database.</summary>
+        </member>
+        <member name="T:MAP.C.Contract.Diagnostics.ModuleErrorId">
+            <summary>
+            Helper for correlating ErrorId between PageNavigator (logging) and
+            MainLayout/BasePage (notification). Attaches ErrorId to Exception.Data
+            so the same ID is used everywhere.
+            </summary>
+        </member>
+        <member name="M:MAP.C.Contract.Diagnostics.ModuleErrorId.Create">
+            <summary>
+            Creates a new 8-character uppercase hex ErrorId.
+            </summary>
+        </member>
+        <member name="M:MAP.C.Contract.Diagnostics.ModuleErrorId.GetOrCreate(System.Exception)">
+            <summary>
+            Returns the existing ErrorId from <see cref="P:System.Exception.Data"/> if present;
+            otherwise creates a new one, attaches it, and returns it.
+            </summary>
+        </member>
+        <member name="M:MAP.C.Contract.Diagnostics.ModuleErrorId.Set(System.Exception,System.String)">
+            <summary>
+            Attaches a specific ErrorId to an exception.
+            </summary>
+        </member>
+        <member name="T:MAP.C.Contract.Localization.ILanguageService">
+            <summary>Provides localized text for MAP core and module resources.</summary>
+        </member>
+        <member name="P:MAP.C.Contract.Localization.ILanguageService.CurrentLanguage">
+            <summary>Gets the active language code.</summary>
+        </member>
+        <member name="P:MAP.C.Contract.Localization.ILanguageService.AvailableLanguages">
+            <summary>Gets available application languages.</summary>
+        </member>
+        <member name="E:MAP.C.Contract.Localization.ILanguageService.LanguageChanged">
+            <summary>Raised after the active language changes.</summary>
+        </member>
+        <member name="M:MAP.C.Contract.Localization.ILanguageService.T(System.String)">
+            <summary>Translates a resource key.</summary>
+        </member>
+        <member name="M:MAP.C.Contract.Localization.ILanguageService.T(System.String,System.String)">
+            <summary>Translates a resource key, returning <paramref name="defaultValue"/> when absent.</summary>
+        </member>
+        <member name="M:MAP.C.Contract.Localization.ILanguageService.SetLanguage(System.String)">
+            <summary>Sets the active language.</summary>
+        </member>
+        <member name="M:MAP.C.Contract.Localization.ILanguageService.LoadModuleResourcesAsync(System.String,System.Collections.Generic.Dictionary{System.String,System.Collections.Generic.Dictionary{System.String,System.Object}},System.Collections.Generic.Dictionary{System.String,System.Collections.Generic.Dictionary{System.String,System.Object}})">
+            <summary>Loads Vietnamese and English resources embedded by a module.</summary>
+        </member>
+        <member name="T:MAP.C.Contract.Localization.LanguageInfo">
+            <summary>Describes an available display language.</summary>
+        </member>
+        <member name="M:MAP.C.Contract.Localization.LanguageInfo.#ctor(System.String,System.String,System.String)">
+            <summary>Describes an available display language.</summary>
+        </member>
+        <member name="T:MAP.C.Contract.Menus.MenuConfigValidator">
+            <summary>
+            Validates MAP menu configuration. A node is either a group with children or
+            a navigable page with an assembly and component, never both.
+            </summary>
+        </member>
+        <member name="T:MAP.C.Contract.Menus.MenuTitle">
+            <summary>
+            Resolves the display title for a menu item based on the current language.
+            Resolution order: current language -> default language -> first available non-empty title -> menu id.
+            </summary>
+        </member>
+        <member name="M:MAP.C.Contract.Menus.MenuTitle.Get(MAP.C.Contract.Models.MenuItem,System.String,System.String)">
+            <summary>
+            Gets the localized title for a menu item.
+            </summary>
+            <param name="item">The menu item.</param>
+            <param name="language">The current language code (e.g., "vi", "en").</param>
+            <param name="defaultLanguage">The default fallback language. Defaults to "vi".</param>
+            <returns>The resolved title string.</returns>
+        </member>
+        <member name="M:MAP.C.Contract.Menus.MenuTree.FindFirstPage(System.Collections.Generic.IEnumerable{MAP.C.Contract.Models.MenuItem})">
+            <summary>
+            Finds the first navigable page using depth-first traversal.
+            Preserves list order.
+            </summary>
+            <param name="items">The menu items to search.</param>
+            <returns>The first navigable page, or null if none found.</returns>
+        </member>
+        <member name="T:MAP.C.Contract.Navigation.IPageNavigator">
+            <summary>Provides navigation between MAP module pages.</summary>
+        </member>
+        <member name="P:MAP.C.Contract.Navigation.IPageNavigator.Current">
+            <summary>Gets the currently active page.</summary>
+        </member>
+        <member name="P:MAP.C.Contract.Navigation.IPageNavigator.CanBack">
+            <summary>Gets whether navigation can return to a previous page.</summary>
+        </member>
+        <member name="E:MAP.C.Contract.Navigation.IPageNavigator.Changed">
+            <summary>Raised when the active page changes.</summary>
+        </member>
+        <member name="M:MAP.C.Contract.Navigation.IPageNavigator.OpenAsync(System.String,System.Object)">
+            <summary>Opens a page, optionally passing an anonymous object or <see cref="T:MAP.C.Contract.Navigation.PageParams"/>.</summary>
+        </member>
+        <member name="M:MAP.C.Contract.Navigation.IPageNavigator.BackAsync">
+            <summary>Returns to the previous page.</summary>
+        </member>
+        <member name="T:MAP.C.Contract.Navigation.PageParams">
+            <summary>
+            A contract-level parameter bag passed between independently loaded pages.
+            </summary>
+        </member>
+    </members>
+</doc>

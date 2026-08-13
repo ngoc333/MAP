@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.17763.0</TargetFramework>
+    <RuntimeIdentifiers>win-x64;win-x86</RuntimeIdentifiers>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>MAP.H.Desktop</RootNamespace>
+    <EnableDefaultContentItems>false</EnableDefaultContentItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Wpf" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
+    <PackageReference Include="Radzen.Blazor" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="MAP.C.Contract"><HintPath>..\Sdk\lib\MAP.C.Contract.dll</HintPath></Reference>
+    <Reference Include="MAP.C.UI"><HintPath>..\Sdk\lib\MAP.C.UI.dll</HintPath></Reference>
+    <Reference Include="MAP.C.Runtime"><HintPath>..\Sdk\lib\MAP.C.Runtime.dll</HintPath></Reference>
+    <Reference Include="MAP.C.Wpf"><HintPath>..\Sdk\lib\MAP.C.Wpf.dll</HintPath></Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="wwwroot\**" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+    <None Include="..\Shared\Config\page.json" Link="page.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Include="..\Shared\Config\db-api.json" Link="db-api.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Include="..\Shared\Fonts\Inter\*.woff2" Link="wwwroot\fonts\inter\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Include="..\Shared\Styles\tailwind.css" Link="wwwroot\css\tailwind.css" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Include="..\Shared\Styles\inter.css" Link="wwwroot\css\inter.css" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Include="..\Shared\Styles\app.css" Link="wwwroot\css\app.css" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup><ModuleProject Include="$(MSBuildProjectDirectory)\..\Modules\*\*.csproj" /></ItemGroup>
+  <Target Name="BuildModules" BeforeTargets="Build;Publish">
+    <MSBuild Projects="@(ModuleProject)" Targets="Build;GetTargetPath" Properties="Configuration=$(Configuration)" BuildInParallel="true"><Output TaskParameter="TargetOutputs" ItemName="_ModuleAssembly" /></MSBuild>
+  </Target>
+  <Target Name="CopyModulesToBuildOutput" AfterTargets="Build" DependsOnTargets="BuildModules">
+    <Copy SourceFiles="@(_ModuleAssembly)" DestinationFolder="$(OutputPath)modules\" />
+  </Target>
+  <Target Name="CopyModulesToPublishOutput" AfterTargets="Publish" DependsOnTargets="BuildModules">
+    <Copy SourceFiles="@(_ModuleAssembly)" DestinationFolder="$(PublishDir)modules\" />
+  </Target>
+</Project>

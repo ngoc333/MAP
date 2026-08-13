@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="MAP.H.Web/MAP.H.Web.csproj" />
+  <Project Path="MAP.H.Desktop/MAP.H.Desktop.csproj" />
+  <Project Path="Modules/MAP.M.Template/MAP.M.Template.csproj" />
+</Solution>

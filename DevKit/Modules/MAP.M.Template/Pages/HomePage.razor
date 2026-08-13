@@ -1,0 +1,17 @@
+@inherits BasePage
+@namespace MAP.M.Template.Pages
+
+<div class="p-4">
+    <h2 class="text-2xl font-bold">@Lang.T("TemplateHome.Title")</h2>
+    <RadzenCard class="mt-4 p-4">
+        <p>@Lang.T("TemplateHome.Description")</p>
+        <RadzenButton Text="@Lang.T("TemplateHome.Notify")" ButtonStyle="ButtonStyle.Success" Click="ShowSuccess" />
+        <RadzenButton class="ml-2" Text="@Lang.T("TemplateHome.OpenDetail")" Click="OpenDetailAsync" />
+    </RadzenCard>
+</div>
+
+@code {
+    private void ShowSuccess() => NotifySuccess(Lang.T("TemplateHome.Success"));
+
+    private Task OpenDetailAsync() => OpenPageAsync("template-detail", new { CustomerId = 42 });
+}

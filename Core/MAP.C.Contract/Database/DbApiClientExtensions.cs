@@ -2,8 +2,10 @@ using System.Text.Json;
 
 namespace MAP.C.Contract.Database;
 
+/// <summary>Typed convenience methods for PostgreSQL database API calls.</summary>
 public static class DbApiClientExtensions
 {
+    /// <summary>Calls a PostgreSQL function and maps its array response to a list.</summary>
     public static async Task<List<T>> QueryPostgreSqlFunctionAsync<T>(
         this IDbApiClient client,
         string dbName,
@@ -34,6 +36,7 @@ public static class DbApiClientExtensions
         }
     }
 
+    /// <summary>Calls a PostgreSQL procedure and validates its response.</summary>
     public static async Task ExecutePostgreSqlProcedureAsync(
         this IDbApiClient client,
         string dbName,
