@@ -17,40 +17,59 @@ namespace MAP.C.UI.Pages;
 /// Base component for MAP module pages. Inherit from this type to access navigation,
 /// localization, notifications, confirmation dialogs, and the configured database API.
 /// </summary>
-public abstract class BasePage : ComponentBase, IDisposable
+public abstract class BasePage : ComponentBase, IDisposable, IAsyncDisposable
 {
+    private readonly CancellationTokenSource _pageCancellationTokenSource = new();
+    private readonly CancellationToken _pageCancellationToken;
+    private readonly object _disposeSyncRoot = new();
+    private Task? _disposeTask;
+
+    protected BasePage()
+    {
+        _pageCancellationToken = _pageCancellationTokenSource.Token;
+    }
+
+    /// <summary>Gets the service used to open pages and return to the previous page.</summary>
     [Inject]
     protected IPageNavigator Navigator { get; private set; } = default!;
 
+    /// <summary>Gets the state used to render the host page header.</summary>
     [Inject]
     protected IPageHeaderState Header { get; private set; } = default!;
 
+    /// <summary>Gets localized text from core and loaded module resources.</summary>
     [Inject]
     protected ILanguageService Lang { get; private set; } = default!;
 
+    /// <summary>Gets the low-level client for configured database API calls.</summary>
     [Inject]
     protected IDbApiClient DbClient { get; private set; } = default!;
 
+    /// <summary>Gets the current user, client IP address, and program context.</summary>
     [Inject]
     protected IClientContextService ClientContext { get; private set; } = default!;
 
+    /// <summary>Gets the loaded menu and its current database configuration.</summary>
     [Inject]
     protected IMenuService MenuService { get; private set; } = default!;
 
+    /// <summary>Gets the Radzen dialog service for advanced dialog scenarios.</summary>
     [Inject]
     protected DialogService Dialogs { get; private set; } = default!;
 
+    /// <summary>Gets the Radzen notification service for advanced notification scenarios.</summary>
     [Inject]
     protected NotificationService Notifications { get; private set; } = default!;
 
+    /// <summary>Gets the notifier used to show safely correlated module errors.</summary>
     [Inject]
     protected ModuleErrorNotifier ErrorNotifier { get; private set; } = default!;
 
-    /// <summary>Gets the raw parameters supplied when the current page was opened.</summary>
-    protected object? PageParameters => Navigator.Current?.RawParameters;
+    /// <summary>Gets the parameters supplied when the current page was opened.</summary>
+    protected PageParams? PageParameters => Navigator.Current?.Parameters;
 
-    /// <summary>Gets the page identifier that opened the current page.</summary>
-    protected string? FromPageId => Navigator.Current?.FromPageId;
+    /// <summary>Gets a token cancelled when this page leaves the UI.</summary>
+    protected CancellationToken PageCancellationToken => _pageCancellationToken;
 
     /// <summary>Gets the configured database name for the current menu.</summary>
 
@@ -126,14 +145,20 @@ public abstract class BasePage : ComponentBase, IDisposable
             DbName, commandName, parameters ?? new { }, cancellationToken);
     }
 
+    /// <summary>Gets the localization key displayed as the page header title.</summary>
+    /// <remarks>Override to set a localized title; return <see langword="null"/> when the page supplies its own header content.</remarks>
     protected virtual string? HeaderTitleKey => null;
 
+    /// <summary>Gets the visual kind applied to the page header.</summary>
     protected virtual HeaderKind HeaderKind => HeaderKind.Default;
 
+    /// <summary>Gets optional custom content rendered in the page header.</summary>
     protected virtual RenderFragment? HeaderContent => null;
 
+    /// <summary>Gets whether the host should show a back button in the page header.</summary>
     protected virtual bool ShowBack => true;
 
+    /// <summary>Refreshes the host header after page state or header properties change.</summary>
     protected void RefreshHeader()
     {
         Header.Set(new PageHeader(
@@ -158,7 +183,7 @@ public abstract class BasePage : ComponentBase, IDisposable
     private bool TryGetParameter<T>(string name, out T? value)
     {
         value = default;
-        var pageParams = PageParams.From(PageParameters, out _);
+        var pageParams = PageParameters;
         if (pageParams is null || pageParams[name] is not { } rawValue)
             return false;
 
@@ -176,9 +201,17 @@ public abstract class BasePage : ComponentBase, IDisposable
                 return value is not null || default(T) is null;
             }
 
+            var targetType = Nullable.GetUnderlyingType(typeof(T)) ?? typeof(T);
+            if (targetType.IsEnum)
+            {
+                value = rawValue is string enumName
+                    ? (T)Enum.Parse(targetType, enumName, ignoreCase: true)
+                    : (T)Enum.ToObject(targetType, rawValue);
+                return true;
+            }
+
             if (rawValue is IConvertible)
             {
-                var targetType = Nullable.GetUnderlyingType(typeof(T)) ?? typeof(T);
                 value = (T?)Convert.ChangeType(rawValue, targetType, CultureInfo.InvariantCulture);
                 return true;
             }
@@ -213,11 +246,14 @@ public abstract class BasePage : ComponentBase, IDisposable
     /// Catches navigation exceptions and shows notification instead of
     /// letting the error propagate to the Module's ErrorBoundary.
     /// </summary>
-    protected async Task OpenPageAsync(string pageId, object? parameters = null)
+    protected async Task OpenPageAsync(
+        string pageId,
+        object? parameters = null,
+        bool pushHistory = true)
     {
         try
         {
-            await Navigator.OpenAsync(pageId, parameters);
+            await Navigator.OpenAsync(pageId, parameters, pushHistory);
         }
         catch (Exception ex)
         {
@@ -226,8 +262,54 @@ public abstract class BasePage : ComponentBase, IDisposable
         }
     }
 
-    public void Dispose()
+    /// <summary>Releases page-specific synchronous resources.</summary>
+    /// <remarks>Do not implement the public disposal interfaces in derived pages; use this hook instead.</remarks>
+    protected virtual void DisposePage()
     {
-        Lang.LanguageChanged -= OnLanguageChanged;
+    }
+
+    /// <summary>Releases page-specific asynchronous resources.</summary>
+    /// <remarks>Do not implement the public disposal interfaces in derived pages; use this hook instead.</remarks>
+    protected virtual ValueTask DisposePageAsync() => ValueTask.CompletedTask;
+
+    void IDisposable.Dispose() => DisposeCoreAsync().AsTask().GetAwaiter().GetResult();
+
+    ValueTask IAsyncDisposable.DisposeAsync() => DisposeCoreAsync();
+
+    private ValueTask DisposeCoreAsync()
+    {
+        lock (_disposeSyncRoot)
+        {
+            _disposeTask ??= DisposeCoreImplementationAsync();
+            return new ValueTask(_disposeTask);
+        }
+    }
+
+    private async Task DisposeCoreImplementationAsync()
+    {
+        try
+        {
+            _pageCancellationTokenSource.Cancel();
+        }
+        finally
+        {
+            Lang.LanguageChanged -= OnLanguageChanged;
+
+            try
+            {
+                DisposePage();
+            }
+            finally
+            {
+                try
+                {
+                    await DisposePageAsync();
+                }
+                finally
+                {
+                    _pageCancellationTokenSource.Dispose();
+                }
+            }
+        }
     }
 }

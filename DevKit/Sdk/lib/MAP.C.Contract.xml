@@ -28,6 +28,12 @@
         <member name="M:MAP.C.Contract.Config.IUiStateService.SetHeader(System.Boolean)">
             <summary>Sets header visibility.</summary>
         </member>
+        <member name="T:MAP.C.Contract.Context.IClientContextService">
+            <summary>Provides the host-supplied context for the active MAP client session.</summary>
+        </member>
+        <member name="P:MAP.C.Contract.Context.IClientContextService.Current">
+            <summary>Gets the immutable context for the active client session.</summary>
+        </member>
         <member name="T:MAP.C.Contract.Database.DbApiClientExtensions">
             <summary>Typed convenience methods for PostgreSQL database API calls.</summary>
         </member>
@@ -102,6 +108,29 @@
         <member name="M:MAP.C.Contract.Localization.LanguageInfo.#ctor(System.String,System.String,System.String)">
             <summary>Describes an available display language.</summary>
         </member>
+        <member name="T:MAP.C.Contract.Menus.IMenuService">
+            <summary>Loads and exposes the host menu tree used to open module pages.</summary>
+        </member>
+        <member name="P:MAP.C.Contract.Menus.IMenuService.Menus">
+            <summary>Gets the loaded root menu items.</summary>
+        </member>
+        <member name="P:MAP.C.Contract.Menus.IMenuService.StartPageId">
+            <summary>Gets the configured initial page identifier, when available.</summary>
+        </member>
+        <member name="P:MAP.C.Contract.Menus.IMenuService.DbName">
+            <summary>Gets the configured database name for the active menu configuration, when available.</summary>
+        </member>
+        <member name="E:MAP.C.Contract.Menus.IMenuService.OnMenusLoaded">
+            <summary>Raised after the menu configuration has been loaded.</summary>
+        </member>
+        <member name="M:MAP.C.Contract.Menus.IMenuService.LoadMenusAsync">
+            <summary>Loads the menu configuration from the configured source.</summary>
+        </member>
+        <member name="M:MAP.C.Contract.Menus.IMenuService.FindById(System.String)">
+            <summary>Finds a menu item by its identifier.</summary>
+            <param name="id">The menu or page identifier to find.</param>
+            <returns>The matching menu item, or <see langword="null"/> when no item exists.</returns>
+        </member>
         <member name="T:MAP.C.Contract.Menus.MenuConfigValidator">
             <summary>
             Validates MAP menu configuration. A node is either a group with children or
@@ -143,16 +172,42 @@
         <member name="E:MAP.C.Contract.Navigation.IPageNavigator.Changed">
             <summary>Raised when the active page changes.</summary>
         </member>
-        <member name="M:MAP.C.Contract.Navigation.IPageNavigator.OpenAsync(System.String,System.Object)">
-            <summary>Opens a page, optionally passing an anonymous object or <see cref="T:MAP.C.Contract.Navigation.PageParams"/>.</summary>
+        <member name="M:MAP.C.Contract.Navigation.IPageNavigator.OpenAsync(System.String,System.Object,System.Boolean)">
+            <summary>
+            Opens a page, optionally passing an anonymous object or <see cref="T:MAP.C.Contract.Navigation.PageParams"/>.
+            When <paramref name="pushHistory"/> is <see langword="true"/>, the current page is saved to the back stack.
+            When it is <see langword="false"/>, the back stack remains unchanged.
+            </summary>
+        </member>
+        <member name="M:MAP.C.Contract.Navigation.IPageNavigator.OpenRootAsync(System.String,System.Object)">
+            <summary>
+            Opens a root page after successfully resolving it, then clears the complete back-navigation history.
+            </summary>
         </member>
         <member name="M:MAP.C.Contract.Navigation.IPageNavigator.BackAsync">
             <summary>Returns to the previous page.</summary>
+        </member>
+        <member name="T:MAP.C.Contract.Navigation.PageHistoryEntry">
+            <summary>Represents a page that can be restored from the back-navigation history.</summary>
+        </member>
+        <member name="M:MAP.C.Contract.Navigation.PageHistoryEntry.#ctor(System.String,MAP.C.Contract.Navigation.PageParams)">
+            <summary>Represents a page that can be restored from the back-navigation history.</summary>
         </member>
         <member name="T:MAP.C.Contract.Navigation.PageParams">
             <summary>
             A contract-level parameter bag passed between independently loaded pages.
             </summary>
+        </member>
+        <member name="M:MAP.C.Contract.Navigation.PageParams.From(System.Object,System.Exception@)">
+            <summary>
+            Creates a parameter bag from an existing bag or the readable public properties of an object.
+            </summary>
+            <param name="parameters">A parameter bag, anonymous object, or <see langword="null"/>.</param>
+            <param name="exception">The reflection error when conversion fails; otherwise <see langword="null"/>.</param>
+            <returns>A parameter bag, or <see langword="null"/> when <paramref name="parameters"/> is <see langword="null"/> or conversion fails.</returns>
+        </member>
+        <member name="P:MAP.C.Contract.Navigation.PageParams.Item(System.String)">
+            <summary>Gets or sets a parameter by name.</summary>
         </member>
     </members>
 </doc>

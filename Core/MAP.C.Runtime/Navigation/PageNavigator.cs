@@ -1,9 +1,8 @@
-using Microsoft.Extensions.Logging;
-using MAP.C.Contract.Navigation;
+using MAP.C.Contract.Diagnostics;
 using MAP.C.Contract.Menus;
 using MAP.C.Contract.Modules;
-using MAP.C.Contract.Models;
-using MAP.C.Contract.Diagnostics;
+using MAP.C.Contract.Navigation;
+using Microsoft.Extensions.Logging;
 
 namespace MAP.C.Runtime.Navigation;
 
@@ -12,10 +11,10 @@ public sealed class PageNavigator : IPageNavigator
     private readonly IMenuService _menuService;
     private readonly IModuleLoader _moduleLoader;
     private readonly ILogger<PageNavigator> _logger;
-    private readonly Stack<ActivePage> _stack = new();
+    private readonly Stack<PageHistoryEntry> _history = new();
 
-    public ActivePage? Current => _stack.Count > 0 ? _stack.Peek() : null;
-    public bool CanBack => _stack.Count > 1;
+    public ActivePage? Current { get; private set; }
+    public bool CanBack => _history.Count > 0;
     public event Action? Changed;
 
     public PageNavigator(IMenuService menuService, IModuleLoader moduleLoader, ILogger<PageNavigator> logger)
@@ -25,82 +24,107 @@ public sealed class PageNavigator : IPageNavigator
         _logger = logger;
     }
 
-    public async Task OpenAsync(string pageId, object? parameters = null)
+    public async Task OpenAsync(string pageId, object? parameters = null, bool pushHistory = true)
     {
-        var fromPageId = _stack.Count > 0 ? _stack.Peek().PageId : null;
+        if (Current?.PageId == pageId && parameters is null)
+        {
+            _logger.LogDebug("Skipping page {PageId}; already current with no new parameters", pageId);
+            return;
+        }
 
         try
         {
-            // Check if already on same page with no new parameters — skip silently
-            if (_stack.Count > 0 && _stack.Peek().PageId == pageId && parameters is null)
-            {
-                _logger.LogDebug("Skipping page {PageId}; already current with no new parameters", pageId);
-                return;
-            }
+            var next = await CreateActivePageAsync(pageId, parameters);
+            var isReplacingCurrent = Current?.PageId == pageId;
 
-            // Determine if this is a replace-same-page operation
-            // Preserve FromPageId from the old page when replacing
-            bool isReplace = _stack.Count > 0 && _stack.Peek().PageId == pageId;
-            if (isReplace)
-            {
-                // Keep the old page's FromPageId so navigation history is preserved
-                fromPageId = _stack.Peek().FromPageId;
-                _logger.LogDebug("Re-opening page {PageId} with new parameters", pageId);
-            }
+            if (Current is not null && pushHistory && !isReplacingCurrent)
+                _history.Push(new PageHistoryEntry(Current.PageId, Current.Parameters));
 
-            var pageParameters = PageParams.From(parameters, out var parameterException);
-            if (parameterException is not null)
-                _logger.LogError(parameterException, "Failed to convert parameters for page {PageId}", pageId);
-
-            // Prepare everything before modifying the stack
-            var menuItem = _menuService.FindById(pageId)
-                ?? throw new InvalidOperationException($"Page not found: {pageId}");
-
-            var type = await _moduleLoader.LoadComponentAsync(menuItem);
-
-            // All preparation succeeded — now safely modify the stack
-            if (isReplace)
-            {
-                _stack.Pop();
-            }
-
-            _stack.Push(new ActivePage(pageId, menuItem, type, pageParameters, fromPageId));
-
-            // Notify UI subscribers — subscriber errors must not break navigation
+            Current = next;
             SafeInvokeChanged(pageId);
 
-            _logger.LogInformation("Page opened. PageId={PageId} FromPageId={FromPageId}", pageId, fromPageId);
+            _logger.LogInformation(
+                "Page opened. PageId={PageId} PushHistory={PushHistory} HistoryDepth={HistoryDepth}",
+                pageId,
+                pushHistory,
+                _history.Count);
         }
         catch (Exception ex)
         {
             var errorId = ModuleErrorId.GetOrCreate(ex);
-            _logger.LogError(ex, "Navigation failed. ErrorId={ErrorId} PageId={PageId} FromPageId={FromPageId}",
-                errorId, pageId, fromPageId);
+            _logger.LogError(ex, "Navigation failed. ErrorId={ErrorId} PageId={PageId}", errorId, pageId);
             throw;
         }
     }
 
-    public Task BackAsync()
+    public async Task OpenRootAsync(string pageId, object? parameters = null)
     {
-        if (!CanBack)
+        try
         {
-            _logger.LogWarning("BackAsync called but cannot go back. StackDepth={StackDepth}", _stack.Count);
-            return Task.CompletedTask;
+            var next = await CreateActivePageAsync(pageId, parameters);
+
+            _history.Clear();
+            Current = next;
+            SafeInvokeChanged(pageId);
+
+            _logger.LogInformation("Root page opened. PageId={PageId}", pageId);
+        }
+        catch (Exception ex)
+        {
+            var errorId = ModuleErrorId.GetOrCreate(ex);
+            _logger.LogError(ex, "Root navigation failed. ErrorId={ErrorId} PageId={PageId}", errorId, pageId);
+            throw;
+        }
+    }
+
+    public async Task BackAsync()
+    {
+        if (_history.Count == 0)
+        {
+            _logger.LogWarning("BackAsync called but cannot go back. HistoryDepth={HistoryDepth}", _history.Count);
+            return;
         }
 
-        var fromPage = _stack.Pop();
-        var toPage = _stack.Peek();
+        var previous = _history.Peek();
 
-        _logger.LogInformation("Navigated back. FromPageId={FromPageId} ToPageId={ToPageId} StackDepth={StackDepth}",
-            fromPage.PageId, toPage.PageId, _stack.Count);
+        try
+        {
+            var next = await CreateActivePageAsync(previous.PageId, previous.Parameters);
 
-        SafeInvokeChanged(toPage.PageId);
-        return Task.CompletedTask;
+            _history.Pop();
+            Current = next;
+            SafeInvokeChanged(next.PageId);
+
+            _logger.LogInformation(
+                "Navigated back. PageId={PageId} HistoryDepth={HistoryDepth}",
+                next.PageId,
+                _history.Count);
+        }
+        catch (Exception ex)
+        {
+            var errorId = ModuleErrorId.GetOrCreate(ex);
+            _logger.LogError(ex, "Back navigation failed. ErrorId={ErrorId} PageId={PageId}", errorId, previous.PageId);
+            throw;
+        }
+    }
+
+    private async Task<ActivePage> CreateActivePageAsync(string pageId, object? parameters)
+    {
+        var pageParameters = PageParams.From(parameters, out var parameterException);
+        if (parameterException is not null)
+            _logger.LogError(parameterException, "Failed to convert parameters for page {PageId}", pageId);
+
+        var menuItem = _menuService.FindById(pageId)
+            ?? throw new InvalidOperationException($"Page not found: {pageId}");
+        var componentType = await _moduleLoader.LoadComponentAsync(menuItem);
+
+        return new ActivePage(pageId, menuItem, componentType, pageParameters);
     }
 
     private void SafeInvokeChanged(string pageId)
     {
-        if (Changed is null) return;
+        if (Changed is null)
+            return;
 
         foreach (var subscriber in Changed.GetInvocationList())
         {
@@ -112,9 +136,7 @@ public sealed class PageNavigator : IPageNavigator
             {
                 _logger.LogError(ex, "Navigation Changed subscriber failed. PageId={PageId} Subscriber={Subscriber}",
                     pageId, subscriber.Method.Name);
-                // Do not rollback stack, do not re-throw — this is a UI notification failure only
             }
         }
     }
-
 }

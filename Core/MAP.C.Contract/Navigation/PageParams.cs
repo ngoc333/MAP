@@ -9,6 +9,12 @@ public sealed class PageParams : DynamicObject
 {
     private readonly Dictionary<string, object?> _values = new(StringComparer.Ordinal);
 
+    /// <summary>
+    /// Creates a parameter bag from an existing bag or the readable public properties of an object.
+    /// </summary>
+    /// <param name="parameters">A parameter bag, anonymous object, or <see langword="null"/>.</param>
+    /// <param name="exception">The reflection error when conversion fails; otherwise <see langword="null"/>.</param>
+    /// <returns>A parameter bag, or <see langword="null"/> when <paramref name="parameters"/> is <see langword="null"/> or conversion fails.</returns>
     public static PageParams? From(object? parameters, out Exception? exception)
     {
         exception = null;
@@ -35,6 +41,7 @@ public sealed class PageParams : DynamicObject
         }
     }
 
+    /// <summary>Gets or sets a parameter by name.</summary>
     public object? this[string name]
     {
         get => _values.TryGetValue(name, out var value) ? value : null;

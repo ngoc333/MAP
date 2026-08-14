@@ -96,7 +96,7 @@
                     "Menu does not contain any navigable page.");
             }
 
-            await OpenPageSafeAsync(firstPage.Id);
+            await OpenRootPageSafeAsync(firstPage.Id);
         }
     }
 
@@ -119,14 +119,14 @@
             return;
         }
 
-        await OpenPageSafeAsync(menuItem.Id);
+        await OpenRootPageSafeAsync(menuItem.Id);
     }
 
-    private async Task OpenPageSafeAsync(string pageId, object? parameters = null)
+    private async Task OpenRootPageSafeAsync(string pageId, object? parameters = null)
     {
         try
         {
-            await Navigator.OpenAsync(pageId, parameters);
+            await Navigator.OpenRootAsync(pageId, parameters);
             FaultedPageId = null; // clear fault on successful navigation
         }
         catch (Exception ex)

@@ -41,11 +41,38 @@
             localization, notifications, confirmation dialogs, and the configured database API.
             </summary>
         </member>
-        <member name="P:MAP.C.UI.Pages.BasePage.PageParameters">
-            <summary>Gets the raw parameters supplied when the current page was opened.</summary>
+        <member name="P:MAP.C.UI.Pages.BasePage.Navigator">
+            <summary>Gets the service used to open pages and return to the previous page.</summary>
         </member>
-        <member name="P:MAP.C.UI.Pages.BasePage.FromPageId">
-            <summary>Gets the page identifier that opened the current page.</summary>
+        <member name="P:MAP.C.UI.Pages.BasePage.Header">
+            <summary>Gets the state used to render the host page header.</summary>
+        </member>
+        <member name="P:MAP.C.UI.Pages.BasePage.Lang">
+            <summary>Gets localized text from core and loaded module resources.</summary>
+        </member>
+        <member name="P:MAP.C.UI.Pages.BasePage.DbClient">
+            <summary>Gets the low-level client for configured database API calls.</summary>
+        </member>
+        <member name="P:MAP.C.UI.Pages.BasePage.ClientContext">
+            <summary>Gets the current user, client IP address, and program context.</summary>
+        </member>
+        <member name="P:MAP.C.UI.Pages.BasePage.MenuService">
+            <summary>Gets the loaded menu and its current database configuration.</summary>
+        </member>
+        <member name="P:MAP.C.UI.Pages.BasePage.Dialogs">
+            <summary>Gets the Radzen dialog service for advanced dialog scenarios.</summary>
+        </member>
+        <member name="P:MAP.C.UI.Pages.BasePage.Notifications">
+            <summary>Gets the Radzen notification service for advanced notification scenarios.</summary>
+        </member>
+        <member name="P:MAP.C.UI.Pages.BasePage.ErrorNotifier">
+            <summary>Gets the notifier used to show safely correlated module errors.</summary>
+        </member>
+        <member name="P:MAP.C.UI.Pages.BasePage.PageParameters">
+            <summary>Gets the parameters supplied when the current page was opened.</summary>
+        </member>
+        <member name="P:MAP.C.UI.Pages.BasePage.PageCancellationToken">
+            <summary>Gets a token cancelled when this page leaves the UI.</summary>
         </member>
         <member name="P:MAP.C.UI.Pages.BasePage.DbName">
             <summary>Gets the configured database name for the current menu.</summary>
@@ -86,12 +113,36 @@
         <member name="M:MAP.C.UI.Pages.BasePage.ExecuteAsync(System.String,System.Object,System.Threading.CancellationToken)">
             <summary>Executes a PostgreSQL procedure using the current menu database.</summary>
         </member>
-        <member name="M:MAP.C.UI.Pages.BasePage.OpenPageAsync(System.String,System.Object)">
+        <member name="P:MAP.C.UI.Pages.BasePage.HeaderTitleKey">
+            <summary>Gets the localization key displayed as the page header title.</summary>
+            <remarks>Override to set a localized title; return <see langword="null"/> when the page supplies its own header content.</remarks>
+        </member>
+        <member name="P:MAP.C.UI.Pages.BasePage.HeaderKind">
+            <summary>Gets the visual kind applied to the page header.</summary>
+        </member>
+        <member name="P:MAP.C.UI.Pages.BasePage.HeaderContent">
+            <summary>Gets optional custom content rendered in the page header.</summary>
+        </member>
+        <member name="P:MAP.C.UI.Pages.BasePage.ShowBack">
+            <summary>Gets whether the host should show a back button in the page header.</summary>
+        </member>
+        <member name="M:MAP.C.UI.Pages.BasePage.RefreshHeader">
+            <summary>Refreshes the host header after page state or header properties change.</summary>
+        </member>
+        <member name="M:MAP.C.UI.Pages.BasePage.OpenPageAsync(System.String,System.Object,System.Boolean)">
             <summary>
             Safe navigation method for Module pages.
             Catches navigation exceptions and shows notification instead of
             letting the error propagate to the Module's ErrorBoundary.
             </summary>
+        </member>
+        <member name="M:MAP.C.UI.Pages.BasePage.DisposePage">
+            <summary>Releases page-specific synchronous resources.</summary>
+            <remarks>Do not implement the public disposal interfaces in derived pages; use this hook instead.</remarks>
+        </member>
+        <member name="M:MAP.C.UI.Pages.BasePage.DisposePageAsync">
+            <summary>Releases page-specific asynchronous resources.</summary>
+            <remarks>Do not implement the public disposal interfaces in derived pages; use this hook instead.</remarks>
         </member>
     </members>
 </doc>

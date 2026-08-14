@@ -1,4 +1,0 @@
-{
-  "OracleApiBaseUrl": "http://172.30.10.120:9090",
-  "PostgreSqlApiBaseUrl": "http://172.30.10.124:5001"
-}

@@ -31,5 +31,6 @@
     private Task GoBackAsync() => Navigator.BackAsync();
 
     // Example database call when a command exists for the configured DbName:
-    // var rows = await QueryAsync<CustomerDto>("schema.fn_get_customer", new { customer_id = _customerId });
+    // var rows = await QueryAsync<CustomerDto>("schema.fn_get_customer", new { customer_id = _customerId }, PageCancellationToken);
+    // Override DisposePage() for timers/event subscriptions and DisposePageAsync() for async resources.
 }
