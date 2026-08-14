@@ -28,11 +28,11 @@
         <main class="flex-1 overflow-auto bg-gray-50 p-6">
             @if (Navigator.Current is { } active)
             {
-                <PageContainer Type="active.ComponentType" @key="(active, _pageGeneration)" OnFaulted="OnPageFaulted" />
+                <PageContainer Type="active.ComponentType" @key="active.InstanceId" OnFaulted="OnPageFaulted" />
             }
             else
             {
-                <PageContainer Type="null" @key="(EmptyPageKey, _pageGeneration)" OnFaulted="OnPageFaulted" />
+                <PageContainer Type="null" @key="EmptyPageKey" OnFaulted="OnPageFaulted" />
             }
         </main>
     </div>
@@ -48,7 +48,6 @@
     private Action? _langChanged;
     private const string EmptyPageKey = "__empty";
     private string? FaultedPageId { get; set; }
-    private int _pageGeneration;
 
     private PageHeader? CurrentPageHeader =>
         PageHeaderResolver.GetMatchingHeader(Navigator.Current, HeaderState.Active);
@@ -110,15 +109,7 @@
     {
         if (!menuItem.IsPage) return;
 
-        // Retry faulted page: recreate component tree without navigation stack change
-        if (FaultedPageId == menuItem.Id)
-        {
-            FaultedPageId = null;
-            _pageGeneration++;
-            StateHasChanged();
-            return;
-        }
-
+        // Every menu selection, including a fault retry, is root navigation.
         await OpenRootPageSafeAsync(menuItem.Id);
     }
 

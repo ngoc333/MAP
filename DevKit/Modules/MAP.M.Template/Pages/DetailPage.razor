@@ -17,6 +17,7 @@
     {
         base.OnInitialized();
         // GetParameter keeps the template page renderable when opened directly from the menu.
+        // Navigation parameters may remain in Back history; prefer IDs and small values.
         // Use RequireParameter in action handlers when the parameter is mandatory for that action.
         _customerId = GetParameter<int>("CustomerId");
     }

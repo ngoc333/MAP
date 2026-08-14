@@ -2,7 +2,6 @@ using MAP.C.Contract.Diagnostics;
 using MAP.C.Contract.Menus;
 using MAP.C.Contract.Models;
 using MAP.C.Contract.Modules;
-using MAP.C.Contract.Navigation;
 using MAP.C.Runtime.Navigation;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -317,5 +316,68 @@ public sealed class PageNavigatorTests
         await navigator.OpenAsync("A");
 
         Assert.Equal("A", navigator.Current!.PageId);
+    }
+
+    [Fact]
+    public async Task OpenRootAsync_SamePage_RecreatesPageWithNewInstanceId()
+    {
+        var menus = new FakeMenuService();
+        var loader = new FakeModuleLoader();
+        menus.Register("A");
+        var navigator = CreateNavigator(menus, loader);
+
+        await navigator.OpenRootAsync("A");
+        var first = navigator.Current!;
+        await navigator.OpenRootAsync("A");
+
+        Assert.NotSame(first, navigator.Current);
+        Assert.True(navigator.Current!.InstanceId > first.InstanceId);
+        Assert.False(navigator.CanBack);
+    }
+
+    [Fact]
+    public async Task ConcurrentOpenAsync_ExecutesRequestsInArrivalOrder()
+    {
+        var menus = new FakeMenuService();
+        var loader = new FakeModuleLoader();
+        foreach (var pageId in new[] { "A", "B", "C" }) menus.Register(pageId);
+        var navigator = CreateNavigator(menus, loader);
+        await navigator.OpenAsync("A");
+
+        var bStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var releaseB = new TaskCompletionSource<Type>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var cStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var releaseC = new TaskCompletionSource<Type>(TaskCreationOptions.RunContinuationsAsynchronously);
+        loader.SetLoadFunc(menu => menu.Id switch
+        {
+            "B" => LoadWhenReleased(bStarted, releaseB),
+            "C" => LoadWhenReleased(cStarted, releaseC),
+            _ => Task.FromResult<Type>(typeof(string))
+        });
+
+        var openB = navigator.OpenAsync("B");
+        await bStarted.Task;
+        var openC = navigator.OpenAsync("C");
+
+        Assert.False(cStarted.Task.IsCompleted);
+        releaseB.SetResult(typeof(string));
+        await cStarted.Task;
+        releaseC.SetResult(typeof(string));
+        await Task.WhenAll(openB, openC);
+        loader.SetLoadFunc(null);
+
+        Assert.Equal("C", navigator.Current!.PageId);
+        await navigator.BackAsync();
+        Assert.Equal("B", navigator.Current!.PageId);
+        await navigator.BackAsync();
+        Assert.Equal("A", navigator.Current!.PageId);
+    }
+
+    private static async Task<Type> LoadWhenReleased(
+        TaskCompletionSource started,
+        TaskCompletionSource<Type> release)
+    {
+        started.SetResult();
+        return await release.Task;
     }
 }

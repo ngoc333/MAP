@@ -1,5 +1,6 @@
 using System.Reflection;
 using System.Text.Json;
+using MAP.C.Contract.Localization;
 using MAP.C.Contract.Models;
 using MAP.C.Contract.Navigation;
 using MAP.C.UI.Pages;
@@ -53,14 +54,59 @@ public sealed class BasePageParameterTests
         typeof(BasePage)
             .GetProperty("Navigator", BindingFlags.Instance | BindingFlags.NonPublic)!
             .SetValue(page, navigator);
+        typeof(BasePage)
+            .GetProperty("Lang", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .SetValue(page, new FakeLanguageService());
+        page.Initialize();
         return page;
     }
 
+    [Fact]
+    public void InitializedPage_UsesItsNavigationSnapshotAfterCurrentChanges()
+    {
+        var page = new TestPage();
+        var navigator = new FakePageNavigator
+        {
+            Current = CreateActivePage("A", 10)
+        };
+
+        SetInjectedProperty(page, "Navigator", navigator);
+        SetInjectedProperty(page, "Lang", new FakeLanguageService());
+        page.Initialize();
+        navigator.Current = CreateActivePage("B", 20);
+
+        Assert.Equal("A", page.CurrentPageId);
+        Assert.Equal(10, page.GetOptional<int>("Id"));
+    }
+
+    private static ActivePage CreateActivePage(string pageId, int id) => new(
+        pageId,
+        new MenuItem { Id = pageId },
+        typeof(TestPage),
+        PageParams.From(new { Id = id }, out _));
+
+    private static void SetInjectedProperty(object target, string name, object value) =>
+        typeof(BasePage)
+            .GetProperty(name, BindingFlags.Instance | BindingFlags.NonPublic)!
+            .SetValue(target, value);
+
     private sealed class TestPage : BasePage
     {
+        public string CurrentPageId => PageId;
         public T? GetOptional<T>(string name) => GetParameter<T>(name);
-
         public T GetRequired<T>(string name) => RequireParameter<T>(name);
+        public void Initialize() => base.OnInitialized();
+    }
+
+    private sealed class FakeLanguageService : ILanguageService
+    {
+        public string CurrentLanguage => "en";
+        public IReadOnlyList<LanguageInfo> AvailableLanguages => [];
+        public event Action? LanguageChanged { add { } remove { } }
+        public string T(string key) => key;
+        public string T(string key, string defaultValue) => defaultValue;
+        public void SetLanguage(string language) { }
+        public Task LoadModuleResourcesAsync(string moduleName, Dictionary<string, Dictionary<string, object>> vi, Dictionary<string, Dictionary<string, object>> en) => Task.CompletedTask;
     }
 
     private sealed class FakePageNavigator : IPageNavigator

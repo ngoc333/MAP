@@ -7,6 +7,7 @@ using MAP.C.Contract.Navigation;
 using MAP.C.UI.Errors;
 using MAP.C.UI.Headers;
 using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.Logging;
 using Radzen;
 using System.Globalization;
 using System.Text.Json;
@@ -17,12 +18,14 @@ namespace MAP.C.UI.Pages;
 /// Base component for MAP module pages. Inherit from this type to access navigation,
 /// localization, notifications, confirmation dialogs, and the configured database API.
 /// </summary>
-public abstract class BasePage : ComponentBase, IDisposable, IAsyncDisposable
+public abstract class BasePage : ComponentBase, IAsyncDisposable
 {
     private readonly CancellationTokenSource _pageCancellationTokenSource = new();
     private readonly CancellationToken _pageCancellationToken;
     private readonly object _disposeSyncRoot = new();
     private Task? _disposeTask;
+    private string _pageId = string.Empty;
+    private PageParams? _pageParameters;
 
     protected BasePage()
     {
@@ -65,10 +68,17 @@ public abstract class BasePage : ComponentBase, IDisposable, IAsyncDisposable
     [Inject]
     protected ModuleErrorNotifier ErrorNotifier { get; private set; } = default!;
 
-    /// <summary>Gets the parameters supplied when the current page was opened.</summary>
-    protected PageParams? PageParameters => Navigator.Current?.Parameters;
+    /// <summary>Gets the logger used to report isolated page cleanup failures.</summary>
+    [Inject]
+    protected ILogger<BasePage> Logger { get; private set; } = default!;
 
-    /// <summary>Gets a token cancelled when this page leaves the UI.</summary>
+    /// <summary>Gets this page instance's navigation identifier captured during initialization.</summary>
+    protected string PageId => _pageId;
+
+    /// <summary>Gets the parameters captured for this page instance during initialization.</summary>
+    protected PageParams? PageParameters => _pageParameters;
+
+    /// <summary>Gets a token cancelled when this page instance leaves the UI.</summary>
     protected CancellationToken PageCancellationToken => _pageCancellationToken;
 
     /// <summary>Gets the configured database name for the current menu.</summary>
@@ -162,15 +172,22 @@ public abstract class BasePage : ComponentBase, IDisposable, IAsyncDisposable
     protected void RefreshHeader()
     {
         Header.Set(new PageHeader(
-            Navigator.Current?.PageId ?? string.Empty,
+            PageId,
             HeaderKind,
             HeaderTitleKey,
             HeaderContent,
             ShowBack));
     }
 
+    /// <summary>
+    /// Captures navigation state for this page instance. Derived overrides must call
+    /// <c>base.OnInitialized()</c> before accessing navigation parameters.
+    /// </summary>
     protected override void OnInitialized()
     {
+        var current = Navigator.Current;
+        _pageId = current?.PageId ?? string.Empty;
+        _pageParameters = current?.Parameters;
         Lang.LanguageChanged += OnLanguageChanged;
     }
 
@@ -263,18 +280,17 @@ public abstract class BasePage : ComponentBase, IDisposable, IAsyncDisposable
     }
 
     /// <summary>Releases page-specific synchronous resources.</summary>
-    /// <remarks>Do not implement the public disposal interfaces in derived pages; use this hook instead.</remarks>
+    /// <remarks>Do not implement disposal interfaces in derived pages; use this hook instead. Failures are logged and isolated.</remarks>
     protected virtual void DisposePage()
     {
     }
 
     /// <summary>Releases page-specific asynchronous resources.</summary>
-    /// <remarks>Do not implement the public disposal interfaces in derived pages; use this hook instead.</remarks>
+    /// <remarks>Do not implement disposal interfaces in derived pages; use this hook instead. Failures are logged and isolated.</remarks>
     protected virtual ValueTask DisposePageAsync() => ValueTask.CompletedTask;
 
-    void IDisposable.Dispose() => DisposeCoreAsync().AsTask().GetAwaiter().GetResult();
-
-    ValueTask IAsyncDisposable.DisposeAsync() => DisposeCoreAsync();
+    /// <inheritdoc />
+    public ValueTask DisposeAsync() => DisposeCoreAsync();
 
     private ValueTask DisposeCoreAsync()
     {
@@ -287,29 +303,42 @@ public abstract class BasePage : ComponentBase, IDisposable, IAsyncDisposable
 
     private async Task DisposeCoreImplementationAsync()
     {
+        SafeCleanup(_pageCancellationTokenSource.Cancel, "Cancel");
+        SafeCleanup(() => Lang.LanguageChanged -= OnLanguageChanged, "UnsubscribeLanguageChanged");
+        SafeCleanup(() => Header.Clear(PageId), "ClearHeader");
+        SafeCleanup(DisposePage, "DisposePage");
+
         try
         {
-            _pageCancellationTokenSource.Cancel();
+            await DisposePageAsync();
         }
-        finally
+        catch (Exception ex)
         {
-            Lang.LanguageChanged -= OnLanguageChanged;
-
-            try
-            {
-                DisposePage();
-            }
-            finally
-            {
-                try
-                {
-                    await DisposePageAsync();
-                }
-                finally
-                {
-                    _pageCancellationTokenSource.Dispose();
-                }
-            }
+            LogCleanupError(ex, "DisposePageAsync");
         }
+
+        SafeCleanup(_pageCancellationTokenSource.Dispose, "DisposeCancellationTokenSource");
+    }
+
+    private void SafeCleanup(Action cleanup, string phase)
+    {
+        try
+        {
+            cleanup();
+        }
+        catch (Exception ex)
+        {
+            LogCleanupError(ex, phase);
+        }
+    }
+
+    private void LogCleanupError(Exception exception, string phase)
+    {
+        Logger?.LogError(
+            exception,
+            "Page cleanup failed. PageId={PageId} Phase={Phase} Component={Component}",
+            PageId,
+            phase,
+            GetType().FullName);
     }
 }
