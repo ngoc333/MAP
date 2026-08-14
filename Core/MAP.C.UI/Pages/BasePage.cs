@@ -137,22 +137,22 @@ public abstract class BasePage : ComponentBase, IAsyncDisposable
     protected Task<List<T>> QueryAsync<T>(
         string commandName,
         object? parameters = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken? cancellationToken = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(commandName);
         return DbClient.QueryPostgreSqlFunctionAsync<T>(
-            DbName, commandName, parameters ?? new { }, cancellationToken);
+            DbName, commandName, parameters ?? new { }, cancellationToken ?? PageCancellationToken);
     }
 
     /// <summary>Executes a PostgreSQL procedure using the current menu database.</summary>
     protected Task ExecuteAsync(
         string commandName,
         object? parameters = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken? cancellationToken = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(commandName);
         return DbClient.ExecutePostgreSqlProcedureAsync(
-            DbName, commandName, parameters ?? new { }, cancellationToken);
+            DbName, commandName, parameters ?? new { }, cancellationToken ?? PageCancellationToken);
     }
 
     /// <summary>Gets the localization key displayed as the page header title.</summary>
@@ -188,6 +188,7 @@ public abstract class BasePage : ComponentBase, IAsyncDisposable
         var current = Navigator.Current;
         _pageId = current?.PageId ?? string.Empty;
         _pageParameters = current?.Parameters;
+        Navigator.Navigating += OnNavigating;
         Lang.LanguageChanged += OnLanguageChanged;
     }
 
@@ -253,6 +254,18 @@ public abstract class BasePage : ComponentBase, IAsyncDisposable
         });
     }
 
+    private void OnNavigating()
+    {
+        try
+        {
+            _pageCancellationTokenSource.Cancel();
+        }
+        catch (Exception ex)
+        {
+            LogCleanupError(ex, "CancelOnNavigating");
+        }
+    }
+
     private void OnLanguageChanged()
     {
         InvokeAsync(StateHasChanged);
@@ -279,13 +292,7 @@ public abstract class BasePage : ComponentBase, IAsyncDisposable
         }
     }
 
-    /// <summary>Releases page-specific synchronous resources.</summary>
-    /// <remarks>Do not implement disposal interfaces in derived pages; use this hook instead. Failures are logged and isolated.</remarks>
-    protected virtual void DisposePage()
-    {
-    }
-
-    /// <summary>Releases page-specific asynchronous resources.</summary>
+    /// <summary>Releases page-specific resources.</summary>
     /// <remarks>Do not implement disposal interfaces in derived pages; use this hook instead. Failures are logged and isolated.</remarks>
     protected virtual ValueTask DisposePageAsync() => ValueTask.CompletedTask;
 
@@ -303,10 +310,9 @@ public abstract class BasePage : ComponentBase, IAsyncDisposable
 
     private async Task DisposeCoreImplementationAsync()
     {
-        SafeCleanup(_pageCancellationTokenSource.Cancel, "Cancel");
+        SafeCleanup(() => Navigator.Navigating -= OnNavigating, "UnsubscribeNavigating");
         SafeCleanup(() => Lang.LanguageChanged -= OnLanguageChanged, "UnsubscribeLanguageChanged");
-        SafeCleanup(() => Header.Clear(PageId), "ClearHeader");
-        SafeCleanup(DisposePage, "DisposePage");
+        SafeCleanup(_pageCancellationTokenSource.Cancel, "Cancel");
 
         try
         {

@@ -9,6 +9,9 @@ public interface IPageNavigator
     /// <summary>Gets whether navigation can return to a previous page.</summary>
     bool CanBack { get; }
 
+    /// <summary>Raised when the current page is about to be left so it can stop page-lifetime work.</summary>
+    event Action? Navigating;
+
     /// <summary>Raised when the active page changes.</summary>
     event Action? Changed;
 

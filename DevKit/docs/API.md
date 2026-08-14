@@ -14,12 +14,12 @@ Use `BasePage` helpers first:
 - `GetParameter<T>(name)` returns default when the parameter is absent or cannot be converted; `RequireParameter<T>(name)` throws in those cases.
 - `NotifySuccess`, `NotifyWarning`, and `NotifyError` use the existing Radzen notification service.
 - `ConfirmAsync(message)` returns `true` only when confirmed.
-- `QueryAsync<T>(commandName, parameters)` invokes the configured PostgreSQL function.
-- `ExecuteAsync(commandName, parameters)` invokes the configured PostgreSQL procedure.
+- `QueryAsync<T>(commandName, parameters)` invokes the configured PostgreSQL function and automatically uses the page cancellation token.
+- `ExecuteAsync(commandName, parameters)` invokes the configured PostgreSQL procedure and automatically uses the page cancellation token.
 - `DbClient`, `DbName`, `UserName`, `IpAddress`, `PageId`, and `PageParameters` are available for advanced scenarios. `PageId` and `PageParameters` belong to the current page instance; they do not change when navigation moves to another page.
-- Pass `cancellationToken: PageCancellationToken` to page-lifetime database or background operations. The token is cancelled when the page leaves the UI.
+- `PageCancellationToken` is cancelled as soon as navigation starts away from the page. Use it for non-database page-lifetime work such as HTTP calls, delays, loops, and APIs that accept a cancellation token.
 - Navigation parameters can remain in Back history until popped or root navigation clears history. Pass IDs or small value/DTO state only; do not pass large collections, buffers, streams, connections, services, or component instances.
-- Do not implement disposal interfaces in a module page. Override `DisposePage()` for synchronous cleanup (timers and event subscriptions) and `DisposePageAsync()` for asynchronous cleanup (for example JS modules or streams). The framework logs and isolates cleanup failures so they do not fault the renderer.
+- Do not implement disposal interfaces in a module page. Override the single `DisposePageAsync()` hook for synchronous cleanup (timers and event subscriptions) and asynchronous cleanup (for example JS modules or streams). The framework logs and isolates cleanup failures so they do not fault the renderer.
 - Override `HeaderTitleKey`, `HeaderKind`, `HeaderContent`, or `ShowBack`, then call `RefreshHeader()` after changing header state.
 
 `Navigator`, `Dialogs`, `Notifications`, `ClientContext`, `MenuService`, and `ErrorNotifier` are protected injected services for advanced scenarios. Prefer `OpenPageAsync` and notification helpers for normal page behavior.

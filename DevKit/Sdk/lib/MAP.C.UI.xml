@@ -30,6 +30,9 @@
             </summary>
             <param name="errorId">Short error ID for user reference (e.g., "A83F28C1").</param>
         </member>
+        <member name="M:MAP.C.UI.Headers.IPageHeaderState.Clear">
+            <summary>Clears the active page header.</summary>
+        </member>
         <member name="T:MAP.C.UI.Headers.PageHeaderResolver">
             <summary>
             Resolves the header belonging to the current page without retaining UI state.
@@ -68,11 +71,17 @@
         <member name="P:MAP.C.UI.Pages.BasePage.ErrorNotifier">
             <summary>Gets the notifier used to show safely correlated module errors.</summary>
         </member>
+        <member name="P:MAP.C.UI.Pages.BasePage.Logger">
+            <summary>Gets the logger used to report isolated page cleanup failures.</summary>
+        </member>
+        <member name="P:MAP.C.UI.Pages.BasePage.PageId">
+            <summary>Gets this page instance's navigation identifier captured during initialization.</summary>
+        </member>
         <member name="P:MAP.C.UI.Pages.BasePage.PageParameters">
-            <summary>Gets the parameters supplied when the current page was opened.</summary>
+            <summary>Gets the parameters captured for this page instance during initialization.</summary>
         </member>
         <member name="P:MAP.C.UI.Pages.BasePage.PageCancellationToken">
-            <summary>Gets a token cancelled when this page leaves the UI.</summary>
+            <summary>Gets a token cancelled when this page instance leaves the UI.</summary>
         </member>
         <member name="P:MAP.C.UI.Pages.BasePage.DbName">
             <summary>Gets the configured database name for the current menu.</summary>
@@ -107,10 +116,10 @@
         <member name="M:MAP.C.UI.Pages.BasePage.ConfirmAsync(System.String)">
             <summary>Shows a confirmation dialog and returns <see langword="true"/> only when confirmed.</summary>
         </member>
-        <member name="M:MAP.C.UI.Pages.BasePage.QueryAsync``1(System.String,System.Object,System.Threading.CancellationToken)">
+        <member name="M:MAP.C.UI.Pages.BasePage.QueryAsync``1(System.String,System.Object,System.Nullable{System.Threading.CancellationToken})">
             <summary>Queries a PostgreSQL function using the current menu database.</summary>
         </member>
-        <member name="M:MAP.C.UI.Pages.BasePage.ExecuteAsync(System.String,System.Object,System.Threading.CancellationToken)">
+        <member name="M:MAP.C.UI.Pages.BasePage.ExecuteAsync(System.String,System.Object,System.Nullable{System.Threading.CancellationToken})">
             <summary>Executes a PostgreSQL procedure using the current menu database.</summary>
         </member>
         <member name="P:MAP.C.UI.Pages.BasePage.HeaderTitleKey">
@@ -129,6 +138,12 @@
         <member name="M:MAP.C.UI.Pages.BasePage.RefreshHeader">
             <summary>Refreshes the host header after page state or header properties change.</summary>
         </member>
+        <member name="M:MAP.C.UI.Pages.BasePage.OnInitialized">
+            <summary>
+            Captures navigation state for this page instance. Derived overrides must call
+            <c>base.OnInitialized()</c> before accessing navigation parameters.
+            </summary>
+        </member>
         <member name="M:MAP.C.UI.Pages.BasePage.OpenPageAsync(System.String,System.Object,System.Boolean)">
             <summary>
             Safe navigation method for Module pages.
@@ -136,13 +151,12 @@
             letting the error propagate to the Module's ErrorBoundary.
             </summary>
         </member>
-        <member name="M:MAP.C.UI.Pages.BasePage.DisposePage">
-            <summary>Releases page-specific synchronous resources.</summary>
-            <remarks>Do not implement the public disposal interfaces in derived pages; use this hook instead.</remarks>
-        </member>
         <member name="M:MAP.C.UI.Pages.BasePage.DisposePageAsync">
-            <summary>Releases page-specific asynchronous resources.</summary>
-            <remarks>Do not implement the public disposal interfaces in derived pages; use this hook instead.</remarks>
+            <summary>Releases page-specific resources.</summary>
+            <remarks>Do not implement disposal interfaces in derived pages; use this hook instead. Failures are logged and isolated.</remarks>
+        </member>
+        <member name="M:MAP.C.UI.Pages.BasePage.DisposeAsync">
+            <inheritdoc />
         </member>
     </members>
 </doc>

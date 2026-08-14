@@ -115,6 +115,12 @@ public sealed class BasePageParameterTests
 
         public bool CanBack => false;
 
+        public event Action? Navigating
+        {
+            add { }
+            remove { }
+        }
+
         public event Action? Changed
         {
             add { }

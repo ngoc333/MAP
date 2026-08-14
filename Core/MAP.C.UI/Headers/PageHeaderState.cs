@@ -11,11 +11,9 @@ public sealed class PageHeaderState : IPageHeaderState
         Changed?.Invoke();
     }
 
-    public void Clear(string pageId)
+    public void Clear()
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(pageId);
-
-        if (Active?.PageId != pageId)
+        if (Active is null)
             return;
 
         Active = null;

@@ -6,8 +6,6 @@ public interface IPageHeaderState
     event Action? Changed;
     void Set(PageHeader header);
 
-    /// <summary>
-    /// Clears the active header only when it belongs to <paramref name="pageId"/>.
-    /// </summary>
-    void Clear(string pageId);
+    /// <summary>Clears the active page header.</summary>
+    void Clear();
 }

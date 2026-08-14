@@ -160,6 +160,9 @@
             <param name="items">The menu items to search.</param>
             <returns>The first navigable page, or null if none found.</returns>
         </member>
+        <member name="T:MAP.C.Contract.Navigation.ActivePage">
+            <summary>Represents the page currently active in the application.</summary>
+        </member>
         <member name="T:MAP.C.Contract.Navigation.IPageNavigator">
             <summary>Provides navigation between MAP module pages.</summary>
         </member>
@@ -169,6 +172,9 @@
         <member name="P:MAP.C.Contract.Navigation.IPageNavigator.CanBack">
             <summary>Gets whether navigation can return to a previous page.</summary>
         </member>
+        <member name="E:MAP.C.Contract.Navigation.IPageNavigator.Navigating">
+            <summary>Raised when the current page is about to be left so it can stop page-lifetime work.</summary>
+        </member>
         <member name="E:MAP.C.Contract.Navigation.IPageNavigator.Changed">
             <summary>Raised when the active page changes.</summary>
         </member>
@@ -176,12 +182,12 @@
             <summary>
             Opens a page, optionally passing an anonymous object or <see cref="T:MAP.C.Contract.Navigation.PageParams"/>.
             When <paramref name="pushHistory"/> is <see langword="true"/>, the current page is saved to the back stack.
-            When it is <see langword="false"/>, the back stack remains unchanged.
+            When it is <see langword="false"/>, the back stack remains unchanged; existing entries are not popped.
             </summary>
         </member>
         <member name="M:MAP.C.Contract.Navigation.IPageNavigator.OpenRootAsync(System.String,System.Object)">
             <summary>
-            Opens a root page after successfully resolving it, then clears the complete back-navigation history.
+            Opens a new root page instance after successfully resolving it, then clears the complete back-navigation history.
             </summary>
         </member>
         <member name="M:MAP.C.Contract.Navigation.IPageNavigator.BackAsync">
