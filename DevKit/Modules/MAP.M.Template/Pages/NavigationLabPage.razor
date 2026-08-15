@@ -1,11 +1,13 @@
 @inherits BasePage
 @namespace MAP.M.Template.Pages
+@using MAP.M.Template.Models
 
 <div class="p-4">
     <h2>Navigation lab <small>Advanced: IPageNavigator</small></h2>
 
     <ApiSection Title="History semantics" Note="A → B (push) → C (no push) → Back returns A; subscriptions are removed during DisposePageAsync.">
         <p>Current: @Navigator.Current?.PageId | CanBack: @Navigator.CanBack | Navigating: @_navigating | Changed: @_changed</p>
+        <p>Cross-instance history: @TemplateProbeState.NavigationHistory</p>
         <ActionRow>
             <RadzenButton Text="Reset as root (A)" Click="ResetRootAsync" />
             <RadzenButton Text="Open B (push)" Click="OpenBAsync" />
@@ -38,15 +40,24 @@
         Navigator.Changed += OnChanged;
     }
 
-    private void OnNavigating() => _navigating++;
+    private void OnNavigating()
+    {
+        _navigating++;
+        TemplateProbeState.Navigating(PageId, null);
+    }
 
     private void OnChanged()
     {
         _changed++;
+        TemplateProbeState.Changed(Navigator.Current?.PageId);
         InvokeAsync(StateHasChanged);
     }
 
-    private Task ResetRootAsync() => Navigator.OpenRootAsync("template-navigation");
+    private Task ResetRootAsync()
+    {
+        TemplateProbeState.Reset();
+        return Navigator.OpenRootAsync("template-navigation");
+    }
 
     private Task OpenBAsync() => Navigator.OpenAsync("template-navigation-b", new { From = PageId }, true);
 

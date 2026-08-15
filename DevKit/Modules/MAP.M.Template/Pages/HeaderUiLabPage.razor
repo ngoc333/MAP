@@ -3,30 +3,38 @@
 @inject IUiStateService UiState
 
 <div class="p-4">
-    <h2>Header and UI state lab <small>Advanced</small></h2>
+    <h2>@Lang.T("TemplateHeaderUi.Title")</h2>
 
-    <ApiSection Title="Live IUiStateService" Note="This is live host state, separate from persisted AppConfig. Original values are restored when leaving.">
-        <p>Menu: @UiState.ShowMenu | Header: @UiState.ShowHeader | Changed: @_uiChanges</p>
+    <ApiSection Title="@Lang.T("TemplateHeaderUi.UiStateTitle")" Tier="@Lang.T("TemplateCommon.Advanced")" Note="@Lang.T("TemplateHeaderUi.UiStateNote")">
+        <p>ShowMenu: @UiState.ShowMenu | ShowHeader: @UiState.ShowHeader | Changed: @_uiChanges</p>
         <ActionRow>
-            <RadzenButton Text="Toggle menu" Click="UiState.ToggleMenu" />
-            <RadzenButton Text="Toggle header" Click="UiState.ToggleHeader" />
-            <RadzenButton Text="Restore UI" Click="Restore" />
+            <RadzenButton Text="ToggleMenu()" Click="UiState.ToggleMenu" />
+            <RadzenButton Text="ToggleHeader()" Click="UiState.ToggleHeader" />
+            <RadzenButton Text="SetMenu(true)" Click="() => UiState.SetMenu(true)" />
+            <RadzenButton Text="SetMenu(false)" Click="() => UiState.SetMenu(false)" />
+            <RadzenButton Text="SetHeader(true)" Click="() => UiState.SetHeader(true)" />
+            <RadzenButton Text="SetHeader(false)" Click="() => UiState.SetHeader(false)" />
+            <RadzenButton Text="@Lang.T("TemplateCommon.Restore")" Click="Restore" />
         </ActionRow>
     </ApiSection>
 
-    <ApiSection Title="IPageHeaderState / BasePage header" Note="HeaderKind is a host gap: Default/Compact are stored but current host does not render a visual distinction.">
-        <p>Active: @Header.Active?.PageId | Kind: @Header.Active?.Kind | Changes: @_headerChanges</p>
+    <ApiSection Title="@Lang.T("TemplateHeaderUi.HeaderTitle")" Note="@Lang.T("TemplateHeaderUi.HostGapNote")">
+        <p>Active: @Header.Active?.PageId | Kind: @Header.Active?.Kind | ShowBack: @Header.Active?.ShowBack | Changes: @_headerChanges</p>
         <ActionRow>
-            <RadzenButton Text="Set compact header" Click="SetCompact" />
-            <RadzenButton Text="Clear header" Click="Header.Clear" />
-            <RadzenButton Text="Refresh header" Click="RefreshHeader" />
+            <RadzenButton Text="HeaderKind.Default" Click="SetDefault" />
+            <RadzenButton Text="HeaderKind.Compact" Click="SetCompact" />
+            <RadzenButton Text="Toggle ShowBack" Click="ToggleShowBack" />
+            <RadzenButton Text="Toggle HeaderContent" Click="ToggleHeaderContent" />
+            <RadzenButton Text="Header.Set(...)" Click="SetHeaderDirectly" />
+            <RadzenButton Text="Header.Clear()" Click="Header.Clear" />
+            <RadzenButton Text="RefreshHeader()" Click="RefreshHeader" />
         </ActionRow>
     </ApiSection>
 
-    <ApiSection Title="Direct Radzen services" Tier="Advanced">
+    <ApiSection Title="@Lang.T("TemplateHeaderUi.RadzenTitle")" Tier="@Lang.T("TemplateCommon.Advanced")">
         <ActionRow>
-            <RadzenButton Text="Direct notification" Click="DirectNotification" />
-            <RadzenButton Text="Direct alert" Click="DirectAlertAsync" />
+            <RadzenButton Text="NotificationService.Notify" Click="DirectNotification" />
+            <RadzenButton Text="DialogService.Alert" Click="DirectAlertAsync" />
         </ActionRow>
     </ApiSection>
 </div>
@@ -36,11 +44,16 @@
     private bool _initialHeader;
     private int _uiChanges;
     private int _headerChanges;
-    private bool _compact;
+    private HeaderKind _headerKind = HeaderKind.Default;
+    private bool _showBack = true;
+    private bool _showCustomContent;
 
     protected override string? HeaderTitleKey => "TemplateHeaderUi.Title";
-    protected override HeaderKind HeaderKind => _compact ? HeaderKind.Compact : HeaderKind.Default;
-    protected override bool ShowBack => true;
+    protected override HeaderKind HeaderKind => _headerKind;
+    protected override bool ShowBack => _showBack;
+    protected override RenderFragment? HeaderContent => _showCustomContent
+        ? builder => builder.AddContent(0, "Template custom header content")
+        : null;
 
     protected override void OnInitialized()
     {
@@ -69,11 +82,36 @@
         UiState.SetHeader(_initialHeader);
     }
 
-    private void SetCompact()
+    private void SetDefault()
     {
-        _compact = true;
+        _headerKind = HeaderKind.Default;
         RefreshHeader();
     }
+
+    private void SetCompact()
+    {
+        _headerKind = HeaderKind.Compact;
+        RefreshHeader();
+    }
+
+    private void ToggleShowBack()
+    {
+        _showBack = !_showBack;
+        RefreshHeader();
+    }
+
+    private void ToggleHeaderContent()
+    {
+        _showCustomContent = !_showCustomContent;
+        RefreshHeader();
+    }
+
+    private void SetHeaderDirectly() => Header.Set(new PageHeader(
+        PageId,
+        HeaderKind.Compact,
+        "TemplateHeaderUi.Title",
+        HeaderContent,
+        _showBack));
 
     private void DirectNotification() => Notifications.Notify(new NotificationMessage
     {

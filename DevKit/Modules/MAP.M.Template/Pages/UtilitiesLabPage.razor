@@ -1,5 +1,149 @@
 @inherits BasePage
 @namespace MAP.M.Template.Pages
 
-<div class="p-4"><h2>Utilities lab <small>Synthetic, deterministic</small></h2><ApiSection Title="PageParams and navigation models"><RadzenButton Text="Run PageParams" Click="Params" /><p>Actual current: @Navigator.Current?.PageId</p></ApiSection><ApiSection Title="Menu validation and tree"><RadzenButton Text="Validate synthetic menu" Click="Menu" /></ApiSection><ApiSection Title="Header utilities"><RadzenButton Text="Run local header state" Click="HeaderUtilities" /></ApiSection><ApiSection Title="DbJson and ModuleErrorId"><RadzenButton Text="Run serialization and correlation" Click="Other" /></ApiSection><ResultPanel Value="@_result" /></div>
-@code { private string? _result; private void Params(){var none=PageParams.From(null,out _);var bag=PageParams.From(new { Name="demo" },out _)!;bag["Count"]=1;dynamic d=bag;d.Enabled=true;var existing=PageParams.From(bag,out _);_result=$"null={none is null}; name={bag["Name"]}; count={bag["Count"]}; dynamic={d.Enabled}; same={ReferenceEquals(bag,existing)}; history={new PageHistoryEntry("synthetic",bag).PageId}";} private void Menu(){var page=new MenuItem{Id="page",Titles=new(){{"en","Page"}},Assembly="a",Component="c"};var config=new PageConfig{Menus=new(){new MenuItem{Id="group",Titles=new(){{"en","Group"}},Children=new(){page}}}};MenuConfigValidator.Validate(config);_result=$"find={MenuTree.Find(config.Menus,"page")?.Id}; first={MenuTree.FindFirstPage(config.Menus)?.Id}; startup={MenuTree.ResolveStartupPage(config.Menus,"page")?.Id}; title={MenuTitle.Get(page,"vi")}";} private void HeaderUtilities(){var state=new PageHeaderState();var changes=0;state.Changed+=()=>changes++;var header=new PageHeader("synthetic",HeaderKind.Compact,"TemplateHome.Title");state.Set(header);var match=PageHeaderResolver.GetMatchingHeader(Navigator.Current,header);state.Clear();_result=$"local changes={changes}; host match={(match is null ? "none" : "matched")}; kind={header.Kind}";} private void Other(){var json=DbJson.ToElement(new { CustomerId=1,FullName="Demo" });var ex=new Exception("synthetic");_result=$"json={json.GetRawText()}; errorId={ModuleErrorId.GetOrCreate(ex)}";} }
+<div class="p-4">
+    <h2>@Lang.T("TemplateUtilities.Title")</h2>
+
+    <ApiSection Title="PageParams" Tier="Synthetic">
+        <ActionRow><RadzenButton Text="Run PageParams branches" Click="RunPageParams" /></ActionRow>
+    </ApiSection>
+    <ApiSection Title="MenuConfigValidator" Tier="Synthetic">
+        <ActionRow>
+            <RadzenButton Text="Valid" Click="ValidateValid" />
+            <RadzenButton Text="Duplicate ID" Click="ValidateDuplicate" />
+            <RadzenButton Text="Missing title" Click="ValidateMissingTitle" />
+            <RadzenButton Text="Assembly only" Click="ValidateAssemblyOnly" />
+            <RadzenButton Text="Component only" Click="ValidateComponentOnly" />
+            <RadzenButton Text="Page with children" Click="ValidatePageWithChildren" />
+            <RadzenButton Text="Empty group" Click="ValidateEmptyGroup" />
+        </ActionRow>
+    </ApiSection>
+    <ApiSection Title="MenuTitle and MenuTree" Tier="Synthetic">
+        <ActionRow><RadzenButton Text="Run menu utility branches" Click="RunMenuUtilities" /></ActionRow>
+    </ApiSection>
+    <ApiSection Title="PageHeaderState and PageHeaderResolver" Tier="Synthetic">
+        <ActionRow><RadzenButton Text="Run header utility branches" Click="RunHeaderUtilities" /></ActionRow>
+    </ApiSection>
+    <ApiSection Title="DbJson and ModuleErrorId" Tier="Synthetic">
+        <ActionRow><RadzenButton Text="Run serialization and correlation" Click="RunOtherUtilities" /></ActionRow>
+    </ApiSection>
+    <ResultPanel Value="@_result" />
+</div>
+
+@code {
+    private string? _result;
+
+    private void RunPageParams()
+    {
+        var none = PageParams.From(null, out _);
+        var parameters = PageParams.From(new { Name = "demo" }, out _)!;
+        parameters["Count"] = 1;
+        dynamic dynamicParameters = parameters;
+        dynamicParameters.Enabled = true;
+        var existing = PageParams.From(parameters, out _);
+        var failure = PageParams.From(new ThrowingParameters(), out var exception);
+
+        _result = $"null={none is null}; name={parameters["Name"]}; count={parameters["Count"]}; dynamic={dynamicParameters.Enabled}; same={ReferenceEquals(parameters, existing)}; reflectionFailure={failure is null}; exception={exception?.GetType().Name}";
+    }
+
+    private void ValidateValid() => CaptureValidation(CreateValidConfig());
+
+    private void ValidateDuplicate() => CaptureValidation(new PageConfig
+    {
+        Menus = [CreatePage("duplicate"), CreatePage("duplicate")]
+    });
+
+    private void ValidateMissingTitle() => CaptureValidation(new PageConfig
+    {
+        Menus = [new MenuItem { Id = "missing-title", Assembly = "a", Component = "c" }]
+    });
+
+    private void ValidateAssemblyOnly() => CaptureValidation(new PageConfig
+    {
+        Menus = [new MenuItem { Id = "assembly-only", Titles = Titles("Page"), Assembly = "a" }]
+    });
+
+    private void ValidateComponentOnly() => CaptureValidation(new PageConfig
+    {
+        Menus = [new MenuItem { Id = "component-only", Titles = Titles("Page"), Component = "c" }]
+    });
+
+    private void ValidatePageWithChildren() => CaptureValidation(new PageConfig
+    {
+        Menus = [new MenuItem { Id = "page-group", Titles = Titles("Page"), Assembly = "a", Component = "c", Children = [CreatePage("child")] }]
+    });
+
+    private void ValidateEmptyGroup() => CaptureValidation(new PageConfig
+    {
+        Menus = [new MenuItem { Id = "empty-group", Titles = Titles("Group") }]
+    });
+
+    private void RunMenuUtilities()
+    {
+        var current = new MenuItem { Id = "current", Titles = new() { ["en"] = "English", ["vi"] = "Vietnamese" } };
+        var defaultFallback = new MenuItem { Id = "default", Titles = new() { ["vi"] = "Vietnamese" } };
+        var firstFallback = new MenuItem { Id = "first", Titles = new() { ["ja"] = "Japanese" } };
+        var idFallback = new MenuItem { Id = "id-fallback" };
+        var config = CreateValidConfig();
+
+        try
+        {
+            _ = MenuTree.ResolveStartupPage(config.Menus, "missing");
+        }
+        catch (InvalidOperationException exception)
+        {
+            _result = $"titleCurrent={MenuTitle.Get(current, "en")}; titleDefault={MenuTitle.Get(defaultFallback, "en")}; titleFirst={MenuTitle.Get(firstFallback, "en")}; titleId={MenuTitle.Get(idFallback, "en")}; find={MenuTree.Find(config.Menus, "page")?.Id}; first={MenuTree.FindFirstPage(config.Menus)?.Id}; startup={MenuTree.ResolveStartupPage(config.Menus, "page")?.Id}; nullStartup={MenuTree.ResolveStartupPage(config.Menus, null)?.Id}; invalid={exception.Message}";
+        }
+    }
+
+    private void RunHeaderUtilities()
+    {
+        var state = new PageHeaderState();
+        var changes = 0;
+        state.Changed += () => changes++;
+        var header = new PageHeader("page", HeaderKind.Compact, "TemplateHome.Title");
+        state.Set(header);
+        var matching = PageHeaderResolver.GetMatchingHeader(new ActivePage("page", CreatePage("page"), typeof(UtilitiesLabPage)), header);
+        var nonMatching = PageHeaderResolver.GetMatchingHeader(new ActivePage("other", CreatePage("other"), typeof(UtilitiesLabPage)), header);
+        var title = PageHeaderResolver.ResolveTitle(new ActivePage("page", CreatePage("page"), typeof(UtilitiesLabPage)), header, item => item.Id, (key, fallback) => key == "TemplateHome.Title" ? "Resolved" : fallback);
+        state.Clear();
+        _result = $"initial=null; changes={changes}; matching={matching is not null}; nonMatching={nonMatching is null}; title={title}; cleared={state.Active is null}";
+    }
+
+    private void RunOtherUtilities()
+    {
+        var json = DbJson.ToElement(new { CustomerId = 1, NullableValue = (string?)null, NestedObject = new { FullName = "Demo" } });
+        var exception = new InvalidOperationException("synthetic");
+        var first = ModuleErrorId.GetOrCreate(exception);
+        var repeated = ModuleErrorId.GetOrCreate(exception);
+        ModuleErrorId.Set(exception, "DEMO0001");
+        _result = $"created={ModuleErrorId.Create()}; same={first == repeated}; afterSet={ModuleErrorId.GetOrCreate(exception)}; json={json.GetRawText()}";
+    }
+
+    private void CaptureValidation(PageConfig config)
+    {
+        try
+        {
+            MenuConfigValidator.Validate(config);
+            _result = "Validation succeeded.";
+        }
+        catch (Exception exception)
+        {
+            _result = $"{exception.GetType().Name}: {exception.Message}";
+        }
+    }
+
+    private static PageConfig CreateValidConfig() => new()
+    {
+        Menus = [new MenuItem { Id = "group", Titles = Titles("Group"), Children = [CreatePage("page")] }]
+    };
+
+    private static MenuItem CreatePage(string id) => new() { Id = id, Titles = Titles("Page"), Assembly = "a", Component = "c" };
+
+    private static Dictionary<string, string> Titles(string title) => new() { ["en"] = title };
+
+    private sealed class ThrowingParameters
+    {
+        public string Value => throw new InvalidOperationException("Synthetic getter failure");
+    }
+}

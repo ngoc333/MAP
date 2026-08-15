@@ -3,9 +3,84 @@
 @inject IAppConfigService ConfigService
 @inject IPlatformCapabilities Platform
 
-<div class="p-4"><h2>Configuration and platform lab <small>Advanced / guarded side effect</small></h2>
-<ApiSection Title="Read-only platform information"><p>Config exists: @ConfigService.Exists</p><p>@JsonSerializer.Serialize(ConfigService.GetSystemInfo())</p><p>Displays: @JsonSerializer.Serialize(ConfigService.GetDisplays())</p><p>Capabilities — Fullscreen: @Platform.SupportsFullscreen; Hide taskbar: @Platform.SupportsHideTaskbar; Display selection: @Platform.SupportsDisplaySelection</p></ApiSection>
-<ApiSection Title="Editable AppConfig" Note="Draft is cloned; it is not the mutable service Current. Save is manual and confirmed.">@if (_draft is not null) { <label>Program ID <input @bind="_draft.ProgramId" /></label><label class="ml-2">Default language <input @bind="_draft.DefaultLanguage" /></label><br/><label><input type="checkbox" @bind="_draft.ShowMenu" /> Show menu</label><label class="ml-2"><input type="checkbox" @bind="_draft.Fullscreen" disabled="@(!Platform.SupportsFullscreen)" /> Fullscreen</label><label class="ml-2"><input type="checkbox" @bind="_draft.HideTaskbar" disabled="@(!Platform.SupportsHideTaskbar)" /> Hide taskbar</label><br/><p>Before: @_before</p><p>Draft: @JsonSerializer.Serialize(_draft)</p><RadzenButton Text="Save after confirmation" Click="SaveAsync" /> } else { <p>No current configuration is available.</p> }</ApiSection>
-<ApiSection Title="Danger zone" Tier="Destructive"><p>Restart is separate from Save. Desktop starts a new process then exits; Web reloads.</p><RadzenButton Text="Restart after confirmation" ButtonStyle="ButtonStyle.Danger" Click="RestartAsync" /></ApiSection><ResultPanel Value="@_result" /></div>
-@code { private AppConfig? _draft; private string _before=""; private string? _result; protected override void OnInitialized(){base.OnInitialized(); if(ConfigService.Current is { } current){_draft=Clone(current);_before=JsonSerializer.Serialize(current);}}
- private async Task SaveAsync(){if(_draft is not null && await ConfirmAsync("Save this configuration draft?")){await ConfigService.SaveAsync(_draft);_result="Saved manually. Live UI visibility is controlled separately by IUiStateService.";}} private async Task RestartAsync(){if(await ConfirmAsync("Restart the application now?")){if(await ConfirmAsync("This ends the current session. Continue?")) ConfigService.RestartApp();}} private static AppConfig Clone(AppConfig source)=>new(){ProgramId=source.ProgramId,Fullscreen=source.Fullscreen,HideTaskbar=source.HideTaskbar,DisplayIndex=source.DisplayIndex,ShowMenu=source.ShowMenu,DefaultLanguage=source.DefaultLanguage,MenuSource=source.MenuSource,ShowModuleErrorNotification=source.ShowModuleErrorNotification,ModuleErrorMessage=source.ModuleErrorMessage}; }
+<div class="p-4">
+    <h2>@Lang.T("TemplateConfig.Title")</h2>
+
+    <ApiSection Title="@Lang.T("TemplateConfig.PlatformTitle")" Tier="@Lang.T("TemplateCommon.Advanced")">
+        <p>@Lang.T("TemplateConfig.ConfigExists"): @ConfigService.Exists</p>
+        <p>@Lang.T("TemplateConfig.SystemInfo"): @JsonSerializer.Serialize(ConfigService.GetSystemInfo())</p>
+        <p>@Lang.T("TemplateConfig.Displays"): @JsonSerializer.Serialize(ConfigService.GetDisplays())</p>
+        <p>@Lang.T("TemplateConfig.Capabilities"): Fullscreen=@Platform.SupportsFullscreen; HideTaskbar=@Platform.SupportsHideTaskbar; DisplaySelection=@Platform.SupportsDisplaySelection</p>
+    </ApiSection>
+
+    <ApiSection Title="@Lang.T("TemplateConfig.EditTitle")" Note="@Lang.T("TemplateConfig.EditNote")">
+        <div class="grid gap-3 md:grid-cols-2">
+            <label>ProgramId <input @bind="_draft.ProgramId" /></label>
+            <label>DefaultLanguage <input @bind="_draft.DefaultLanguage" /></label>
+            <label>MenuSource <input @bind="_draft.MenuSource" /></label>
+            <label>DisplayIndex <input type="number" @bind="_draft.DisplayIndex" disabled="@(!Platform.SupportsDisplaySelection)" /></label>
+            <label class="flex items-center gap-2"><input type="checkbox" @bind="_draft.ShowMenu" /> ShowMenu</label>
+            <label class="flex items-center gap-2"><input type="checkbox" @bind="_draft.Fullscreen" disabled="@(!Platform.SupportsFullscreen)" /> Fullscreen</label>
+            <label class="flex items-center gap-2"><input type="checkbox" @bind="_draft.HideTaskbar" disabled="@(!Platform.SupportsHideTaskbar)" /> HideTaskbar</label>
+            <label class="flex items-center gap-2"><input type="checkbox" @bind="_draft.ShowModuleErrorNotification" /> ShowModuleErrorNotification</label>
+            <label class="md:col-span-2">ModuleErrorMessage <input class="w-full" @bind="_draft.ModuleErrorMessage" /></label>
+        </div>
+        <p>@Lang.T("TemplateConfig.Before"): @_before</p>
+        <p>@Lang.T("TemplateConfig.Draft"): @JsonSerializer.Serialize(_draft)</p>
+        <p>@Lang.T("TemplateConfig.After"): @_after</p>
+        <ActionRow><RadzenButton Text="@Lang.T("TemplateCommon.Save")" Click="SaveAsync" /></ActionRow>
+    </ApiSection>
+
+    <ApiSection Title="@Lang.T("TemplateConfig.RestartTitle")" Tier="@Lang.T("TemplateCommon.Destructive")">
+        <p>@Lang.T("TemplateConfig.RestartNote")</p>
+        <ActionRow><RadzenButton Text="@Lang.T("TemplateConfig.Restart")" ButtonStyle="ButtonStyle.Danger" Click="RestartAsync" /></ActionRow>
+    </ApiSection>
+    <ResultPanel Value="@_result" />
+</div>
+
+@code {
+    private AppConfig _draft = new();
+    private string _before = "";
+    private string _after = "";
+    private string? _result;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        var source = ConfigService.Current ?? new AppConfig();
+        _draft = Clone(source);
+        _before = JsonSerializer.Serialize(source);
+    }
+
+    private async Task SaveAsync()
+    {
+        if (!await ConfirmAsync(Lang.T("TemplateConfig.SaveConfirm")))
+            return;
+
+        await ConfigService.SaveAsync(_draft);
+        _after = JsonSerializer.Serialize(ConfigService.Current ?? _draft);
+        _result = Lang.T("TemplateConfig.Saved");
+    }
+
+    private async Task RestartAsync()
+    {
+        if (!await ConfirmAsync(Lang.T("TemplateConfig.RestartConfirmOne")))
+            return;
+
+        if (await ConfirmAsync(Lang.T("TemplateConfig.RestartConfirmTwo")))
+            ConfigService.RestartApp();
+    }
+
+    private static AppConfig Clone(AppConfig source) => new()
+    {
+        ProgramId = source.ProgramId,
+        Fullscreen = source.Fullscreen,
+        HideTaskbar = source.HideTaskbar,
+        DisplayIndex = source.DisplayIndex,
+        ShowMenu = source.ShowMenu,
+        DefaultLanguage = source.DefaultLanguage,
+        MenuSource = source.MenuSource,
+        ShowModuleErrorNotification = source.ShowModuleErrorNotification,
+        ModuleErrorMessage = source.ModuleErrorMessage
+    };
+}

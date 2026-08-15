@@ -1,15 +1,29 @@
 <RadzenCard class="mt-4 p-4">
-    <h3>@Title <small class="text-muted">@Tier</small></h3>
-    @ChildContent
+    <div class="flex flex-wrap items-center justify-between gap-2">
+        <h3 class="m-0 text-lg font-semibold">@Title</h3>
+        <span class="rounded bg-gray-100 px-2 py-1 text-sm text-gray-600">@Tier</span>
+    </div>
+
+    <div class="mt-3">
+        @ChildContent
+    </div>
+
     @if (!string.IsNullOrWhiteSpace(Note))
     {
-        <p class="mt-2 text-muted"><em>@Note</em></p>
+        <p class="mt-3 text-sm text-gray-500"><em>@Note</em></p>
     }
 </RadzenCard>
 
 @code {
-    [Parameter, EditorRequired] public string Title { get; set; } = string.Empty;
-    [Parameter] public string Tier { get; set; } = "Recommended";
-    [Parameter] public string? Note { get; set; }
-    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Tier { get; set; } = "Recommended";
+
+    [Parameter]
+    public string? Note { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
 }

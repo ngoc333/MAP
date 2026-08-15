@@ -8,6 +8,7 @@
     <ApiSection Title="ILogStore sandbox" Note="Only the dedicated 2099-12-31 sandbox day is written or cleared.">
         <ActionRow>
             <RadzenButton Text="Write sandbox entry" Click="WriteAsync" />
+            <RadzenButton Text="Get sandbox days" Click="GetDaysAsync" />
             <RadzenButton Text="Read sandbox day" Click="ReadAsync" />
             <RadzenButton Text="Clear sandbox day" ButtonStyle="ButtonStyle.Warning" Click="ClearAsync" />
         </ActionRow>
@@ -46,12 +47,19 @@
             Level = "Information",
             Category = "MAP.M.Template.Sandbox",
             Message = "Template sandbox entry",
+            Exception = "Synthetic exception field demonstration",
             SessionId = AppSession.Id
         };
 
         await LogStore.WriteAsync(entry, PageCancellationToken);
         _result = "Sandbox entry written.";
         _days = string.Join(", ", await LogStore.GetDaysAsync(PageCancellationToken));
+    }
+
+    private async Task GetDaysAsync()
+    {
+        _days = string.Join(", ", await LogStore.GetDaysAsync(PageCancellationToken));
+        _result = "Sandbox days loaded.";
     }
 
     private async Task ReadAsync()
