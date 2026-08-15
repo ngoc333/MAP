@@ -1,0 +1,90 @@
+@inherits BasePage
+@namespace MAP.M.Template.Pages
+
+<div class="p-4">
+    <h2>Navigation lab <small>Advanced: IPageNavigator</small></h2>
+
+    <ApiSection Title="History semantics" Note="A → B (push) → C (no push) → Back returns A; subscriptions are removed during DisposePageAsync.">
+        <p>Current: @Navigator.Current?.PageId | CanBack: @Navigator.CanBack | Navigating: @_navigating | Changed: @_changed</p>
+        <ActionRow>
+            <RadzenButton Text="Reset as root (A)" Click="ResetRootAsync" />
+            <RadzenButton Text="Open B (push)" Click="OpenBAsync" />
+            <RadzenButton Text="Same page no-op" Click="SamePageAsync" />
+        </ActionRow>
+        <ResultPanel Value="@_result" />
+    </ApiSection>
+
+    <ApiSection Title="Safe helper versus direct navigator">
+        <ActionRow>
+            <RadzenButton Text="Safe OpenPageAsync unknown" ButtonStyle="ButtonStyle.Warning" Click="SafeFailureAsync" />
+            <RadzenButton Text="Direct unknown (caught)" ButtonStyle="ButtonStyle.Warning" Click="DirectFailureAsync" />
+        </ActionRow>
+    </ApiSection>
+
+    <ApiSection Title="PageParams">
+        <ActionRow><RadzenButton Text="Run PageParams example" Click="PageParamsExample" /></ActionRow>
+    </ApiSection>
+</div>
+
+@code {
+    private int _navigating;
+    private int _changed;
+    private string? _result;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        Navigator.Navigating += OnNavigating;
+        Navigator.Changed += OnChanged;
+    }
+
+    private void OnNavigating() => _navigating++;
+
+    private void OnChanged()
+    {
+        _changed++;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private Task ResetRootAsync() => Navigator.OpenRootAsync("template-navigation");
+
+    private Task OpenBAsync() => Navigator.OpenAsync("template-navigation-b", new { From = PageId }, true);
+
+    private async Task SamePageAsync()
+    {
+        await Navigator.OpenAsync(Navigator.Current!.PageId);
+        _result = $"Current remains {Navigator.Current?.PageId}";
+    }
+
+    private Task SafeFailureAsync() => OpenPageAsync("does-not-exist");
+
+    private async Task DirectFailureAsync()
+    {
+        try
+        {
+            await Navigator.OpenAsync("does-not-exist");
+        }
+        catch (Exception exception)
+        {
+            _result = $"{exception.GetType().Name}: {exception.Message}; ErrorId: {ModuleErrorId.GetOrCreate(exception)}";
+        }
+    }
+
+    private void PageParamsExample()
+    {
+        var parameters = PageParams.From(new { Name = "Template" }, out var error)!;
+        parameters["Count"] = 1;
+        dynamic dynamicParameters = parameters;
+        dynamicParameters.Flag = true;
+
+        var history = new PageHistoryEntry("sample", parameters);
+        _result = $"{parameters["Name"]}, {parameters["Count"]}, {dynamicParameters.Flag}; history={history.PageId}; error={error?.Message ?? "none"}";
+    }
+
+    protected override ValueTask DisposePageAsync()
+    {
+        Navigator.Navigating -= OnNavigating;
+        Navigator.Changed -= OnChanged;
+        return ValueTask.CompletedTask;
+    }
+}

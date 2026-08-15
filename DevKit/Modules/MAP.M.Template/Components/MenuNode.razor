@@ -1,0 +1,3 @@
+<li><strong>@Item.Id</strong> — @MenuTitle.Get(Item, Lang.CurrentLanguage) | icon=@Item.Icon | page=@Item.IsPage | children=@Item.HasChildren | assembly=@Item.Assembly | component=@Item.Component
+@if (Item.HasChildren) { <ul>@foreach (var child in Item.Children) { <MenuNode Item="child" /> }</ul> }</li>
+@code { [Inject] private ILanguageService Lang { get; set; } = default!; [Parameter, EditorRequired] public MenuItem Item { get; set; } = default!; }

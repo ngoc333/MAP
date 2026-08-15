@@ -1,0 +1,8 @@
+@if (!string.IsNullOrWhiteSpace(Value))
+{
+    <pre class="mt-2 p-2 border rounded">@Value</pre>
+}
+
+@code {
+    [Parameter] public string? Value { get; set; }
+}

@@ -36,3 +36,7 @@ Do not reference `MAP.C.Runtime`, `MAP.C.Wpf`, or `MAP.C.Wasm`. The provided `Sd
 Additional NuGet or library dependencies are allowed. Desktop deployment stages and deploys their private runtime DLLs automatically, excluding host-owned MAP platform DLLs and framework DLLs.
 
 V1 uses Radzen components and services directly. `IUiStateService` and `IPageNavigator` are advanced APIs; prefer `BasePage` helpers first.
+
+## Interactive template catalog
+
+`MAP.M.Template` provides capability-oriented smoke-test labs for navigation, headers/UI state, localization/context/menu, database, configuration/platform, logging/errors, lifecycle, and pure utilities. See [TEMPLATE-COVERAGE.md](TEMPLATE-COVERAGE.md) for the supported API matrix, host-only exclusions, and known host gaps such as `HeaderKind` not currently being rendered.

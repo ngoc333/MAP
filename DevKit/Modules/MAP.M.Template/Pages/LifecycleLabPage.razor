@@ -1,0 +1,74 @@
+@inherits BasePage
+@namespace MAP.M.Template.Pages
+@using MAP.M.Template.Models
+
+<div class="p-4">
+    <h2>Lifecycle lab</h2>
+
+    <ApiSection Title="Page cancellation and cleanup" Note="Navigate away while the loop runs. BasePage cancels PageCancellationToken at navigation start; cleanup is only in DisposePageAsync.">
+        <p>Instance: @_instanceId | running: @_running | ticks: @_ticks | cancelled: @PageCancellationToken.IsCancellationRequested</p>
+        <p>Initialized: @TemplateProbeState.InitializedCount | disposed: @TemplateProbeState.DisposedCount | last: @TemplateProbeState.LastDisposedInstanceId</p>
+        <ActionRow>
+            <RadzenButton Text="Start loop" Click="Start" />
+            <RadzenButton Text="Reset probe" Click="ResetProbe" />
+        </ActionRow>
+        <ResultPanel Value="@_result" />
+    </ApiSection>
+</div>
+
+@code {
+    private readonly string _instanceId = Guid.NewGuid().ToString("N")[..8];
+    private PeriodicTimer? _timer;
+    private Task? _loop;
+    private bool _running;
+    private int _ticks;
+    private string? _result;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        TemplateProbeState.Initialized();
+    }
+
+    private void Start()
+    {
+        if (_running)
+            return;
+
+        _running = true;
+        _timer = new PeriodicTimer(TimeSpan.FromSeconds(1));
+        _loop = TickAsync();
+    }
+
+    private void ResetProbe() => TemplateProbeState.Reset();
+
+    private async Task TickAsync()
+    {
+        try
+        {
+            while (await _timer!.WaitForNextTickAsync(PageCancellationToken))
+            {
+                _ticks++;
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            _result = "Loop cancelled cleanly.";
+        }
+        finally
+        {
+            _running = false;
+        }
+    }
+
+    protected override async ValueTask DisposePageAsync()
+    {
+        _timer?.Dispose();
+
+        if (_loop is not null)
+            await _loop;
+
+        TemplateProbeState.Disposed(_instanceId);
+    }
+}

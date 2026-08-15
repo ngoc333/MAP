@@ -1,0 +1,5 @@
+<RadzenButton Text="Throw from isolated probe" ButtonStyle="ButtonStyle.Danger" Click="ThrowAsync" />
+
+@code {
+    private static Task ThrowAsync() => throw new InvalidOperationException("Opt-in template fault probe.");
+}

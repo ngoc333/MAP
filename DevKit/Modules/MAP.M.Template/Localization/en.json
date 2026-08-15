@@ -1,17 +1,13 @@
 {
-  "TemplateHome": {
-    "Title": "MAP Module Template",
-    "Description": "A starter page for module development.",
-    "Notify": "Show success",
-    "Success": "The operation completed.",
-    "OpenDetail": "Open detail"
-  },
-  "TemplateDetail": {
-    "Title": "Template detail",
-    "CustomerId": "Customer ID",
-    "Confirm": "Confirm",
-    "Back": "Back",
-    "ConfirmMessage": "Do you want to continue?",
-    "Confirmed": "Confirmed."
-  }
+  "TemplateHome": { "Title": "MAP Module API Catalog", "Description": "Interactive smoke-test labs for supported MAP module APIs.", "Success": "The operation completed." },
+  "TemplateDetail": { "Title": "Parameter detail" },
+  "TemplateNavigation": { "Title": "Navigation lab" },
+  "TemplateHeaderUi": { "Title": "Header and UI lab" },
+  "TemplateLocalization": { "Title": "Localization, context and menu lab" },
+  "TemplateDatabase": { "Title": "Database lab", "Run": "Run" },
+  "TemplateConfig": { "Title": "Configuration and platform lab" },
+  "TemplateLogging": { "Title": "Logging and error lab" },
+  "TemplateLifecycle": { "Title": "Lifecycle lab" },
+  "TemplateUtilities": { "Title": "Utilities lab" },
+  "TemplateCommon": { "Advanced": "Advanced", "HostGap": "Host gap" }
 }

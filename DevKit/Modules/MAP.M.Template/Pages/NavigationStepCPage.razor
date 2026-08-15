@@ -1,0 +1,4 @@
+@inherits BasePage
+@namespace MAP.M.Template.Pages
+<div class="p-4"><h2>Navigation step C</h2><p>Opened without pushing B. Back should return directly to navigation A.</p><p>Received From: @(GetParameter<string>("From"))</p><RadzenButton Text="Back" Click="BackAsync" /></div>
+@code { private Task BackAsync()=>Navigator.BackAsync(); }

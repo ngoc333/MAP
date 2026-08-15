@@ -1,0 +1,93 @@
+@inherits BasePage
+@namespace MAP.M.Template.Pages
+@inject IUiStateService UiState
+
+<div class="p-4">
+    <h2>Header and UI state lab <small>Advanced</small></h2>
+
+    <ApiSection Title="Live IUiStateService" Note="This is live host state, separate from persisted AppConfig. Original values are restored when leaving.">
+        <p>Menu: @UiState.ShowMenu | Header: @UiState.ShowHeader | Changed: @_uiChanges</p>
+        <ActionRow>
+            <RadzenButton Text="Toggle menu" Click="UiState.ToggleMenu" />
+            <RadzenButton Text="Toggle header" Click="UiState.ToggleHeader" />
+            <RadzenButton Text="Restore UI" Click="Restore" />
+        </ActionRow>
+    </ApiSection>
+
+    <ApiSection Title="IPageHeaderState / BasePage header" Note="HeaderKind is a host gap: Default/Compact are stored but current host does not render a visual distinction.">
+        <p>Active: @Header.Active?.PageId | Kind: @Header.Active?.Kind | Changes: @_headerChanges</p>
+        <ActionRow>
+            <RadzenButton Text="Set compact header" Click="SetCompact" />
+            <RadzenButton Text="Clear header" Click="Header.Clear" />
+            <RadzenButton Text="Refresh header" Click="RefreshHeader" />
+        </ActionRow>
+    </ApiSection>
+
+    <ApiSection Title="Direct Radzen services" Tier="Advanced">
+        <ActionRow>
+            <RadzenButton Text="Direct notification" Click="DirectNotification" />
+            <RadzenButton Text="Direct alert" Click="DirectAlertAsync" />
+        </ActionRow>
+    </ApiSection>
+</div>
+
+@code {
+    private bool _initialMenu;
+    private bool _initialHeader;
+    private int _uiChanges;
+    private int _headerChanges;
+    private bool _compact;
+
+    protected override string? HeaderTitleKey => "TemplateHeaderUi.Title";
+    protected override HeaderKind HeaderKind => _compact ? HeaderKind.Compact : HeaderKind.Default;
+    protected override bool ShowBack => true;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        _initialMenu = UiState.ShowMenu;
+        _initialHeader = UiState.ShowHeader;
+        UiState.Changed += UiChanged;
+        Header.Changed += HeaderChanged;
+    }
+
+    private void UiChanged()
+    {
+        _uiChanges++;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void HeaderChanged()
+    {
+        _headerChanges++;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void Restore()
+    {
+        UiState.SetMenu(_initialMenu);
+        UiState.SetHeader(_initialHeader);
+    }
+
+    private void SetCompact()
+    {
+        _compact = true;
+        RefreshHeader();
+    }
+
+    private void DirectNotification() => Notifications.Notify(new NotificationMessage
+    {
+        Severity = NotificationSeverity.Info,
+        Detail = "Direct NotificationService call"
+    });
+
+    private Task DirectAlertAsync() => Dialogs.Alert("Direct DialogService alert");
+
+    protected override ValueTask DisposePageAsync()
+    {
+        Restore();
+        UiState.Changed -= UiChanged;
+        Header.Changed -= HeaderChanged;
+        return ValueTask.CompletedTask;
+    }
+}

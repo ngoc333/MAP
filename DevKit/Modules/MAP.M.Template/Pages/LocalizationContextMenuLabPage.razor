@@ -1,0 +1,40 @@
+@inherits BasePage
+@namespace MAP.M.Template.Pages
+@inject IResourceLoader ResourceLoader
+@inject IModuleLoader ModuleLoader
+@inject Radzen.ILocalizer RadzenLocalizer
+
+<div class="p-4"><h2>Localization, context and menu lab <small>Advanced</small></h2>
+<ApiSection Title="ILanguageService">
+    <p>Current: @Lang.CurrentLanguage | Available: @string.Join(", ", Lang.AvailableLanguages.Select(x => x.Code))</p>
+    <p>Known: @Lang.T("TemplateHome.Title") | Missing fallback: @Lang.T("not.found", "fallback") | Radzen known: @RadzenLocalizer.Get("Cancel", System.Globalization.CultureInfo.CurrentCulture) | unknown: @RadzenLocalizer.Get("not.found", System.Globalization.CultureInfo.CurrentCulture)</p>
+    <ActionRow>
+        <RadzenButton Text="Vietnamese" Click="SetVietnamese" />
+        <RadzenButton Text="English" Click="SetEnglish" />
+        <RadzenButton Text="Load template resources" Click="LoadResourcesAsync" />
+    </ActionRow>
+</ApiSection>
+<ApiSection Title="IClientContextService"><p>Program: @ClientContext.Current.ProgramId | User: @UserName | IP: @IpAddress | Local path: @ClientContext.Current.LocalPath</p></ApiSection>
+<ApiSection Title="IMenuService">
+    <p>Start page: @MenuService.StartPageId | Database: @MenuService.DbName | OnMenusLoaded count: @_menuEvents</p>
+    <ActionRow>
+        <RadzenButton Text="Load menus manually" Click="LoadMenusAsync" />
+        <RadzenButton Text="Load selected component" Click="LoadComponentAsync" />
+    </ActionRow>
+    <ul>
+        @foreach (var item in MenuService.Menus)
+        {
+            <MenuNode Item="item" />
+        }
+    </ul>
+    <ResultPanel Value="@_result" />
+</ApiSection>
+</div>
+@code { private int _menuEvents; private int _loadingEvents; private string? _result;
+ protected override void OnInitialized(){ base.OnInitialized(); MenuService.OnMenusLoaded += MenusLoaded; ModuleLoader.OnLoadingChanged += LoadingChanged; }
+ private void SetVietnamese() => Lang.SetLanguage("vi"); private void SetEnglish() => Lang.SetLanguage("en"); private void MenusLoaded(){ _menuEvents++; InvokeAsync(StateHasChanged); } private void LoadingChanged(bool loading){ _loadingEvents++; _result=$"Loading event {loading}; count={_loadingEvents}. Cache hits can resolve before events."; InvokeAsync(StateHasChanged); }
+ private async Task LoadResourcesAsync(){ var assembly=GetType().Assembly; var vi=await ResourceLoader.LoadJsonAsync(assembly,"MAP.M.Template.Localization.vi.json"); var en=await ResourceLoader.LoadJsonAsync(assembly,"MAP.M.Template.Localization.en.json"); await Lang.LoadModuleResourcesAsync("TemplateRuntime", vi, en); _result=$"Loaded sections: VI={vi.Count}, EN={en.Count}. Repeated loads are safe for this module."; }
+ private async Task LoadMenusAsync(){ await MenuService.LoadMenusAsync(); _result="LoadMenusAsync completed; cached startup loads may not raise a new event."; }
+ private async Task LoadComponentAsync(){ var page=MenuTree.FindFirstPage(MenuService.Menus); if(page is null){_result="No page in menu.";return;} var type=await ModuleLoader.LoadComponentAsync(page); _result=$"Resolved: {type.FullName}; loading events: {_loadingEvents}. Cache hits may skip transitions."; }
+ protected override ValueTask DisposePageAsync(){ MenuService.OnMenusLoaded-=MenusLoaded; ModuleLoader.OnLoadingChanged-=LoadingChanged; return ValueTask.CompletedTask; }
+}

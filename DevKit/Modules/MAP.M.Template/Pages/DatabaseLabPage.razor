@@ -1,0 +1,89 @@
+@inherits BasePage
+@namespace MAP.M.Template.Pages
+@using MAP.M.Template.Models
+
+<div class="p-4">
+    <h2>Database lab <small>Environment dependent</small></h2>
+    <p>No database request runs during initialization. Offline endpoints are rendered as caught results.</p>
+
+    <ApiSection Title="Recommended BasePage helpers">
+        <div class="d-flex flex-wrap gap-3">
+            <label>Database <input @bind="_dbName" /></label>
+            <label>Command <input @bind="_command" /></label>
+            <label>Parameters JSON <input @bind="_json" /></label>
+        </div>
+        <ActionRow>
+            <RadzenButton Text="QueryAsync&lt;DemoDbRow&gt;" Disabled="@string.IsNullOrWhiteSpace(_command)" Click="QueryAsync" />
+            <RadzenButton Text="ExecuteAsync" Disabled="@string.IsNullOrWhiteSpace(_command)" Click="ExecuteAsync" />
+        </ActionRow>
+    </ApiSection>
+
+    <ApiSection Title="IDbApiClient low-level calls" Tier="Advanced">
+        <ActionRow>
+            <RadzenButton Text="PostgreSQL function" Disabled="@string.IsNullOrWhiteSpace(_command)" Click="LowLevelFunctionAsync" />
+            <RadzenButton Text="PostgreSQL procedure" Disabled="@string.IsNullOrWhiteSpace(_command)" Click="LowLevelProcedureAsync" />
+            <RadzenButton Text="Oracle body" Click="OracleAsync" />
+        </ActionRow>
+    </ApiSection>
+
+    <ApiSection Title="DbJson synthetic serialization">
+        <ActionRow><RadzenButton Text="Show snake_case JSON" Click="ShowDbJson" /></ActionRow>
+    </ApiSection>
+    <ResultPanel Value="@_result" />
+</div>
+
+@code {
+    private string _dbName = "";
+    private string _command = "";
+    private string _json = "{}";
+    private string? _result;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        _dbName = MenuService.DbName ?? "";
+    }
+
+    private JsonElement Parameters() => JsonDocument.Parse(_json).RootElement.Clone();
+
+    private Task QueryAsync() => CaptureAsync(async () =>
+    {
+        if (MenuService.DbName is null)
+            throw new InvalidOperationException("DbName is not configured.");
+
+        var rows = await base.QueryAsync<DemoDbRow>(_command, Parameters(), PageCancellationToken);
+        return JsonSerializer.Serialize(rows);
+    });
+
+    private Task ExecuteAsync() => CaptureAsync(async () =>
+    {
+        if (MenuService.DbName is null)
+            throw new InvalidOperationException("DbName is not configured.");
+
+        await base.ExecuteAsync(_command, Parameters(), CancellationToken.None);
+        return "Procedure completed.";
+    });
+
+    private Task LowLevelFunctionAsync() => CaptureAsync(async () =>
+        (await DbClient.CallPostgreSqlFunctionAsync(_dbName, _command, Parameters(), PageCancellationToken)).GetRawText());
+
+    private Task LowLevelProcedureAsync() => CaptureAsync(async () =>
+        (await DbClient.CallPostgreSqlProcedureAsync(_dbName, _command, Parameters(), PageCancellationToken)).GetRawText());
+
+    private Task OracleAsync() => CaptureAsync(async () =>
+        (await DbClient.CallOracleAsync(Parameters(), PageCancellationToken)).GetRawText());
+
+    private void ShowDbJson() => _result = DbJson.ToElement(new { CustomerId = 1, FullName = "Template User" }).GetRawText();
+
+    private async Task CaptureAsync(Func<Task<string>> action)
+    {
+        try
+        {
+            _result = await action();
+        }
+        catch (Exception exception)
+        {
+            _result = $"{exception.GetType().Name}: {exception.Message}; cancelled={PageCancellationToken.IsCancellationRequested}";
+        }
+    }
+}

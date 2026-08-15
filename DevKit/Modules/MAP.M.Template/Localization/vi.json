@@ -1,17 +1,13 @@
 {
-  "TemplateHome": {
-    "Title": "MAP Module Template",
-    "Description": "Trang mẫu để bắt đầu phát triển module.",
-    "Notify": "Thông báo thành công",
-    "Success": "Thao tác đã hoàn tất.",
-    "OpenDetail": "Mở chi tiết"
-  },
-  "TemplateDetail": {
-    "Title": "Chi tiết mẫu",
-    "CustomerId": "Mã khách hàng",
-    "Confirm": "Xác nhận",
-    "Back": "Quay lại",
-    "ConfirmMessage": "Bạn có chắc muốn tiếp tục?",
-    "Confirmed": "Đã xác nhận."
-  }
+  "TemplateHome": { "Title": "Danh mục API Module MAP", "Description": "Các phòng thí nghiệm kiểm thử tương tác cho API module MAP được hỗ trợ.", "Success": "Thao tác đã hoàn tất." },
+  "TemplateDetail": { "Title": "Chi tiết tham số" },
+  "TemplateNavigation": { "Title": "Phòng thí nghiệm điều hướng" },
+  "TemplateHeaderUi": { "Title": "Phòng thí nghiệm đầu trang và UI" },
+  "TemplateLocalization": { "Title": "Phòng thí nghiệm ngôn ngữ, ngữ cảnh và menu" },
+  "TemplateDatabase": { "Title": "Phòng thí nghiệm cơ sở dữ liệu", "Run": "Chạy" },
+  "TemplateConfig": { "Title": "Phòng thí nghiệm cấu hình và nền tảng" },
+  "TemplateLogging": { "Title": "Phòng thí nghiệm nhật ký và lỗi" },
+  "TemplateLifecycle": { "Title": "Phòng thí nghiệm vòng đời" },
+  "TemplateUtilities": { "Title": "Phòng thí nghiệm tiện ích" },
+  "TemplateCommon": { "Advanced": "Nâng cao", "HostGap": "Khoảng trống host" }
 }

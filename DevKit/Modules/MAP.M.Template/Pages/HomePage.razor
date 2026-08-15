@@ -2,16 +2,62 @@
 @namespace MAP.M.Template.Pages
 
 <div class="p-4">
-    <h2 class="text-2xl font-bold">@Lang.T("TemplateHome.Title")</h2>
-    <RadzenCard class="mt-4 p-4">
-        <p>@Lang.T("TemplateHome.Description")</p>
-        <RadzenButton Text="@Lang.T("TemplateHome.Notify")" ButtonStyle="ButtonStyle.Success" Click="ShowSuccess" />
-        <RadzenButton class="ml-2" Text="@Lang.T("TemplateHome.OpenDetail")" Click="OpenDetailAsync" />
-    </RadzenCard>
+    <h2>@Lang.T("TemplateHome.Title")</h2>
+    <p>@Lang.T("TemplateHome.Description")</p>
+
+    <ApiSection Title="Runtime summary" Note="Recommended module APIs are demonstrated by the labs below.">
+        <p>PageId: @PageId | User: @UserName | IP: @IpAddress | Database: @MenuService.DbName</p>
+        <p>Language: @Lang.CurrentLanguage | Session: @AppSession.Id</p>
+
+        <ActionRow>
+            <RadzenButton Text="Success" ButtonStyle="ButtonStyle.Success" Click="ShowSuccess" />
+            <RadzenButton Text="Warning" ButtonStyle="ButtonStyle.Warning" Click="ShowWarning" />
+            <RadzenButton Text="Error" ButtonStyle="ButtonStyle.Danger" Click="ShowError" />
+            <RadzenButton Text="Confirm" Click="ConfirmAsync" />
+        </ActionRow>
+        <ResultPanel Value="@_result" />
+    </ApiSection>
+
+    <ApiSection Title="API catalog / smoke-test labs">
+        <ActionRow>
+            @foreach (var lab in Labs)
+            {
+                <RadzenButton Text="@lab.Title" Click="() => OpenPageAsync(lab.PageId)" />
+            }
+            <RadzenButton Text="Detail with parameters" Click="OpenDetailAsync" />
+        </ActionRow>
+    </ApiSection>
 </div>
 
 @code {
+    private static readonly (string PageId, string Title)[] Labs =
+    [
+        ("template-navigation", "Navigation"),
+        ("template-header-ui", "Header & UI"),
+        ("template-localization-context-menu", "Localization, context & menu"),
+        ("template-database", "Database"),
+        ("template-config-platform", "Config & platform"),
+        ("template-logging-error", "Logging & errors"),
+        ("template-lifecycle", "Lifecycle"),
+        ("template-utilities", "Utilities")
+    ];
+
+    private string? _result;
+
     private void ShowSuccess() => NotifySuccess(Lang.T("TemplateHome.Success"));
 
-    private Task OpenDetailAsync() => OpenPageAsync("template-detail", new { CustomerId = 42 });
+    private void ShowWarning() => NotifyWarning("Warning notification");
+
+    private void ShowError() => NotifyError("Error notification");
+
+    private async Task ConfirmAsync()
+    {
+        _result = await base.ConfirmAsync("Run the confirmation dialog?")
+            ? "Confirmed"
+            : "Cancelled";
+    }
+
+    private Task OpenDetailAsync() => OpenPageAsync(
+        "template-detail",
+        new { CustomerId = 42, Count = "7", Status = "Active" });
 }

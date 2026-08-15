@@ -1,0 +1,8 @@
+<div class="d-flex flex-wrap gap-2 mt-3">
+    @ChildContent
+</div>
+
+@code {
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}

@@ -2,36 +2,49 @@
 @namespace MAP.M.Template.Pages
 
 <div class="p-4">
-    <h2 class="text-2xl font-bold">@Lang.T("TemplateDetail.Title")</h2>
-    <RadzenCard class="mt-4 p-4">
-        <p>@Lang.T("TemplateDetail.CustomerId"): @_customerId</p>
-        <RadzenButton Text="@Lang.T("TemplateDetail.Confirm")" ButtonStyle="ButtonStyle.Warning" Click="ConfirmDeleteAsync" />
-        <RadzenButton class="ml-2" Text="@Lang.T("TemplateDetail.Back")" Click="GoBackAsync" />
-    </RadzenCard>
+    <h2>@Lang.T("TemplateDetail.Title")</h2>
+    <ApiSection Title="Parameters and Back navigation">
+        <p>PageId: @PageId | CanBack: @Navigator.CanBack</p>
+        <p>CustomerId (int): @_customerId | Count converted from string: @_count | Status enum: @_status</p>
+        <p>Optional missing value: @(GetParameter<string>("Missing") ?? "null")</p>
+        <p>PageParameters: @(_parametersText)</p>
+        <ActionRow>
+            <RadzenButton Text="Require invalid parameter safely" ButtonStyle="ButtonStyle.Warning" Click="TestRequiredAsync" />
+            <RadzenButton Text="Confirm" Click="ConfirmDeleteAsync" />
+            <RadzenButton Text="Back" Click="() => Navigator.BackAsync()" Disabled="@(!Navigator.CanBack)" />
+        </ActionRow>
+        <ResultPanel Value="@_result" />
+    </ApiSection>
 </div>
 
 @code {
     private int _customerId;
+    private int _count;
+    private DemoStatus? _status;
+    private string _parametersText = "null";
+    private string? _result;
 
     protected override void OnInitialized()
     {
         base.OnInitialized();
-        // GetParameter keeps the template page renderable when opened directly from the menu.
-        // Navigation parameters may remain in Back history; prefer IDs and small values.
-        // Use RequireParameter in action handlers when the parameter is mandatory for that action.
         _customerId = GetParameter<int>("CustomerId");
+        _count = GetParameter<int>("Count");
+        _status = GetParameter<DemoStatus>("Status");
+        _parametersText = PageParameters is null ? "null" : "captured for this page instance";
     }
 
     private async Task ConfirmDeleteAsync()
     {
-        var customerId = RequireParameter<int>("CustomerId");
-        if (await ConfirmAsync($"{Lang.T("TemplateDetail.ConfirmMessage")} (ID: {customerId})"))
-            NotifyWarning(Lang.T("TemplateDetail.Confirmed"));
+        if (await ConfirmAsync($"Continue with customer {_customerId}?"))
+            NotifyWarning("Confirmed.");
     }
 
-    private Task GoBackAsync() => Navigator.BackAsync();
+    private Task TestRequiredAsync()
+    {
+        try { _ = RequireParameter<Guid>("MissingRequired"); }
+        catch (InvalidOperationException exception) { _result = exception.Message; }
+        return Task.CompletedTask;
+    }
 
-    // Example database call when a command exists for the configured DbName:
-    // var rows = await QueryAsync<CustomerDto>("schema.fn_get_customer", new { customer_id = _customerId });
-    // Override DisposePageAsync() for timers, event subscriptions, and async resources.
+    private enum DemoStatus { Active, Inactive }
 }

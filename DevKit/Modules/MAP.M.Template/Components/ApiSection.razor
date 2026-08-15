@@ -1,0 +1,15 @@
+<RadzenCard class="mt-4 p-4">
+    <h3>@Title <small class="text-muted">@Tier</small></h3>
+    @ChildContent
+    @if (!string.IsNullOrWhiteSpace(Note))
+    {
+        <p class="mt-2 text-muted"><em>@Note</em></p>
+    }
+</RadzenCard>
+
+@code {
+    [Parameter, EditorRequired] public string Title { get; set; } = string.Empty;
+    [Parameter] public string Tier { get; set; } = "Recommended";
+    [Parameter] public string? Note { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

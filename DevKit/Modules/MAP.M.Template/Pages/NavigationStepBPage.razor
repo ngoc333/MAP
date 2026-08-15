@@ -1,0 +1,4 @@
+@inherits BasePage
+@namespace MAP.M.Template.Pages
+<div class="p-4"><h2>Navigation step B</h2><p>Received From: @(GetParameter<string>("From"))</p><p>CanBack: @Navigator.CanBack</p><RadzenButton Text="Open C without history" Click="OpenCAsync" /><RadzenButton class="ml-2" Text="Back" Click="BackAsync" /></div>
+@code { private Task OpenCAsync()=>Navigator.OpenAsync("template-navigation-c",new { From=PageId },false); private Task BackAsync()=>Navigator.BackAsync(); }
