@@ -4,7 +4,7 @@
 <div class="p-4">
     <h2>@Lang.T("TemplateNavigation.StepBTitle")</h2>
     <p>@Lang.T("TemplateNavigation.ReceivedFrom"): @(GetParameter<string>("From"))</p>
-    <p>Opening C with <code>pushHistory: false</code> preserves A as the Back destination.</p>
+    <p>@Lang.T("TemplateNavigation.StepBDescription")</p>
     <ActionRow>
         <RadzenButton Text="@Lang.T("TemplateNavigation.OpenC")" Click="OpenCAsync" />
         <RadzenButton Text="@Lang.T("TemplateCommon.Back")" Click="BackAsync" />

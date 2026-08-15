@@ -1,64 +1,206 @@
 <Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <OverrideHtmlAssetPlaceholders>true</OverrideHtmlAssetPlaceholders>
     <BlazorWebAssemblyLoadAllGlobalizationData>true</BlazorWebAssemblyLoadAllGlobalizationData>
+    <WebModulesDir>$(MSBuildProjectDirectory)\Modules\</WebModulesDir>
   </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" PrivateAssets="all" />
     <PackageReference Include="Radzen.Blazor" />
   </ItemGroup>
+
+  <!-- DevKit intentionally consumes the distributed SDK binaries rather than Core projects. -->
   <ItemGroup>
-    <Reference Include="MAP.C.Contract"><HintPath>..\Sdk\lib\MAP.C.Contract.dll</HintPath></Reference>
-    <Reference Include="MAP.C.UI"><HintPath>..\Sdk\lib\MAP.C.UI.dll</HintPath></Reference>
-    <Reference Include="MAP.C.Runtime"><HintPath>..\Sdk\lib\MAP.C.Runtime.dll</HintPath></Reference>
-    <Reference Include="MAP.C.Wasm"><HintPath>..\Sdk\lib\MAP.C.Wasm.dll</HintPath></Reference>
+    <Reference Include="MAP.C.Contract">
+      <HintPath>..\Sdk\lib\MAP.C.Contract.dll</HintPath>
+    </Reference>
+    <Reference Include="MAP.C.UI">
+      <HintPath>..\Sdk\lib\MAP.C.UI.dll</HintPath>
+    </Reference>
+    <Reference Include="MAP.C.Runtime">
+      <HintPath>..\Sdk\lib\MAP.C.Runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="MAP.C.Wasm">
+      <HintPath>..\Sdk\lib\MAP.C.Wasm.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
     <ModuleProject Include="$(MSBuildProjectDirectory)\..\Modules\*\*.csproj" />
     <ProjectReference Include="@(ModuleProject)" />
     <BlazorWebAssemblyLazyLoad Include="@(ModuleProject->'%(Filename).dll')" />
+    <None Include="..\Shared\Config\page.json" Link="wwwroot\page.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Include="..\Shared\Config\db-api.json" Link="wwwroot\db-api.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Include="..\Shared\Scripts\app-log.js" Link="wwwroot\js\app-log.js" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Include="..\Shared\Scripts\app-config.js" Link="wwwroot\js\app-config.js" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Include="..\Shared\Styles\tailwind.css" Link="wwwroot\css\tailwind.css" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
-  <Target Name="MaterializeSharedWebAssets" BeforeTargets="ResolveProjectStaticWebAssets">
+  <Target Name="UseSharedConfigurationStaticWebAssets" AfterTargets="ResolveStaticWebAssetsInputs">
     <ItemGroup>
-      <_SharedWebAsset Include="..\Shared\Config\page.json">
-        <Destination>page.json</Destination>
-      </_SharedWebAsset>
-      <_SharedWebAsset Include="..\Shared\Config\db-api.json">
-        <Destination>db-api.json</Destination>
-      </_SharedWebAsset>
-      <_SharedWebAsset Include="..\Shared\Scripts\app-log.js">
-        <Destination>js\app-log.js</Destination>
-      </_SharedWebAsset>
-      <_SharedWebAsset Include="..\Shared\Scripts\app-config.js">
-        <Destination>js\app-config.js</Destination>
-      </_SharedWebAsset>
-      <_SharedWebAsset Include="..\Shared\Styles\tailwind.css">
-        <Destination>css\tailwind.css</Destination>
-      </_SharedWebAsset>
-      <_SharedWebAsset Include="..\Shared\Styles\inter.css">
-        <Destination>css\inter.css</Destination>
-      </_SharedWebAsset>
-      <_SharedWebAsset Include="..\Shared\Styles\app.css">
-        <Destination>css\app.css</Destination>
-      </_SharedWebAsset>
-      <_SharedWebAsset Include="..\Shared\Fonts\Inter\*.woff2">
-        <Destination>fonts\inter\%(Filename)%(Extension)</Destination>
-      </_SharedWebAsset>
+      <_SharedConfigurationAsset Include="$(MSBuildProjectDirectory)\..\Shared\Config\page.json">
+        <RelativePath>page.json</RelativePath>
+      </_SharedConfigurationAsset>
+      <_SharedConfigurationAsset Include="$(MSBuildProjectDirectory)\..\Shared\Config\db-api.json">
+        <RelativePath>db-api.json</RelativePath>
+      </_SharedConfigurationAsset>
     </ItemGroup>
 
-    <MakeDir Directories="$(MSBuildProjectDirectory)\wwwroot\js;$(MSBuildProjectDirectory)\wwwroot\css;$(MSBuildProjectDirectory)\wwwroot\fonts\inter" />
-    <Copy SourceFiles="@(_SharedWebAsset)" DestinationFiles="@(_SharedWebAsset->'$(MSBuildProjectDirectory)\wwwroot\%(Destination)')" SkipUnchangedFiles="true" />
+    <DefineStaticWebAssets CandidateAssets="@(_SharedConfigurationAsset)"
+                           SourceId="$(PackageId)"
+                           SourceType="Computed"
+                           AssetKind="All"
+                           AssetMode="All"
+                           AssetRole="Primary"
+                           CopyToOutputDirectory="PreserveNewest"
+                           CopyToPublishDirectory="PreserveNewest"
+                           ContentRoot="$(MSBuildProjectDirectory)\..\Shared\Config\"
+                           BasePath="$(StaticWebAssetBasePath)">
+      <Output TaskParameter="Assets" ItemName="_SharedConfigurationStaticWebAsset" />
+    </DefineStaticWebAssets>
+
+    <DefineStaticWebAssetEndpoints CandidateAssets="@(_SharedConfigurationStaticWebAsset)"
+                                   ExistingEndpoints="@(StaticWebAssetEndpoint)"
+                                   ContentTypeMappings="@(StaticWebAssetContentTypeMapping)">
+      <Output TaskParameter="Endpoints" ItemName="_SharedConfigurationStaticWebAssetEndpoint" />
+    </DefineStaticWebAssetEndpoints>
 
     <ItemGroup>
-      <Content Remove="wwwroot\page.json;wwwroot\db-api.json;wwwroot\js\app-log.js;wwwroot\js\app-config.js;wwwroot\css\tailwind.css;wwwroot\css\inter.css;wwwroot\css\app.css;wwwroot\fonts\inter\*.woff2" />
-      <Content Include="wwwroot\page.json;wwwroot\db-api.json;wwwroot\js\app-log.js;wwwroot\js\app-config.js;wwwroot\css\tailwind.css;wwwroot\css\inter.css;wwwroot\css\app.css;wwwroot\fonts\inter\*.woff2" />
+      <StaticWebAsset Include="@(_SharedConfigurationStaticWebAsset)" />
+      <StaticWebAssetEndpoint Include="@(_SharedConfigurationStaticWebAssetEndpoint)" />
     </ItemGroup>
   </Target>
 
-  <Target Name="RemoveMaterializedSharedWebAssets" AfterTargets="Clean">
-    <Delete Files="$(MSBuildProjectDirectory)\wwwroot\page.json;$(MSBuildProjectDirectory)\wwwroot\db-api.json;$(MSBuildProjectDirectory)\wwwroot\js\app-log.js;$(MSBuildProjectDirectory)\wwwroot\js\app-config.js;$(MSBuildProjectDirectory)\wwwroot\css\tailwind.css;$(MSBuildProjectDirectory)\wwwroot\css\inter.css;$(MSBuildProjectDirectory)\wwwroot\css\app.css;$(MSBuildProjectDirectory)\wwwroot\fonts\inter\*.woff2" />
+  <Target Name="UseSharedScriptsStaticWebAssets" AfterTargets="ResolveStaticWebAssetsInputs">
+    <ItemGroup>
+      <_SharedScriptAsset Include="$(MSBuildProjectDirectory)\..\Shared\Scripts\app-log.js">
+        <RelativePath>js/app-log.js</RelativePath>
+      </_SharedScriptAsset>
+      <_SharedScriptAsset Include="$(MSBuildProjectDirectory)\..\Shared\Scripts\app-config.js">
+        <RelativePath>js/app-config.js</RelativePath>
+      </_SharedScriptAsset>
+    </ItemGroup>
+
+    <DefineStaticWebAssets CandidateAssets="@(_SharedScriptAsset)"
+                           SourceId="$(PackageId)"
+                           SourceType="Computed"
+                           AssetKind="All"
+                           AssetMode="All"
+                           AssetRole="Primary"
+                           CopyToOutputDirectory="PreserveNewest"
+                           CopyToPublishDirectory="PreserveNewest"
+                           ContentRoot="$(MSBuildProjectDirectory)\..\Shared\Scripts\"
+                           BasePath="$(StaticWebAssetBasePath)">
+      <Output TaskParameter="Assets" ItemName="_SharedScriptStaticWebAsset" />
+    </DefineStaticWebAssets>
+
+    <DefineStaticWebAssetEndpoints CandidateAssets="@(_SharedScriptStaticWebAsset)"
+                                   ExistingEndpoints="@(StaticWebAssetEndpoint)"
+                                   ContentTypeMappings="@(StaticWebAssetContentTypeMapping)">
+      <Output TaskParameter="Endpoints" ItemName="_SharedScriptStaticWebAssetEndpoint" />
+    </DefineStaticWebAssetEndpoints>
+
+    <ItemGroup>
+      <StaticWebAsset Include="@(_SharedScriptStaticWebAsset)" />
+      <StaticWebAssetEndpoint Include="@(_SharedScriptStaticWebAssetEndpoint)" />
+    </ItemGroup>
   </Target>
+
+  <Target Name="UseSharedStylesStaticWebAssets" AfterTargets="ResolveStaticWebAssetsInputs">
+    <ItemGroup>
+      <_SharedStyleAsset Include="$(MSBuildProjectDirectory)\..\Shared\Styles\tailwind.css">
+        <RelativePath>css/tailwind.css</RelativePath>
+      </_SharedStyleAsset>
+      <_SharedStyleAsset Include="$(MSBuildProjectDirectory)\..\Shared\Styles\inter.css">
+        <RelativePath>css/inter.css</RelativePath>
+      </_SharedStyleAsset>
+      <_SharedStyleAsset Include="$(MSBuildProjectDirectory)\..\Shared\Styles\app.css">
+        <RelativePath>css/app.css</RelativePath>
+      </_SharedStyleAsset>
+    </ItemGroup>
+
+    <DefineStaticWebAssets CandidateAssets="@(_SharedStyleAsset)"
+                           SourceId="$(PackageId)"
+                           SourceType="Computed"
+                           AssetKind="All"
+                           AssetMode="All"
+                           AssetRole="Primary"
+                           CopyToOutputDirectory="PreserveNewest"
+                           CopyToPublishDirectory="PreserveNewest"
+                           ContentRoot="$(MSBuildProjectDirectory)\..\Shared\Styles\"
+                           BasePath="$(StaticWebAssetBasePath)">
+      <Output TaskParameter="Assets" ItemName="_SharedStyleStaticWebAsset" />
+    </DefineStaticWebAssets>
+
+    <DefineStaticWebAssetEndpoints CandidateAssets="@(_SharedStyleStaticWebAsset)"
+                                   ExistingEndpoints="@(StaticWebAssetEndpoint)"
+                                   ContentTypeMappings="@(StaticWebAssetContentTypeMapping)">
+      <Output TaskParameter="Endpoints" ItemName="_SharedStyleStaticWebAssetEndpoint" />
+    </DefineStaticWebAssetEndpoints>
+
+    <ItemGroup>
+      <StaticWebAsset Include="@(_SharedStyleStaticWebAsset)" />
+      <StaticWebAssetEndpoint Include="@(_SharedStyleStaticWebAssetEndpoint)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="UseSharedFontsStaticWebAssets" AfterTargets="ResolveStaticWebAssetsInputs">
+    <ItemGroup>
+      <_SharedFontAsset Include="$(MSBuildProjectDirectory)\..\Shared\Fonts\Inter\Inter-latin.woff2">
+        <RelativePath>fonts/inter/Inter-latin.woff2</RelativePath>
+      </_SharedFontAsset>
+      <_SharedFontAsset Include="$(MSBuildProjectDirectory)\..\Shared\Fonts\Inter\Inter-latin-ext.woff2">
+        <RelativePath>fonts/inter/Inter-latin-ext.woff2</RelativePath>
+      </_SharedFontAsset>
+      <_SharedFontAsset Include="$(MSBuildProjectDirectory)\..\Shared\Fonts\Inter\Inter-vietnamese.woff2">
+        <RelativePath>fonts/inter/Inter-vietnamese.woff2</RelativePath>
+      </_SharedFontAsset>
+    </ItemGroup>
+
+    <DefineStaticWebAssets CandidateAssets="@(_SharedFontAsset)"
+                           SourceId="$(PackageId)"
+                           SourceType="Computed"
+                           AssetKind="All"
+                           AssetMode="All"
+                           AssetRole="Primary"
+                           CopyToOutputDirectory="PreserveNewest"
+                           CopyToPublishDirectory="PreserveNewest"
+                           ContentRoot="$(MSBuildProjectDirectory)\..\Shared\Fonts\Inter\"
+                           BasePath="$(StaticWebAssetBasePath)">
+      <Output TaskParameter="Assets" ItemName="_SharedFontStaticWebAsset" />
+    </DefineStaticWebAssets>
+
+    <DefineStaticWebAssetEndpoints CandidateAssets="@(_SharedFontStaticWebAsset)"
+                                   ExistingEndpoints="@(StaticWebAssetEndpoint)"
+                                   ContentTypeMappings="@(StaticWebAssetContentTypeMapping)">
+      <Output TaskParameter="Endpoints" ItemName="_SharedFontStaticWebAssetEndpoint" />
+    </DefineStaticWebAssetEndpoints>
+
+    <ItemGroup>
+      <StaticWebAsset Include="@(_SharedFontStaticWebAsset)" />
+      <StaticWebAssetEndpoint Include="@(_SharedFontStaticWebAssetEndpoint)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="BuildAndSyncModules" BeforeTargets="ResolveReferences">
+    <MSBuild Projects="@(ModuleProject)"
+             Targets="GetTargetPath"
+             Properties="Configuration=$(Configuration)"
+             BuildInParallel="true">
+      <Output TaskParameter="TargetOutputs" ItemName="_ModuleAssembly" />
+    </MSBuild>
+
+    <MakeDir Directories="$(WebModulesDir)" />
+    <Copy SourceFiles="@(_ModuleAssembly)" DestinationFolder="$(WebModulesDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_ModuleAssembly->'%(RootDir)%(Directory)%(Filename).pdb')"
+          DestinationFolder="$(WebModulesDir)"
+          SkipUnchangedFiles="true" />
+  </Target>
+
 </Project>

@@ -4,51 +4,134 @@
     "Destructive": "Destructive",
     "Back": "Back",
     "Restore": "Restore",
-    "Save": "Save"
+    "Save": "Save",
+    "Open": "Open"
   },
   "TemplateHome": {
     "Title": "MAP module developer demo",
     "Description": "Runnable, practical examples for building a MAP module.",
-    "Success": "The operation completed."
+    "Success": "The operation completed.",
+    "RuntimeTitle": "Runtime summary",
+    "RuntimeDescription": "Shows values MAP supplies to every module page. Use them when a page needs its current host context.",
+    "NotificationsTitle": "Notifications and confirmation",
+    "NotificationsDescription": "Shows success, warning, error, and confirmation messages. Use these helpers for clear feedback before or after user actions.",
+    "FeaturesTitle": "Practical module examples",
+    "FeaturesDescription": "Open a lab, change a value, then copy the small example into your module.",
+    "Features": {
+      "Parameters": { "Title": "Detail & parameters", "Description": "Read optional or required values passed to a detail page." },
+      "Navigation": { "Title": "Navigation", "Description": "Open pages, pass parameters, manage Back history, and perform root navigation." },
+      "HeaderUi": { "Title": "Header & UI", "Description": "Change header content, Back button behavior, and menu or header visibility." },
+      "Localization": { "Title": "Localization, context & menu", "Description": "Translate text, inspect host context, find menus, and load module components." },
+      "Database": { "Title": "Database", "Description": "Call PostgreSQL and Oracle using BasePage helpers or low-level APIs." },
+      "Config": { "Title": "Config & platform", "Description": "Inspect host configuration and platform capabilities, then save only after confirmation." },
+      "Logging": { "Title": "Logging & errors", "Description": "Work with sandbox logs and correlate a module error with a short ID." },
+      "Lifecycle": { "Title": "Lifecycle", "Description": "Cancel page-lifetime work and clean up resources when a page closes." },
+      "Utilities": { "Title": "Utilities", "Description": "Use small helpers for page parameters, JSON, and menu trees." }
+    }
   },
-  "TemplateDetail": { "Title": "Parameter detail" },
+  "TemplateDetail": {
+    "Title": "Parameter detail",
+    "Description": "This page reads values supplied by OpenPageAsync.",
+    "ParametersTitle": "Parameters and Back navigation",
+    "GetParameterDescription": "Reads an optional parameter. Returns the default value when missing or not convertible.",
+    "RequireParameterDescription": "Reads a required parameter. Use it when the page cannot operate without that value."
+  },
   "TemplateNavigation": {
     "Title": "Navigation lab",
+    "Description": "Use these helpers to move between pages without reimplementing navigation behavior.",
+    "OpenPageTitle": "Open a page",
+    "OpenPageDescription": "Opens another page using the recommended helper. Navigation errors are handled and reported safely.",
+    "ParametersTitle": "Parameters",
+    "ParametersDescription": "Pass small values to the target page using a parameter object.",
+    "HistoryTitle": "History",
+    "HistoryDescription": "Controls whether the current page is added to Back history. Back returns to the most recent page stored in that history.",
+    "RootTitle": "Root navigation",
+    "RootDescription": "Opens a page as a new root and clears the previous Back history.",
+    "SafeFailureTitle": "Safe failure",
+    "SafeFailureDescription": "Try an unknown page to see the standard navigation error notification.",
     "StepBTitle": "Navigation step B",
     "StepCTitle": "Navigation step C",
     "ReceivedFrom": "Received from",
     "OpenC": "Open C without history",
+    "StepBDescription": "Opens C with pushHistory set to false, so A remains the Back destination.",
     "StepCNote": "C was opened without pushing B. Back returns directly to A."
   },
   "TemplateHeaderUi": {
     "Title": "Header and UI lab",
+    "HeaderTitle": "Page header",
+    "HeaderDescription": "HeaderTitleKey sets the localized header title, HeaderContent displays custom header content, and ShowBack controls the Back button. Call RefreshHeader after changing any of these values.",
+    "UiTitle": "UI visibility",
+    "UiDescription": "ToggleMenu and ToggleHeader switch the current visibility; SetMenu and SetHeader set an explicit state. Use them when a page needs more screen space, then restore the original values.",
+    "NotificationsTitle": "Notifications and dialogs",
+    "NotificationsDescription": "NotifySuccess, NotifyWarning, and NotifyError give standard feedback. Use ConfirmAsync before an action that needs the user's approval.",
     "CustomTitle": "Custom template header"
   },
-  "TemplateLocalization": { "Title": "Localization, context and menu lab" },
+  "TemplateLocalization": {
+    "Title": "Localization, context and menu lab",
+    "LocalizationTitle": "Localization",
+    "LocalizationDescription": "Lang.T gets display text for the current language. Lang.SetLanguage changes the application's active language.",
+    "ContextTitle": "Client context",
+    "ContextDescription": "ClientContext provides current environment information such as ProgramId, user, IP address, and local path.",
+    "MenuTitle": "Application menu",
+    "MenuDescription": "MenuService.FindById finds a menu or page by the ID declared in page.json. ModuleLoader.LoadComponentAsync loads its component from the menu assembly and component information."
+  },
   "TemplateDatabase": {
     "Title": "Database lab",
-    "OfflineNote": "No database request runs during initialization. Offline endpoint errors are displayed safely."
+    "OfflineNote": "No database request runs during initialization. Offline endpoint errors are displayed safely.",
+    "RecommendedTitle": "Recommended PostgreSQL helpers",
+    "RecommendedDescription": "QueryAsync<T> calls a PostgreSQL function and maps returned data to a DTO list; this is recommended for normal pages. ExecuteAsync calls a PostgreSQL procedure when no result data is required.",
+    "LowLevelTitle": "Low-level PostgreSQL",
+    "LowLevelDescription": "Allows an explicit DbName and lower-level JSON response handling. Use it when the BasePage helpers are not sufficient.",
+    "OracleTitle": "Oracle",
+    "OracleDescription": "Sends a request directly to the Oracle DB API using a JSON payload.",
+    "DbJsonTitle": "DbJson",
+    "DbJsonDescription": "Converts a .NET object to JsonElement using MAP JSON conventions."
   },
   "TemplateConfig": {
     "Title": "Configuration and platform lab",
     "PlatformTitle": "Read-only platform information",
+    "PlatformDescription": "IAppConfigService reads the current host configuration, system information, and displays. IPlatformCapabilities indicates support for fullscreen, taskbar hiding, and display selection.",
     "ConfigExists": "Config exists",
     "SystemInfo": "System info",
     "Displays": "Displays",
     "Capabilities": "Capabilities",
     "EditTitle": "Editable AppConfig",
     "EditNote": "The draft works even when no configuration exists. Save is manual and does not restart the application.",
+    "EditDescription": "SaveAsync stores the current host configuration. Use it only after the user explicitly confirms the change.",
     "Before": "Before",
     "Draft": "Draft",
     "After": "After",
     "RestartTitle": "Restart",
     "RestartNote": "Restart is separate from Save and always requires confirmation.",
+    "RestartDescription": "RestartApp restarts the host after explicit confirmation. Use it only when a configuration change requires a new application session.",
     "Restart": "Restart application",
     "SaveConfirm": "Save this configuration draft?",
     "RestartConfirmOne": "Restart the application now?",
     "Saved": "Configuration saved manually."
   },
-  "TemplateLogging": { "Title": "Logging and error lab" },
-  "TemplateLifecycle": { "Title": "Lifecycle lab" },
-  "TemplateUtilities": { "Title": "Utilities lab" }
+  "TemplateLogging": {
+    "Title": "Logging and error lab",
+    "LogStoreTitle": "ILogStore sandbox",
+    "LogStoreDescription": "Writes, reads, and clears logs stored by the host. The demo only uses the 2099-12-31 sandbox day.",
+    "ErrorTitle": "Module error correlation",
+    "ErrorDescription": "ModuleErrorId creates a short correlation ID so the user and logs can reference the same error. ErrorNotifier shows a module error notification with that ID.",
+    "FaultTitle": "Fault boundary",
+    "FaultDescription": "The nested example is opt-in and the error stays inside its boundary."
+  },
+  "TemplateLifecycle": {
+    "Title": "Lifecycle lab",
+    "Description": "PageCancellationToken is automatically cancelled when the page starts navigating away. Use it for loops, delays, HTTP calls, or other page-lifetime work.",
+    "CancellationTitle": "Page cancellation and cleanup",
+    "CleanupDescription": "DisposePageAsync is the page's single cleanup hook. Use it to dispose timers, unsubscribe events, and release resources."
+  },
+  "TemplateUtilities": {
+    "Title": "Utilities lab",
+    "Description": "Small helpers that are useful when building a module.",
+    "PageParamsTitle": "PageParams",
+    "PageParamsDescription": "Creates and reads a dynamic parameter set used for page navigation.",
+    "DbJsonTitle": "DbJson",
+    "DbJsonDescription": "Converts a .NET object to JsonElement using MAP JSON conventions.",
+    "MenuTitle": "MenuTree and MenuTitle",
+    "MenuDescription": "MenuTree finds menus or pages inside the menu tree. MenuTitle gets the menu title appropriate for the current language."
+  }
 }

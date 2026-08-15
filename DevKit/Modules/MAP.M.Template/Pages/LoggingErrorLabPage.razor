@@ -5,7 +5,7 @@
 <div class="p-4">
     <h2>@Lang.T("TemplateLogging.Title")</h2>
 
-    <ApiSection Title="ILogStore sandbox" Note="Only the dedicated 2099-12-31 sandbox day is written or cleared; today's logs are never touched.">
+    <ApiSection Title="@Lang.T("TemplateLogging.LogStoreTitle")" Note="@Lang.T("TemplateLogging.LogStoreDescription")">
         <ActionRow>
             <RadzenButton Text="WriteAsync" Click="WriteAsync" />
             <RadzenButton Text="GetDaysAsync" Click="GetDaysAsync" />
@@ -16,15 +16,14 @@
         <p>Sample LogEntry: @_sampleEntry</p>
     </ApiSection>
 
-    <ApiSection Title="Module error correlation">
-        <p><code>ModuleErrorId.Create</code> creates a correlation ID; <code>GetOrCreate</code> keeps one on an exception.</p>
+    <ApiSection Title="@Lang.T("TemplateLogging.ErrorTitle")" Note="@Lang.T("TemplateLogging.ErrorDescription")">
         <ActionRow>
             <RadzenButton Text="Create error ID" Click="CreateErrorId" />
             <RadzenButton Text="ErrorNotifier.Notify" Click="NotifyError" />
         </ActionRow>
     </ApiSection>
 
-    <ApiSection Title="Fault boundary" Tier="Advanced" Note="The nested example is opt-in and the error stays inside its boundary.">
+    <ApiSection Title="@Lang.T("TemplateLogging.FaultTitle")" Tier="@Lang.T("TemplateCommon.Advanced")" Note="@Lang.T("TemplateLogging.FaultDescription")">
         <ModuleErrorBoundary OnFaulted="ProbeFaulted">
             <ChildContent>
                 <FaultProbe />

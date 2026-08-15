@@ -6,7 +6,7 @@
 <div class="p-4">
     <h2>@Lang.T("TemplateConfig.Title")</h2>
 
-    <ApiSection Title="@Lang.T("TemplateConfig.PlatformTitle")" Tier="@Lang.T("TemplateCommon.Advanced")">
+    <ApiSection Title="@Lang.T("TemplateConfig.PlatformTitle")" Tier="@Lang.T("TemplateCommon.Advanced")" Note="@Lang.T("TemplateConfig.PlatformDescription")">
         <p>@Lang.T("TemplateConfig.ConfigExists"): @ConfigService.Exists</p>
         <p>Current: @JsonSerializer.Serialize(ConfigService.Current)</p>
         <p>@Lang.T("TemplateConfig.SystemInfo"): @JsonSerializer.Serialize(ConfigService.GetSystemInfo())</p>
@@ -14,7 +14,7 @@
         <p>@Lang.T("TemplateConfig.Capabilities"): Fullscreen=@Platform.SupportsFullscreen; HideTaskbar=@Platform.SupportsHideTaskbar; DisplaySelection=@Platform.SupportsDisplaySelection</p>
     </ApiSection>
 
-    <ApiSection Title="@Lang.T("TemplateConfig.EditTitle")" Note="@Lang.T("TemplateConfig.EditNote")">
+    <ApiSection Title="@Lang.T("TemplateConfig.EditTitle")" Note="@Lang.T("TemplateConfig.EditDescription")">
         <div class="grid gap-3 md:grid-cols-2">
             <label>ProgramId <input @bind="_draft.ProgramId" /></label>
             <label>DefaultLanguage <input @bind="_draft.DefaultLanguage" /></label>
@@ -33,7 +33,7 @@
     </ApiSection>
 
     <ApiSection Title="@Lang.T("TemplateConfig.RestartTitle")" Tier="@Lang.T("TemplateCommon.Destructive")">
-        <p>@Lang.T("TemplateConfig.RestartNote")</p>
+        <p>@Lang.T("TemplateConfig.RestartDescription")</p>
         <ActionRow><RadzenButton Text="@Lang.T("TemplateConfig.Restart")" ButtonStyle="ButtonStyle.Danger" Click="RestartAsync" /></ActionRow>
     </ApiSection>
     <ResultPanel Value="@_result" />

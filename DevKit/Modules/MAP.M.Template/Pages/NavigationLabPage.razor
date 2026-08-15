@@ -3,16 +3,21 @@
 
 <div class="p-4">
     <h2>@Lang.T("TemplateNavigation.Title")</h2>
-    <p>Use <code>OpenPageAsync</code> for normal module navigation. It reports navigation errors through the module error helper.</p>
+    <p>@Lang.T("TemplateNavigation.Description")</p>
 
-    <ApiSection Title="Open a page">
+    <ApiSection Title="@Lang.T("TemplateNavigation.OpenPageTitle")" Note="@Lang.T("TemplateNavigation.OpenPageDescription")">
         <ActionRow>
             <RadzenButton Text="Open detail" Click="OpenDetailAsync" />
+        </ActionRow>
+    </ApiSection>
+
+    <ApiSection Title="@Lang.T("TemplateNavigation.ParametersTitle")" Note="@Lang.T("TemplateNavigation.ParametersDescription")">
+        <ActionRow>
             <RadzenButton Text="Open detail with parameters" Click="OpenDetailWithParametersAsync" />
         </ActionRow>
     </ApiSection>
 
-    <ApiSection Title="History" Note="A → B (pushHistory=true) → C (pushHistory=false) → Back returns to A.">
+    <ApiSection Title="@Lang.T("TemplateNavigation.HistoryTitle")" Note="@Lang.T("TemplateNavigation.HistoryDescription")">
         <p>Current page: @Navigator.Current?.PageId | CanBack: @Navigator.CanBack</p>
         <ActionRow>
             <RadzenButton Text="Start flow at B" Click="OpenBAsync" />
@@ -20,14 +25,13 @@
         </ActionRow>
     </ApiSection>
 
-    <ApiSection Title="Root navigation" Note="OpenRootAsync clears the Back history before opening the page.">
+    <ApiSection Title="@Lang.T("TemplateNavigation.RootTitle")" Note="@Lang.T("TemplateNavigation.RootDescription")">
         <ActionRow>
             <RadzenButton Text="Open navigation as root" Click="OpenRootAsync" />
         </ActionRow>
     </ApiSection>
 
-    <ApiSection Title="Safe failure">
-        <p>Try an unknown page to see the standard navigation error notification.</p>
+    <ApiSection Title="@Lang.T("TemplateNavigation.SafeFailureTitle")" Note="@Lang.T("TemplateNavigation.SafeFailureDescription")">
         <ActionRow>
             <RadzenButton Text="Open does-not-exist" ButtonStyle="ButtonStyle.Warning" Click="OpenUnknownPageAsync" />
         </ActionRow>

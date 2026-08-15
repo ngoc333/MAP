@@ -5,7 +5,7 @@
 <div class="p-4">
     <h2>@Lang.T("TemplateHeaderUi.Title")</h2>
 
-    <ApiSection Title="Page header" Note="HeaderKind is informational: the current host does not render a different visual style for it.">
+    <ApiSection Title="@Lang.T("TemplateHeaderUi.HeaderTitle")" Note="@Lang.T("TemplateHeaderUi.HeaderDescription")">
         <p>HeaderTitleKey: @HeaderTitleKey | HeaderKind: @HeaderKind | ShowBack: @ShowBack</p>
         <p>HeaderContent: @(_showCustomContent ? "Custom content is active" : "No custom content")</p>
         <ActionRow>
@@ -16,7 +16,7 @@
         </ActionRow>
     </ApiSection>
 
-    <ApiSection Title="UI visibility" Note="Original menu and header values are restored when this page is left.">
+    <ApiSection Title="@Lang.T("TemplateHeaderUi.UiTitle")" Note="@Lang.T("TemplateHeaderUi.UiDescription")">
         <p>ShowMenu: @UiState.ShowMenu | ShowHeader: @UiState.ShowHeader</p>
         <ActionRow>
             <RadzenButton Text="ToggleMenu()" Click="UiState.ToggleMenu" />
@@ -29,7 +29,7 @@
         </ActionRow>
     </ApiSection>
 
-    <ApiSection Title="Notifications and dialogs">
+    <ApiSection Title="@Lang.T("TemplateHeaderUi.NotificationsTitle")" Note="@Lang.T("TemplateHeaderUi.NotificationsDescription")">
         <ActionRow>
             <RadzenButton Text="NotifySuccess" ButtonStyle="ButtonStyle.Success" Click="ShowSuccess" />
             <RadzenButton Text="NotifyWarning" ButtonStyle="ButtonStyle.Warning" Click="ShowWarning" />

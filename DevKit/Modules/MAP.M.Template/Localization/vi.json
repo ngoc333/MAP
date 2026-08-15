@@ -4,51 +4,134 @@
     "Destructive": "Nguy hiểm",
     "Back": "Quay lại",
     "Restore": "Khôi phục",
-    "Save": "Lưu"
+    "Save": "Lưu",
+    "Open": "Mở"
   },
   "TemplateHome": {
     "Title": "Demo phát triển module MAP",
     "Description": "Ví dụ thực tế có thể chạy để phát triển module MAP.",
-    "Success": "Thao tác đã hoàn tất."
+    "Success": "Thao tác đã hoàn tất.",
+    "RuntimeTitle": "Tóm tắt môi trường chạy",
+    "RuntimeDescription": "Hiển thị các giá trị MAP cung cấp cho mọi page module. Dùng khi page cần ngữ cảnh host hiện tại.",
+    "NotificationsTitle": "Thông báo và xác nhận",
+    "NotificationsDescription": "Hiển thị thông báo thành công, cảnh báo, lỗi và hộp xác nhận. Dùng các helper này để phản hồi rõ ràng trước hoặc sau thao tác của người dùng.",
+    "FeaturesTitle": "Ví dụ module thực tế",
+    "FeaturesDescription": "Mở một lab, thay đổi giá trị rồi sao chép ví dụ ngắn vào module của bạn.",
+    "Features": {
+      "Parameters": { "Title": "Chi tiết & tham số", "Description": "Đọc giá trị tùy chọn hoặc bắt buộc được truyền sang page chi tiết." },
+      "Navigation": { "Title": "Điều hướng", "Description": "Mở page, truyền tham số, quản lý lịch sử Back và điều hướng root." },
+      "HeaderUi": { "Title": "Header & UI", "Description": "Thay đổi nội dung header, nút Back và trạng thái hiển thị menu hoặc header." },
+      "Localization": { "Title": "Ngôn ngữ, ngữ cảnh & menu", "Description": "Dịch chuỗi, xem ngữ cảnh host, tìm menu và nạp component module." },
+      "Database": { "Title": "Cơ sở dữ liệu", "Description": "Gọi PostgreSQL và Oracle bằng BasePage helper hoặc API cấp thấp." },
+      "Config": { "Title": "Cấu hình & nền tảng", "Description": "Xem cấu hình host và khả năng nền tảng, sau đó chỉ lưu khi đã xác nhận." },
+      "Logging": { "Title": "Nhật ký & lỗi", "Description": "Làm việc với log sandbox và liên kết lỗi module bằng mã ngắn." },
+      "Lifecycle": { "Title": "Vòng đời", "Description": "Hủy tác vụ theo vòng đời page và dọn tài nguyên khi page đóng." },
+      "Utilities": { "Title": "Tiện ích", "Description": "Dùng các helper nhỏ cho tham số page, JSON và cây menu." }
+    }
   },
-  "TemplateDetail": { "Title": "Chi tiết tham số" },
+  "TemplateDetail": {
+    "Title": "Chi tiết tham số",
+    "Description": "Page này đọc các giá trị được truyền bởi OpenPageAsync.",
+    "ParametersTitle": "Tham số và điều hướng Back",
+    "GetParameterDescription": "Đọc tham số tùy chọn. Nếu không có hoặc không chuyển đổi được thì trả về giá trị mặc định.",
+    "RequireParameterDescription": "Đọc tham số bắt buộc. Dùng khi page không thể hoạt động nếu thiếu giá trị này."
+  },
   "TemplateNavigation": {
     "Title": "Phòng thí nghiệm điều hướng",
+    "Description": "Dùng các helper này để chuyển giữa các page mà không cần tự cài đặt hành vi điều hướng.",
+    "OpenPageTitle": "Mở một page",
+    "OpenPageDescription": "Mở page khác theo cách khuyến nghị. Lỗi điều hướng được xử lý và thông báo an toàn.",
+    "ParametersTitle": "Tham số",
+    "ParametersDescription": "Truyền dữ liệu nhỏ sang page đích bằng object tham số.",
+    "HistoryTitle": "Lịch sử",
+    "HistoryDescription": "Quyết định page hiện tại có được thêm vào lịch sử Back hay không. Back quay lại page gần nhất đã được lưu trong lịch sử.",
+    "RootTitle": "Điều hướng root",
+    "RootDescription": "Mở page như một điểm bắt đầu mới và xóa lịch sử Back trước đó.",
+    "SafeFailureTitle": "Xử lý lỗi an toàn",
+    "SafeFailureDescription": "Thử một page không tồn tại để xem thông báo lỗi điều hướng chuẩn.",
     "StepBTitle": "Bước điều hướng B",
     "StepCTitle": "Bước điều hướng C",
     "ReceivedFrom": "Nhận từ",
     "OpenC": "Mở C không thêm lịch sử",
+    "StepBDescription": "Mở C với pushHistory là false để A vẫn là điểm quay lại bằng Back.",
     "StepCNote": "C mở mà không thêm B. Quay lại sẽ trực tiếp về A."
   },
   "TemplateHeaderUi": {
-    "Title": "Phòng thí nghiệm đầu trang và UI",
-    "CustomTitle": "Đầu trang mẫu tùy chỉnh"
+    "Title": "Phòng thí nghiệm header và UI",
+    "HeaderTitle": "Header của page",
+    "HeaderDescription": "HeaderTitleKey đặt tiêu đề header theo ngôn ngữ, HeaderContent hiển thị nội dung header tùy chỉnh và ShowBack điều khiển nút Back. Gọi RefreshHeader sau khi thay đổi các giá trị này.",
+    "UiTitle": "Hiển thị UI",
+    "UiDescription": "ToggleMenu và ToggleHeader đổi trạng thái hiện tại; SetMenu và SetHeader đặt trạng thái cụ thể. Dùng khi page cần thêm không gian, sau đó khôi phục giá trị ban đầu.",
+    "NotificationsTitle": "Thông báo và hộp thoại",
+    "NotificationsDescription": "NotifySuccess, NotifyWarning và NotifyError đưa ra phản hồi chuẩn. Dùng ConfirmAsync trước thao tác cần sự chấp thuận của người dùng.",
+    "CustomTitle": "Header mẫu tùy chỉnh"
   },
-  "TemplateLocalization": { "Title": "Phòng thí nghiệm ngôn ngữ, ngữ cảnh và menu" },
+  "TemplateLocalization": {
+    "Title": "Phòng thí nghiệm ngôn ngữ, ngữ cảnh và menu",
+    "LocalizationTitle": "Ngôn ngữ",
+    "LocalizationDescription": "Lang.T lấy chuỗi hiển thị theo ngôn ngữ hiện tại. Lang.SetLanguage chuyển ngôn ngữ đang sử dụng của ứng dụng.",
+    "ContextTitle": "Ngữ cảnh client",
+    "ContextDescription": "ClientContext cung cấp thông tin môi trường hiện tại như ProgramId, user, IP và local path.",
+    "MenuTitle": "Menu ứng dụng",
+    "MenuDescription": "MenuService.FindById tìm menu hoặc page theo ID đã khai báo trong page.json. ModuleLoader.LoadComponentAsync nạp component theo thông tin assembly và component từ menu."
+  },
   "TemplateDatabase": {
     "Title": "Phòng thí nghiệm cơ sở dữ liệu",
-    "OfflineNote": "Không có yêu cầu cơ sở dữ liệu khi khởi tạo. Lỗi endpoint offline được hiển thị an toàn."
+    "OfflineNote": "Không có yêu cầu cơ sở dữ liệu khi khởi tạo. Lỗi endpoint offline được hiển thị an toàn.",
+    "RecommendedTitle": "PostgreSQL helper được khuyến nghị",
+    "RecommendedDescription": "QueryAsync<T> gọi PostgreSQL function và ánh xạ dữ liệu trả về thành danh sách DTO; đây là cách khuyến nghị cho page thông thường. ExecuteAsync gọi PostgreSQL procedure khi không cần dữ liệu trả về.",
+    "LowLevelTitle": "PostgreSQL cấp thấp",
+    "LowLevelDescription": "Cho phép chỉ định DbName trực tiếp và làm việc với JSON response ở mức thấp hơn. Dùng khi BasePage helper không đủ.",
+    "OracleTitle": "Oracle",
+    "OracleDescription": "Gửi request trực tiếp tới Oracle DB API bằng JSON payload.",
+    "DbJsonTitle": "DbJson",
+    "DbJsonDescription": "Chuyển object .NET sang JsonElement theo quy ước JSON của MAP."
   },
   "TemplateConfig": {
     "Title": "Phòng thí nghiệm cấu hình và nền tảng",
     "PlatformTitle": "Thông tin nền tảng chỉ đọc",
+    "PlatformDescription": "IAppConfigService đọc cấu hình host hiện tại, thông tin hệ thống và màn hình. IPlatformCapabilities cho biết host có hỗ trợ fullscreen, ẩn taskbar và chọn màn hình hay không.",
     "ConfigExists": "Cấu hình tồn tại",
     "SystemInfo": "Thông tin hệ thống",
     "Displays": "Màn hình",
     "Capabilities": "Khả năng",
     "EditTitle": "AppConfig có thể chỉnh sửa",
     "EditNote": "Bản nháp hoạt động cả khi chưa có cấu hình. Lưu thủ công và không khởi động lại ứng dụng.",
+    "EditDescription": "SaveAsync lưu cấu hình host hiện tại. Chỉ dùng sau khi người dùng chủ động xác nhận thay đổi.",
     "Before": "Trước",
     "Draft": "Bản nháp",
     "After": "Sau",
     "RestartTitle": "Khởi động lại",
     "RestartNote": "Khởi động lại độc lập với Lưu và luôn yêu cầu xác nhận.",
+    "RestartDescription": "RestartApp khởi động lại host sau khi đã xác nhận. Chỉ dùng khi thay đổi cấu hình cần một phiên ứng dụng mới.",
     "Restart": "Khởi động lại ứng dụng",
     "SaveConfirm": "Lưu bản nháp cấu hình này?",
     "RestartConfirmOne": "Khởi động lại ứng dụng ngay bây giờ?",
     "Saved": "Đã lưu cấu hình thủ công."
   },
-  "TemplateLogging": { "Title": "Phòng thí nghiệm nhật ký và lỗi" },
-  "TemplateLifecycle": { "Title": "Phòng thí nghiệm vòng đời" },
-  "TemplateUtilities": { "Title": "Phòng thí nghiệm tiện ích" }
+  "TemplateLogging": {
+    "Title": "Phòng thí nghiệm nhật ký và lỗi",
+    "LogStoreTitle": "Sandbox ILogStore",
+    "LogStoreDescription": "Ghi, đọc và xóa log được lưu bởi host. Demo chỉ sử dụng ngày sandbox 2099-12-31.",
+    "ErrorTitle": "Liên kết lỗi module",
+    "ErrorDescription": "ModuleErrorId tạo mã tương quan ngắn để người dùng và log có thể tham chiếu cùng một lỗi. ErrorNotifier hiển thị thông báo lỗi module kèm mã đó.",
+    "FaultTitle": "Ranh giới lỗi",
+    "FaultDescription": "Ví dụ lồng nhau là tùy chọn và lỗi chỉ nằm trong ranh giới của nó."
+  },
+  "TemplateLifecycle": {
+    "Title": "Phòng thí nghiệm vòng đời",
+    "Description": "PageCancellationToken tự động bị hủy khi page bắt đầu rời khỏi màn hình. Dùng cho vòng lặp, delay, HTTP hoặc tác vụ sống theo vòng đời page.",
+    "CancellationTitle": "Hủy page và dọn dẹp",
+    "CleanupDescription": "DisposePageAsync là điểm dọn dẹp duy nhất của page. Dùng để hủy timer, bỏ đăng ký event và giải phóng tài nguyên."
+  },
+  "TemplateUtilities": {
+    "Title": "Phòng thí nghiệm tiện ích",
+    "Description": "Các helper nhỏ hữu ích khi xây dựng module.",
+    "PageParamsTitle": "PageParams",
+    "PageParamsDescription": "Tạo và đọc tập tham số động dùng cho điều hướng page.",
+    "DbJsonTitle": "DbJson",
+    "DbJsonDescription": "Chuyển object .NET sang JsonElement theo quy ước JSON của MAP.",
+    "MenuTitle": "MenuTree và MenuTitle",
+    "MenuDescription": "MenuTree tìm menu hoặc page trong cấu trúc menu dạng cây. MenuTitle lấy tiêu đề menu phù hợp với ngôn ngữ hiện tại."
+  }
 }

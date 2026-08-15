@@ -6,7 +6,7 @@
     <h2>@Lang.T("TemplateDatabase.Title")</h2>
     <p>@Lang.T("TemplateDatabase.OfflineNote")</p>
 
-    <ApiSection Title="Recommended PostgreSQL helpers" Note="No request runs until you choose an action. Errors, including an offline backend, are shown below.">
+    <ApiSection Title="@Lang.T("TemplateDatabase.RecommendedTitle")" Note="@Lang.T("TemplateDatabase.RecommendedDescription")">
         <p>Configured DbName: @MenuService.DbName</p>
         <label>
             Command
@@ -22,7 +22,7 @@
         </ActionRow>
     </ApiSection>
 
-    <ApiSection Title="Low-level PostgreSQL" Tier="Advanced">
+    <ApiSection Title="@Lang.T("TemplateDatabase.LowLevelTitle")" Tier="@Lang.T("TemplateCommon.Advanced")" Note="@Lang.T("TemplateDatabase.LowLevelDescription")">
         <label>
             Explicit DbName
             <input @bind="_lowLevelDbName" />
@@ -35,7 +35,7 @@
         </ActionRow>
     </ApiSection>
 
-    <ApiSection Title="Oracle" Tier="Advanced">
+    <ApiSection Title="@Lang.T("TemplateDatabase.OracleTitle")" Tier="@Lang.T("TemplateCommon.Advanced")" Note="@Lang.T("TemplateDatabase.OracleDescription")">
         <label>
             Oracle request JSON
             <input class="w-full" @bind="_oracleRequestJson" />
@@ -45,7 +45,7 @@
         </ActionRow>
     </ApiSection>
 
-    <ApiSection Title="DbJson">
+    <ApiSection Title="@Lang.T("TemplateDatabase.DbJsonTitle")" Note="@Lang.T("TemplateDatabase.DbJsonDescription")">
         <p><code>DbJson.ToElement(new { CustomerId = 1 })</code></p>
         <ActionRow>
             <RadzenButton Text="Serialize example" Click="ShowDbJson" />

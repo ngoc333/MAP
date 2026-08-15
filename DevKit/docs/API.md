@@ -1,5 +1,9 @@
 # Module API
 
+MAP.M.Template là bộ ví dụ chạy được dành cho developer module. Mỗi page minh họa cách sử dụng API trong tình huống thực tế.
+
+MAP.M.Template is a runnable example catalog for module developers. Each page demonstrates how to use the APIs in practical scenarios.
+
 Module pages inherit `BasePage`:
 
 ```razor

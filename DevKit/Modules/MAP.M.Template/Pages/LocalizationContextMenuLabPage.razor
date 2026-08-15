@@ -5,7 +5,7 @@
 <div class="p-4">
     <h2>@Lang.T("TemplateLocalization.Title")</h2>
 
-    <ApiSection Title="Localization">
+    <ApiSection Title="@Lang.T("TemplateLocalization.LocalizationTitle")" Note="@Lang.T("TemplateLocalization.LocalizationDescription")">
         <p><code>Lang.T("TemplateHome.Title")</code>: @Lang.T("TemplateHome.Title")</p>
         <p>CurrentLanguage: @Lang.CurrentLanguage</p>
         <p>AvailableLanguages: @string.Join(", ", Lang.AvailableLanguages.Select(language => language.Code))</p>
@@ -15,13 +15,13 @@
         </ActionRow>
     </ApiSection>
 
-    <ApiSection Title="Client context">
+    <ApiSection Title="@Lang.T("TemplateLocalization.ContextTitle")" Note="@Lang.T("TemplateLocalization.ContextDescription")">
         <p>ProgramId: @ClientContext.Current.ProgramId</p>
         <p>UserName: @UserName | IpAddress: @IpAddress</p>
         <p>LocalPath: @ClientContext.Current.LocalPath</p>
     </ApiSection>
 
-    <ApiSection Title="Application menu">
+    <ApiSection Title="@Lang.T("TemplateLocalization.MenuTitle")" Note="@Lang.T("TemplateLocalization.MenuDescription")">
         <p>StartPageId: @MenuService.StartPageId | DbName: @MenuService.DbName</p>
         <label>
             Menu/Page ID

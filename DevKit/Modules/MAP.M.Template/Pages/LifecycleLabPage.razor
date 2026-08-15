@@ -4,9 +4,9 @@
 
 <div class="p-4">
     <h2>@Lang.T("TemplateLifecycle.Title")</h2>
-    <p>Start the loop, then navigate to another lab. <code>PageCancellationToken</code> stops the work and <code>DisposePageAsync</code> cleans up the timer.</p>
+    <p>@Lang.T("TemplateLifecycle.Description")</p>
 
-    <ApiSection Title="Page cancellation and cleanup">
+    <ApiSection Title="@Lang.T("TemplateLifecycle.CancellationTitle")" Note="@Lang.T("TemplateLifecycle.CleanupDescription")">
         <p>Running: @_running | Ticks: @_ticks | Token cancelled: @PageCancellationToken.IsCancellationRequested</p>
         <p>Last completed cleanup: @TemplateProbeState.LastCleanup</p>
         <ActionRow>

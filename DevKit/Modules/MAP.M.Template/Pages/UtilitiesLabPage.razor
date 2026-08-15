@@ -3,22 +3,21 @@
 
 <div class="p-4">
     <h2>@Lang.T("TemplateUtilities.Title")</h2>
-    <p>Small helpers that are useful when building a module.</p>
+    <p>@Lang.T("TemplateUtilities.Description")</p>
 
-    <ApiSection Title="PageParams">
-        <p><code>PageParams.From(...)</code>, the indexer, and dynamic access keep page parameters easy to read.</p>
+    <ApiSection Title="@Lang.T("TemplateUtilities.PageParamsTitle")" Note="@Lang.T("TemplateUtilities.PageParamsDescription")">
         <ActionRow>
             <RadzenButton Text="Run PageParams example" Click="RunPageParams" />
         </ActionRow>
     </ApiSection>
 
-    <ApiSection Title="DbJson">
+    <ApiSection Title="@Lang.T("TemplateUtilities.DbJsonTitle")" Note="@Lang.T("TemplateUtilities.DbJsonDescription")">
         <ActionRow>
             <RadzenButton Text="Serialize an object" Click="RunDbJson" />
         </ActionRow>
     </ApiSection>
 
-    <ApiSection Title="MenuTree and MenuTitle">
+    <ApiSection Title="@Lang.T("TemplateUtilities.MenuTitle")" Note="@Lang.T("TemplateUtilities.MenuDescription")">
         <ActionRow>
             <RadzenButton Text="Find a page" Click="RunMenuTree" />
             <RadzenButton Text="Get localized title" Click="RunMenuTitle" />

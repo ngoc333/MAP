@@ -3,9 +3,11 @@
 
 <div class="p-4">
     <h2>@Lang.T("TemplateDetail.Title")</h2>
-    <p>This page reads values supplied by <code>OpenPageAsync</code>.</p>
+    <p>@Lang.T("TemplateDetail.Description")</p>
 
-    <ApiSection Title="Parameters and Back navigation">
+    <ApiSection Title="@Lang.T("TemplateDetail.ParametersTitle")">
+        <p class="text-sm text-gray-600"><code>GetParameter&lt;T&gt;</code>: @Lang.T("TemplateDetail.GetParameterDescription")</p>
+        <p class="text-sm text-gray-600"><code>RequireParameter&lt;T&gt;</code>: @Lang.T("TemplateDetail.RequireParameterDescription")</p>
         <p>PageId: @PageId | CanBack: @Navigator.CanBack</p>
         <p>CustomerId: @_customerId</p>
         <p>Status: @_status</p>
