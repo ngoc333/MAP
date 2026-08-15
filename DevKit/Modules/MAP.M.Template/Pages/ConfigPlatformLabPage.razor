@@ -8,6 +8,7 @@
 
     <ApiSection Title="@Lang.T("TemplateConfig.PlatformTitle")" Tier="@Lang.T("TemplateCommon.Advanced")">
         <p>@Lang.T("TemplateConfig.ConfigExists"): @ConfigService.Exists</p>
+        <p>Current: @JsonSerializer.Serialize(ConfigService.Current)</p>
         <p>@Lang.T("TemplateConfig.SystemInfo"): @JsonSerializer.Serialize(ConfigService.GetSystemInfo())</p>
         <p>@Lang.T("TemplateConfig.Displays"): @JsonSerializer.Serialize(ConfigService.GetDisplays())</p>
         <p>@Lang.T("TemplateConfig.Capabilities"): Fullscreen=@Platform.SupportsFullscreen; HideTaskbar=@Platform.SupportsHideTaskbar; DisplaySelection=@Platform.SupportsDisplaySelection</p>
@@ -64,10 +65,7 @@
 
     private async Task RestartAsync()
     {
-        if (!await ConfirmAsync(Lang.T("TemplateConfig.RestartConfirmOne")))
-            return;
-
-        if (await ConfirmAsync(Lang.T("TemplateConfig.RestartConfirmTwo")))
+        if (await ConfirmAsync(Lang.T("TemplateConfig.RestartConfirmOne")))
             ConfigService.RestartApp();
     }
 

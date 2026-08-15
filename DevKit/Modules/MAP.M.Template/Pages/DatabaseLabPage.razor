@@ -6,44 +6,60 @@
     <h2>@Lang.T("TemplateDatabase.Title")</h2>
     <p>@Lang.T("TemplateDatabase.OfflineNote")</p>
 
-    <ApiSection Title="@Lang.T("TemplateDatabase.RecommendedTitle")" Note="@Lang.T("TemplateDatabase.RecommendedNote")">
-        <p>@Lang.T("TemplateDatabase.ConfiguredDbName"): @MenuService.DbName</p>
-        <label>@Lang.T("TemplateDatabase.Command") <input @bind="_command" /></label>
-        <label class="ml-3">@Lang.T("TemplateDatabase.Parameters") <input @bind="_json" /></label>
+    <ApiSection Title="Recommended PostgreSQL helpers" Note="No request runs until you choose an action. Errors, including an offline backend, are shown below.">
+        <p>Configured DbName: @MenuService.DbName</p>
+        <label>
+            Command
+            <input @bind="_commandName" />
+        </label>
+        <label class="ml-3">
+            Parameters JSON
+            <input @bind="_parametersJson" />
+        </label>
         <ActionRow>
-            <RadzenButton Text="QueryAsync&lt;DemoDbRow&gt;" Disabled="@string.IsNullOrWhiteSpace(_command)" Click="QueryAsync" />
-            <RadzenButton Text="ExecuteAsync" Disabled="@string.IsNullOrWhiteSpace(_command)" Click="ExecuteAsync" />
+            <RadzenButton Text="QueryAsync&lt;DemoDbRow&gt;" Disabled="@string.IsNullOrWhiteSpace(_commandName)" Click="QueryAsync" />
+            <RadzenButton Text="ExecuteAsync" Disabled="@string.IsNullOrWhiteSpace(_commandName)" Click="ExecuteAsync" />
         </ActionRow>
     </ApiSection>
 
-    <ApiSection Title="@Lang.T("TemplateDatabase.AdvancedTitle")" Tier="@Lang.T("TemplateCommon.Advanced")">
-        <label>@Lang.T("TemplateDatabase.ExplicitDbName") <input @bind="_lowLevelDbName" /></label>
+    <ApiSection Title="Low-level PostgreSQL" Tier="Advanced">
+        <label>
+            Explicit DbName
+            <input @bind="_lowLevelDbName" />
+        </label>
         <ActionRow>
-            <RadzenButton Text="CallPostgreSqlFunctionAsync" Disabled="@string.IsNullOrWhiteSpace(_command)" Click="LowLevelFunctionAsync" />
-            <RadzenButton Text="CallPostgreSqlProcedureAsync" Disabled="@string.IsNullOrWhiteSpace(_command)" Click="LowLevelProcedureAsync" />
-            <RadzenButton Text="CallOracleAsync" Click="OracleAsync" />
-            <RadzenButton Text="QueryPostgreSqlFunctionAsync&lt;DemoDbRow&gt;" Disabled="@string.IsNullOrWhiteSpace(_command)" Click="DirectTypedQueryAsync" />
-            <RadzenButton Text="ExecutePostgreSqlProcedureAsync" Disabled="@string.IsNullOrWhiteSpace(_command)" Click="DirectTypedExecuteAsync" />
+            <RadzenButton Text="CallPostgreSqlFunctionAsync" Disabled="@string.IsNullOrWhiteSpace(_commandName)" Click="CallPostgreSqlFunctionAsync" />
+            <RadzenButton Text="CallPostgreSqlProcedureAsync" Disabled="@string.IsNullOrWhiteSpace(_commandName)" Click="CallPostgreSqlProcedureAsync" />
+            <RadzenButton Text="QueryPostgreSqlFunctionAsync&lt;DemoDbRow&gt;" Disabled="@string.IsNullOrWhiteSpace(_commandName)" Click="QueryPostgreSqlFunctionAsync" />
+            <RadzenButton Text="ExecutePostgreSqlProcedureAsync" Disabled="@string.IsNullOrWhiteSpace(_commandName)" Click="ExecutePostgreSqlProcedureAsync" />
         </ActionRow>
     </ApiSection>
 
-    <ApiSection Title="@Lang.T("TemplateDatabase.SyntheticTitle")" Tier="@Lang.T("TemplateCommon.Advanced")" Note="@Lang.T("TemplateDatabase.SyntheticNote")">
+    <ApiSection Title="Oracle" Tier="Advanced">
+        <label>
+            Oracle request JSON
+            <input class="w-full" @bind="_oracleRequestJson" />
+        </label>
         <ActionRow>
-            <RadzenButton Text="@Lang.T("TemplateDatabase.ValidArray")" Click="ShowValidSynthetic" />
-            <RadzenButton Text="success != true" Click="ShowFailedSynthetic" />
-            <RadzenButton Text="@Lang.T("TemplateDatabase.MissingData")" Click="ShowMissingData" />
-            <RadzenButton Text="@Lang.T("TemplateDatabase.InvalidArray")" Click="ShowInvalidArray" />
-            <RadzenButton Text="@Lang.T("TemplateDatabase.MappingFailure")" Click="ShowMappingFailure" />
-            <RadzenButton Text="DbJson" Click="ShowDbJson" />
+            <RadzenButton Text="DbClient.CallOracleAsync" Click="CallOracleAsync" />
         </ActionRow>
     </ApiSection>
+
+    <ApiSection Title="DbJson">
+        <p><code>DbJson.ToElement(new { CustomerId = 1 })</code></p>
+        <ActionRow>
+            <RadzenButton Text="Serialize example" Click="ShowDbJson" />
+        </ActionRow>
+    </ApiSection>
+
     <ResultPanel Value="@_result" />
 </div>
 
 @code {
+    private string _commandName = "";
+    private string _parametersJson = "{}";
     private string _lowLevelDbName = "";
-    private string _command = "";
-    private string _json = "{}";
+    private string _oracleRequestJson = "{}";
     private string? _result;
 
     protected override void OnInitialized()
@@ -52,51 +68,65 @@
         _lowLevelDbName = MenuService.DbName ?? "";
     }
 
-    private JsonElement Parameters() => JsonDocument.Parse(_json).RootElement.Clone();
-
     private Task QueryAsync() => CaptureAsync(async () =>
     {
-        EnsureConfiguredDatabase();
-        var rows = await base.QueryAsync<DemoDbRow>(_command, Parameters());
+        var rows = await base.QueryAsync<DemoDbRow>(
+            _commandName,
+            ParseParameters(_parametersJson));
         return JsonSerializer.Serialize(rows);
     });
 
     private Task ExecuteAsync() => CaptureAsync(async () =>
     {
-        EnsureConfiguredDatabase();
-        await base.ExecuteAsync(_command, Parameters());
-        return Lang.T("TemplateDatabase.ProcedureCompleted");
+        await base.ExecuteAsync(_commandName, ParseParameters(_parametersJson));
+        return "Procedure completed.";
     });
 
-    private Task LowLevelFunctionAsync() => CaptureAsync(async () =>
-        (await DbClient.CallPostgreSqlFunctionAsync(_lowLevelDbName, _command, Parameters(), PageCancellationToken)).GetRawText());
+    private Task CallPostgreSqlFunctionAsync() => CaptureAsync(async () =>
+        (await DbClient.CallPostgreSqlFunctionAsync(
+            _lowLevelDbName,
+            _commandName,
+            ParseParameters(_parametersJson),
+            PageCancellationToken)).GetRawText());
 
-    private Task LowLevelProcedureAsync() => CaptureAsync(async () =>
-        (await DbClient.CallPostgreSqlProcedureAsync(_lowLevelDbName, _command, Parameters(), PageCancellationToken)).GetRawText());
+    private Task CallPostgreSqlProcedureAsync() => CaptureAsync(async () =>
+        (await DbClient.CallPostgreSqlProcedureAsync(
+            _lowLevelDbName,
+            _commandName,
+            ParseParameters(_parametersJson),
+            PageCancellationToken)).GetRawText());
 
-    private Task OracleAsync() => CaptureAsync(async () =>
-        (await DbClient.CallOracleAsync(Parameters(), PageCancellationToken)).GetRawText());
+    private Task QueryPostgreSqlFunctionAsync() => CaptureAsync(async () => JsonSerializer.Serialize(
+        await DbClient.QueryPostgreSqlFunctionAsync<DemoDbRow>(
+            _lowLevelDbName,
+            _commandName,
+            ParseParameters(_parametersJson),
+            PageCancellationToken)));
 
-    private Task DirectTypedQueryAsync() => CaptureAsync(async () => JsonSerializer.Serialize(
-        await DbClient.QueryPostgreSqlFunctionAsync<DemoDbRow>(_lowLevelDbName, _command, Parameters(), PageCancellationToken)));
-
-    private Task DirectTypedExecuteAsync() => CaptureAsync(async () =>
+    private Task ExecutePostgreSqlProcedureAsync() => CaptureAsync(async () =>
     {
-        await DbClient.ExecutePostgreSqlProcedureAsync(_lowLevelDbName, _command, Parameters(), PageCancellationToken);
-        return Lang.T("TemplateDatabase.ProcedureCompleted");
+        await DbClient.ExecutePostgreSqlProcedureAsync(
+            _lowLevelDbName,
+            _commandName,
+            ParseParameters(_parametersJson),
+            PageCancellationToken);
+        return "Procedure completed.";
     });
 
-    private void ShowValidSynthetic() => _result = "Synthetic contract example: success=true, data=[{customer_id:1,full_name:'Template User'}] maps to DemoDbRow.";
-    private void ShowFailedSynthetic() => _result = "Synthetic contract example: success=false raises an InvalidOperationException.";
-    private void ShowMissingData() => _result = "Synthetic contract example: success=true with no data raises an InvalidOperationException.";
-    private void ShowInvalidArray() => _result = "Synthetic contract example: success=true with non-array data raises an InvalidOperationException.";
-    private void ShowMappingFailure() => _result = "Synthetic contract example: an incompatible array element raises a DTO mapping InvalidOperationException.";
-    private void ShowDbJson() => _result = DbJson.ToElement(new { CustomerId = 1, FullName = "Template User" }).GetRawText();
+    private Task CallOracleAsync() => CaptureAsync(async () =>
+        (await DbClient.CallOracleAsync(
+            ParseParameters(_oracleRequestJson),
+            PageCancellationToken)).GetRawText());
 
-    private void EnsureConfiguredDatabase()
+    private void ShowDbJson()
     {
-        if (MenuService.DbName is null)
-            throw new InvalidOperationException("DbName is not configured.");
+        _result = DbJson.ToElement(new { CustomerId = 1 }).GetRawText();
+    }
+
+    private static JsonElement ParseParameters(string json)
+    {
+        using var document = JsonDocument.Parse(json);
+        return document.RootElement.Clone();
     }
 
     private async Task CaptureAsync(Func<Task<string>> action)
@@ -107,7 +137,7 @@
         }
         catch (Exception exception)
         {
-            _result = $"{exception.GetType().Name}: {exception.Message}; cancelled={PageCancellationToken.IsCancellationRequested}";
+            _result = $"{exception.GetType().Name}: {exception.Message}";
         }
     }
 }

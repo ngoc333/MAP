@@ -5,8 +5,19 @@
 <div class="p-4">
     <h2>@Lang.T("TemplateHeaderUi.Title")</h2>
 
-    <ApiSection Title="@Lang.T("TemplateHeaderUi.UiStateTitle")" Tier="@Lang.T("TemplateCommon.Advanced")" Note="@Lang.T("TemplateHeaderUi.UiStateNote")">
-        <p>ShowMenu: @UiState.ShowMenu | ShowHeader: @UiState.ShowHeader | Changed: @_uiChanges</p>
+    <ApiSection Title="Page header" Note="HeaderKind is informational: the current host does not render a different visual style for it.">
+        <p>HeaderTitleKey: @HeaderTitleKey | HeaderKind: @HeaderKind | ShowBack: @ShowBack</p>
+        <p>HeaderContent: @(_showCustomContent ? "Custom content is active" : "No custom content")</p>
+        <ActionRow>
+            <RadzenButton Text="Change title" Click="ChangeTitle" />
+            <RadzenButton Text="Toggle HeaderContent" Click="ToggleHeaderContent" />
+            <RadzenButton Text="Toggle ShowBack" Click="ToggleShowBack" />
+            <RadzenButton Text="RefreshHeader()" Click="RefreshHeader" />
+        </ActionRow>
+    </ApiSection>
+
+    <ApiSection Title="UI visibility" Note="Original menu and header values are restored when this page is left.">
+        <p>ShowMenu: @UiState.ShowMenu | ShowHeader: @UiState.ShowHeader</p>
         <ActionRow>
             <RadzenButton Text="ToggleMenu()" Click="UiState.ToggleMenu" />
             <RadzenButton Text="ToggleHeader()" Click="UiState.ToggleHeader" />
@@ -14,43 +25,37 @@
             <RadzenButton Text="SetMenu(false)" Click="() => UiState.SetMenu(false)" />
             <RadzenButton Text="SetHeader(true)" Click="() => UiState.SetHeader(true)" />
             <RadzenButton Text="SetHeader(false)" Click="() => UiState.SetHeader(false)" />
-            <RadzenButton Text="@Lang.T("TemplateCommon.Restore")" Click="Restore" />
+            <RadzenButton Text="Restore" Click="Restore" />
         </ActionRow>
     </ApiSection>
 
-    <ApiSection Title="@Lang.T("TemplateHeaderUi.HeaderTitle")" Note="@Lang.T("TemplateHeaderUi.HostGapNote")">
-        <p>Active: @Header.Active?.PageId | Kind: @Header.Active?.Kind | ShowBack: @Header.Active?.ShowBack | Changes: @_headerChanges</p>
+    <ApiSection Title="Notifications and dialogs">
         <ActionRow>
-            <RadzenButton Text="HeaderKind.Default" Click="SetDefault" />
-            <RadzenButton Text="HeaderKind.Compact" Click="SetCompact" />
-            <RadzenButton Text="Toggle ShowBack" Click="ToggleShowBack" />
-            <RadzenButton Text="Toggle HeaderContent" Click="ToggleHeaderContent" />
-            <RadzenButton Text="Header.Set(...)" Click="SetHeaderDirectly" />
-            <RadzenButton Text="Header.Clear()" Click="Header.Clear" />
-            <RadzenButton Text="RefreshHeader()" Click="RefreshHeader" />
+            <RadzenButton Text="NotifySuccess" ButtonStyle="ButtonStyle.Success" Click="ShowSuccess" />
+            <RadzenButton Text="NotifyWarning" ButtonStyle="ButtonStyle.Warning" Click="ShowWarning" />
+            <RadzenButton Text="NotifyError" ButtonStyle="ButtonStyle.Danger" Click="ShowError" />
+            <RadzenButton Text="ConfirmAsync" Click="ConfirmAsync" />
         </ActionRow>
-    </ApiSection>
-
-    <ApiSection Title="@Lang.T("TemplateHeaderUi.RadzenTitle")" Tier="@Lang.T("TemplateCommon.Advanced")">
-        <ActionRow>
-            <RadzenButton Text="NotificationService.Notify" Click="DirectNotification" />
-            <RadzenButton Text="DialogService.Alert" Click="DirectAlertAsync" />
-        </ActionRow>
+        <ResultPanel Value="@_result" />
     </ApiSection>
 </div>
 
 @code {
     private bool _initialMenu;
     private bool _initialHeader;
-    private int _uiChanges;
-    private int _headerChanges;
-    private HeaderKind _headerKind = HeaderKind.Default;
     private bool _showBack = true;
     private bool _showCustomContent;
+    private bool _useAlternateTitle;
+    private string? _result;
 
-    protected override string? HeaderTitleKey => "TemplateHeaderUi.Title";
-    protected override HeaderKind HeaderKind => _headerKind;
+    protected override string? HeaderTitleKey => _useAlternateTitle
+        ? "TemplateHeaderUi.CustomTitle"
+        : "TemplateHeaderUi.Title";
+
+    protected override HeaderKind HeaderKind => HeaderKind.Default;
+
     protected override bool ShowBack => _showBack;
+
     protected override RenderFragment? HeaderContent => _showCustomContent
         ? builder => builder.AddContent(0, "Template custom header content")
         : null;
@@ -60,43 +65,11 @@
         base.OnInitialized();
         _initialMenu = UiState.ShowMenu;
         _initialHeader = UiState.ShowHeader;
-        UiState.Changed += UiChanged;
-        Header.Changed += HeaderChanged;
     }
 
-    private void UiChanged()
+    private void ChangeTitle()
     {
-        _uiChanges++;
-        InvokeAsync(StateHasChanged);
-    }
-
-    private void HeaderChanged()
-    {
-        _headerChanges++;
-        InvokeAsync(StateHasChanged);
-    }
-
-    private void Restore()
-    {
-        UiState.SetMenu(_initialMenu);
-        UiState.SetHeader(_initialHeader);
-    }
-
-    private void SetDefault()
-    {
-        _headerKind = HeaderKind.Default;
-        RefreshHeader();
-    }
-
-    private void SetCompact()
-    {
-        _headerKind = HeaderKind.Compact;
-        RefreshHeader();
-    }
-
-    private void ToggleShowBack()
-    {
-        _showBack = !_showBack;
+        _useAlternateTitle = !_useAlternateTitle;
         RefreshHeader();
     }
 
@@ -106,26 +79,34 @@
         RefreshHeader();
     }
 
-    private void SetHeaderDirectly() => Header.Set(new PageHeader(
-        PageId,
-        HeaderKind.Compact,
-        "TemplateHeaderUi.Title",
-        HeaderContent,
-        _showBack));
-
-    private void DirectNotification() => Notifications.Notify(new NotificationMessage
+    private void ToggleShowBack()
     {
-        Severity = NotificationSeverity.Info,
-        Detail = "Direct NotificationService call"
-    });
+        _showBack = !_showBack;
+        RefreshHeader();
+    }
 
-    private Task DirectAlertAsync() => Dialogs.Alert("Direct DialogService alert");
+    private void Restore()
+    {
+        UiState.SetMenu(_initialMenu);
+        UiState.SetHeader(_initialHeader);
+    }
+
+    private void ShowSuccess() => NotifySuccess("Header change saved.");
+
+    private void ShowWarning() => NotifyWarning("This is a warning notification.");
+
+    private void ShowError() => NotifyError("This is an error notification.");
+
+    private async Task ConfirmAsync()
+    {
+        _result = await base.ConfirmAsync("Apply this header example?")
+            ? "Confirmed"
+            : "Cancelled";
+    }
 
     protected override ValueTask DisposePageAsync()
     {
         Restore();
-        UiState.Changed -= UiChanged;
-        Header.Changed -= HeaderChanged;
         return ValueTask.CompletedTask;
     }
 }

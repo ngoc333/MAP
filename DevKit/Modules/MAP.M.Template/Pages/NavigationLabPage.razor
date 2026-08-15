@@ -1,101 +1,58 @@
 @inherits BasePage
 @namespace MAP.M.Template.Pages
-@using MAP.M.Template.Models
 
 <div class="p-4">
-    <h2>Navigation lab <small>Advanced: IPageNavigator</small></h2>
+    <h2>@Lang.T("TemplateNavigation.Title")</h2>
+    <p>Use <code>OpenPageAsync</code> for normal module navigation. It reports navigation errors through the module error helper.</p>
 
-    <ApiSection Title="History semantics" Note="A → B (push) → C (no push) → Back returns A; subscriptions are removed during DisposePageAsync.">
-        <p>Current: @Navigator.Current?.PageId | CanBack: @Navigator.CanBack | Navigating: @_navigating | Changed: @_changed</p>
-        <p>Cross-instance history: @TemplateProbeState.NavigationHistory</p>
+    <ApiSection Title="Open a page">
         <ActionRow>
-            <RadzenButton Text="Reset as root (A)" Click="ResetRootAsync" />
-            <RadzenButton Text="Open B (push)" Click="OpenBAsync" />
-            <RadzenButton Text="Same page no-op" Click="SamePageAsync" />
-        </ActionRow>
-        <ResultPanel Value="@_result" />
-    </ApiSection>
-
-    <ApiSection Title="Safe helper versus direct navigator">
-        <ActionRow>
-            <RadzenButton Text="Safe OpenPageAsync unknown" ButtonStyle="ButtonStyle.Warning" Click="SafeFailureAsync" />
-            <RadzenButton Text="Direct unknown (caught)" ButtonStyle="ButtonStyle.Warning" Click="DirectFailureAsync" />
+            <RadzenButton Text="Open detail" Click="OpenDetailAsync" />
+            <RadzenButton Text="Open detail with parameters" Click="OpenDetailWithParametersAsync" />
         </ActionRow>
     </ApiSection>
 
-    <ApiSection Title="PageParams">
-        <ActionRow><RadzenButton Text="Run PageParams example" Click="PageParamsExample" /></ActionRow>
+    <ApiSection Title="History" Note="A → B (pushHistory=true) → C (pushHistory=false) → Back returns to A.">
+        <p>Current page: @Navigator.Current?.PageId | CanBack: @Navigator.CanBack</p>
+        <ActionRow>
+            <RadzenButton Text="Start flow at B" Click="OpenBAsync" />
+            <RadzenButton Text="Back" Disabled="@(!Navigator.CanBack)" Click="BackAsync" />
+        </ActionRow>
+    </ApiSection>
+
+    <ApiSection Title="Root navigation" Note="OpenRootAsync clears the Back history before opening the page.">
+        <ActionRow>
+            <RadzenButton Text="Open navigation as root" Click="OpenRootAsync" />
+        </ActionRow>
+    </ApiSection>
+
+    <ApiSection Title="Safe failure">
+        <p>Try an unknown page to see the standard navigation error notification.</p>
+        <ActionRow>
+            <RadzenButton Text="Open does-not-exist" ButtonStyle="ButtonStyle.Warning" Click="OpenUnknownPageAsync" />
+        </ActionRow>
     </ApiSection>
 </div>
 
 @code {
-    private int _navigating;
-    private int _changed;
-    private string? _result;
+    private Task OpenDetailAsync() => OpenPageAsync("template-detail");
 
-    protected override void OnInitialized()
-    {
-        base.OnInitialized();
-        Navigator.Navigating += OnNavigating;
-        Navigator.Changed += OnChanged;
-    }
-
-    private void OnNavigating()
-    {
-        _navigating++;
-        TemplateProbeState.Navigating(PageId, null);
-    }
-
-    private void OnChanged()
-    {
-        _changed++;
-        TemplateProbeState.Changed(Navigator.Current?.PageId);
-        InvokeAsync(StateHasChanged);
-    }
-
-    private Task ResetRootAsync()
-    {
-        TemplateProbeState.Reset();
-        return Navigator.OpenRootAsync("template-navigation");
-    }
-
-    private Task OpenBAsync() => Navigator.OpenAsync("template-navigation-b", new { From = PageId }, true);
-
-    private async Task SamePageAsync()
-    {
-        await Navigator.OpenAsync(Navigator.Current!.PageId);
-        _result = $"Current remains {Navigator.Current?.PageId}";
-    }
-
-    private Task SafeFailureAsync() => OpenPageAsync("does-not-exist");
-
-    private async Task DirectFailureAsync()
-    {
-        try
+    private Task OpenDetailWithParametersAsync() => OpenPageAsync(
+        "template-detail",
+        new
         {
-            await Navigator.OpenAsync("does-not-exist");
-        }
-        catch (Exception exception)
-        {
-            _result = $"{exception.GetType().Name}: {exception.Message}; ErrorId: {ModuleErrorId.GetOrCreate(exception)}";
-        }
-    }
+            CustomerId = 42,
+            Status = "Active"
+        });
 
-    private void PageParamsExample()
-    {
-        var parameters = PageParams.From(new { Name = "Template" }, out var error)!;
-        parameters["Count"] = 1;
-        dynamic dynamicParameters = parameters;
-        dynamicParameters.Flag = true;
+    private Task OpenBAsync() => Navigator.OpenAsync(
+        "template-navigation-b",
+        new { From = PageId },
+        pushHistory: true);
 
-        var history = new PageHistoryEntry("sample", parameters);
-        _result = $"{parameters["Name"]}, {parameters["Count"]}, {dynamicParameters.Flag}; history={history.PageId}; error={error?.Message ?? "none"}";
-    }
+    private Task BackAsync() => Navigator.BackAsync();
 
-    protected override ValueTask DisposePageAsync()
-    {
-        Navigator.Navigating -= OnNavigating;
-        Navigator.Changed -= OnChanged;
-        return ValueTask.CompletedTask;
-    }
+    private Task OpenRootAsync() => Navigator.OpenRootAsync("template-navigation");
+
+    private Task OpenUnknownPageAsync() => OpenPageAsync("does-not-exist");
 }

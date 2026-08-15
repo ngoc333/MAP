@@ -3,15 +3,17 @@
 
 <div class="p-4">
     <h2>@Lang.T("TemplateDetail.Title")</h2>
+    <p>This page reads values supplied by <code>OpenPageAsync</code>.</p>
+
     <ApiSection Title="Parameters and Back navigation">
         <p>PageId: @PageId | CanBack: @Navigator.CanBack</p>
-        <p>CustomerId (int): @_customerId | Count converted from string: @_count | Status enum: @_status</p>
-        <p>Optional missing value: @(GetParameter<string>("Missing") ?? "null")</p>
-        <p>PageParameters: @(_parametersText)</p>
+        <p>CustomerId: @_customerId</p>
+        <p>Status: @_status</p>
+        <p>Optional value: @(GetParameter<string>("OptionalNote") ?? "null")</p>
+        <p><code>RequireParameter&lt;string&gt;("Status")</code>: @_requiredStatus</p>
         <ActionRow>
-            <RadzenButton Text="Require invalid parameter safely" ButtonStyle="ButtonStyle.Warning" Click="TestRequiredAsync" />
-            <RadzenButton Text="Confirm" Click="ConfirmDeleteAsync" />
-            <RadzenButton Text="Back" Click="() => Navigator.BackAsync()" Disabled="@(!Navigator.CanBack)" />
+            <RadzenButton Text="ConfirmAsync" Click="ConfirmAsync" />
+            <RadzenButton Text="Back" Disabled="@(!Navigator.CanBack)" Click="BackAsync" />
         </ActionRow>
         <ResultPanel Value="@_result" />
     </ApiSection>
@@ -19,32 +21,26 @@
 
 @code {
     private int _customerId;
-    private int _count;
-    private DemoStatus? _status;
-    private string _parametersText = "null";
+    private string? _status;
+    private string? _requiredStatus;
     private string? _result;
 
     protected override void OnInitialized()
     {
         base.OnInitialized();
         _customerId = GetParameter<int>("CustomerId");
-        _count = GetParameter<int>("Count");
-        _status = GetParameter<DemoStatus>("Status");
-        _parametersText = PageParameters is null ? "null" : "captured for this page instance";
+        _status = GetParameter<string>("Status");
+        _requiredStatus = _status is null
+            ? "Status was not supplied."
+            : RequireParameter<string>("Status");
     }
 
-    private async Task ConfirmDeleteAsync()
+    private async Task ConfirmAsync()
     {
-        if (await ConfirmAsync($"Continue with customer {_customerId}?"))
-            NotifyWarning("Confirmed.");
+        _result = await base.ConfirmAsync($"Continue with customer {_customerId}?")
+            ? "Confirmed"
+            : "Cancelled";
     }
 
-    private Task TestRequiredAsync()
-    {
-        try { _ = RequireParameter<Guid>("MissingRequired"); }
-        catch (InvalidOperationException exception) { _result = exception.Message; }
-        return Task.CompletedTask;
-    }
-
-    private enum DemoStatus { Active, Inactive }
+    private Task BackAsync() => Navigator.BackAsync();
 }

@@ -5,7 +5,9 @@
     <h2>@Lang.T("TemplateNavigation.StepCTitle")</h2>
     <p>@Lang.T("TemplateNavigation.StepCNote")</p>
     <p>@Lang.T("TemplateNavigation.ReceivedFrom"): @(GetParameter<string>("From"))</p>
-    <ActionRow><RadzenButton Text="@Lang.T("TemplateCommon.Back")" Click="BackAsync" /></ActionRow>
+    <ActionRow>
+        <RadzenButton Text="@Lang.T("TemplateCommon.Back")" Click="BackAsync" />
+    </ActionRow>
 </div>
 
 @code {

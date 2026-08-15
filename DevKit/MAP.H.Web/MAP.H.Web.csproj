@@ -20,4 +20,45 @@
     <ProjectReference Include="@(ModuleProject)" />
     <BlazorWebAssemblyLazyLoad Include="@(ModuleProject->'%(Filename).dll')" />
   </ItemGroup>
+
+  <Target Name="MaterializeSharedWebAssets" BeforeTargets="ResolveProjectStaticWebAssets">
+    <ItemGroup>
+      <_SharedWebAsset Include="..\Shared\Config\page.json">
+        <Destination>page.json</Destination>
+      </_SharedWebAsset>
+      <_SharedWebAsset Include="..\Shared\Config\db-api.json">
+        <Destination>db-api.json</Destination>
+      </_SharedWebAsset>
+      <_SharedWebAsset Include="..\Shared\Scripts\app-log.js">
+        <Destination>js\app-log.js</Destination>
+      </_SharedWebAsset>
+      <_SharedWebAsset Include="..\Shared\Scripts\app-config.js">
+        <Destination>js\app-config.js</Destination>
+      </_SharedWebAsset>
+      <_SharedWebAsset Include="..\Shared\Styles\tailwind.css">
+        <Destination>css\tailwind.css</Destination>
+      </_SharedWebAsset>
+      <_SharedWebAsset Include="..\Shared\Styles\inter.css">
+        <Destination>css\inter.css</Destination>
+      </_SharedWebAsset>
+      <_SharedWebAsset Include="..\Shared\Styles\app.css">
+        <Destination>css\app.css</Destination>
+      </_SharedWebAsset>
+      <_SharedWebAsset Include="..\Shared\Fonts\Inter\*.woff2">
+        <Destination>fonts\inter\%(Filename)%(Extension)</Destination>
+      </_SharedWebAsset>
+    </ItemGroup>
+
+    <MakeDir Directories="$(MSBuildProjectDirectory)\wwwroot\js;$(MSBuildProjectDirectory)\wwwroot\css;$(MSBuildProjectDirectory)\wwwroot\fonts\inter" />
+    <Copy SourceFiles="@(_SharedWebAsset)" DestinationFiles="@(_SharedWebAsset->'$(MSBuildProjectDirectory)\wwwroot\%(Destination)')" SkipUnchangedFiles="true" />
+
+    <ItemGroup>
+      <Content Remove="wwwroot\page.json;wwwroot\db-api.json;wwwroot\js\app-log.js;wwwroot\js\app-config.js;wwwroot\css\tailwind.css;wwwroot\css\inter.css;wwwroot\css\app.css;wwwroot\fonts\inter\*.woff2" />
+      <Content Include="wwwroot\page.json;wwwroot\db-api.json;wwwroot\js\app-log.js;wwwroot\js\app-config.js;wwwroot\css\tailwind.css;wwwroot\css\inter.css;wwwroot\css\app.css;wwwroot\fonts\inter\*.woff2" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="RemoveMaterializedSharedWebAssets" AfterTargets="Clean">
+    <Delete Files="$(MSBuildProjectDirectory)\wwwroot\page.json;$(MSBuildProjectDirectory)\wwwroot\db-api.json;$(MSBuildProjectDirectory)\wwwroot\js\app-log.js;$(MSBuildProjectDirectory)\wwwroot\js\app-config.js;$(MSBuildProjectDirectory)\wwwroot\css\tailwind.css;$(MSBuildProjectDirectory)\wwwroot\css\inter.css;$(MSBuildProjectDirectory)\wwwroot\css\app.css;$(MSBuildProjectDirectory)\wwwroot\fonts\inter\*.woff2" />
+  </Target>
 </Project>

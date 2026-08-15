@@ -4,7 +4,7 @@
 <div class="p-4">
     <h2>@Lang.T("TemplateNavigation.StepBTitle")</h2>
     <p>@Lang.T("TemplateNavigation.ReceivedFrom"): @(GetParameter<string>("From"))</p>
-    <p>CanBack: @Navigator.CanBack</p>
+    <p>Opening C with <code>pushHistory: false</code> preserves A as the Back destination.</p>
     <ActionRow>
         <RadzenButton Text="@Lang.T("TemplateNavigation.OpenC")" Click="OpenCAsync" />
         <RadzenButton Text="@Lang.T("TemplateCommon.Back")" Click="BackAsync" />
@@ -12,7 +12,10 @@
 </div>
 
 @code {
-    private Task OpenCAsync() => Navigator.OpenAsync("template-navigation-c", new { From = PageId }, false);
+    private Task OpenCAsync() => Navigator.OpenAsync(
+        "template-navigation-c",
+        new { From = PageId },
+        pushHistory: false);
 
     private Task BackAsync() => Navigator.BackAsync();
 }

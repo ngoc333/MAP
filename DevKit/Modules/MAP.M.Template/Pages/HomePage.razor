@@ -5,26 +5,28 @@
     <h2>@Lang.T("TemplateHome.Title")</h2>
     <p>@Lang.T("TemplateHome.Description")</p>
 
-    <ApiSection Title="Runtime summary" Note="Recommended module APIs are demonstrated by the labs below.">
-        <p>PageId: @PageId | User: @UserName | IP: @IpAddress | Database: @MenuService.DbName</p>
-        <p>Language: @Lang.CurrentLanguage | Session: @AppSession.Id</p>
+    <ApiSection Title="Runtime summary" Note="Values supplied to every module page by MAP.">
+        <p>PageId: @PageId</p>
+        <p>UserName: @UserName | IpAddress: @IpAddress</p>
+        <p>DbName: @MenuService.DbName | Language: @Lang.CurrentLanguage | Session: @AppSession.Id</p>
+    </ApiSection>
 
+    <ApiSection Title="Notifications and confirmation">
         <ActionRow>
-            <RadzenButton Text="Success" ButtonStyle="ButtonStyle.Success" Click="ShowSuccess" />
-            <RadzenButton Text="Warning" ButtonStyle="ButtonStyle.Warning" Click="ShowWarning" />
-            <RadzenButton Text="Error" ButtonStyle="ButtonStyle.Danger" Click="ShowError" />
-            <RadzenButton Text="Confirm" Click="ConfirmAsync" />
+            <RadzenButton Text="NotifySuccess" ButtonStyle="ButtonStyle.Success" Click="ShowSuccess" />
+            <RadzenButton Text="NotifyWarning" ButtonStyle="ButtonStyle.Warning" Click="ShowWarning" />
+            <RadzenButton Text="NotifyError" ButtonStyle="ButtonStyle.Danger" Click="ShowError" />
+            <RadzenButton Text="ConfirmAsync" Click="ConfirmAsync" />
         </ActionRow>
         <ResultPanel Value="@_result" />
     </ApiSection>
 
-    <ApiSection Title="API catalog / smoke-test labs">
+    <ApiSection Title="Practical module examples" Note="Open a lab, change a value, then copy the small example into your module.">
         <ActionRow>
             @foreach (var lab in Labs)
             {
                 <RadzenButton Text="@lab.Title" Click="() => OpenPageAsync(lab.PageId)" />
             }
-            <RadzenButton Text="Detail with parameters" Click="OpenDetailAsync" />
         </ActionRow>
     </ApiSection>
 </div>
@@ -46,9 +48,9 @@
 
     private void ShowSuccess() => NotifySuccess(Lang.T("TemplateHome.Success"));
 
-    private void ShowWarning() => NotifyWarning("Warning notification");
+    private void ShowWarning() => NotifyWarning("This is a warning notification.");
 
-    private void ShowError() => NotifyError("Error notification");
+    private void ShowError() => NotifyError("This is an error notification.");
 
     private async Task ConfirmAsync()
     {
@@ -56,8 +58,4 @@
             ? "Confirmed"
             : "Cancelled";
     }
-
-    private Task OpenDetailAsync() => OpenPageAsync(
-        "template-detail",
-        new { CustomerId = 42, Count = "7", Status = "Active" });
 }

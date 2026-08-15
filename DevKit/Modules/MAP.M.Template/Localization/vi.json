@@ -1,13 +1,54 @@
 {
-  "TemplateCommon": { "Recommended":"Khuyến nghị", "Advanced":"Nâng cao", "Destructive":"Nguy hiểm", "HostGap":"Khoảng trống host", "Save":"Lưu", "Restore":"Khôi phục", "Reset":"Đặt lại", "Back":"Quay lại" },
-  "TemplateHome": { "Title":"Danh mục API Module MAP", "Description":"Các phòng thí nghiệm kiểm thử tương tác cho API module MAP được hỗ trợ.", "Success":"Thao tác đã hoàn tất." },
-  "TemplateDetail": { "Title":"Chi tiết tham số" },
-  "TemplateNavigation": { "Title":"Phòng thí nghiệm điều hướng", "StepBTitle":"Bước điều hướng B", "StepCTitle":"Bước điều hướng C", "ReceivedFrom":"Nhận từ", "OpenC":"Mở C không thêm lịch sử", "StepCNote":"C được mở mà không thêm B. Quay lại sẽ trực tiếp về A." },
-  "TemplateHeaderUi": { "Title":"Phòng thí nghiệm đầu trang và UI", "UiStateTitle":"Trạng thái UI trực tiếp", "UiStateNote":"Trạng thái host trực tiếp độc lập với AppConfig đã lưu. Giá trị gốc được khôi phục khi rời trang.", "HeaderTitle":"Trạng thái đầu trang", "HostGapNote":"Khoảng trống host: host hiện tại lưu HeaderKind nhưng không hiển thị trực quan khác nhau.", "RadzenTitle":"Dịch vụ Radzen trực tiếp" },
-  "TemplateLocalization": { "Title":"Phòng thí nghiệm ngôn ngữ, ngữ cảnh và menu" },
-  "TemplateDatabase": { "Title":"Phòng thí nghiệm cơ sở dữ liệu", "OfflineNote":"Không có yêu cầu cơ sở dữ liệu nào chạy khi khởi tạo. Lỗi endpoint offline được hiển thị an toàn.", "RecommendedTitle":"Trợ giúp BasePage khuyến nghị", "RecommendedNote":"DbName cấu hình chỉ đọc vì helper BasePage luôn sử dụng cấu hình menu.", "ConfiguredDbName":"DbName cấu hình", "Command":"Lệnh", "Parameters":"JSON tham số", "AdvancedTitle":"API cơ sở dữ liệu cấp thấp", "ExplicitDbName":"DbName tường minh", "SyntheticTitle":"Kiểm tra phản hồi tổng hợp", "SyntheticNote":"Ví dụ hợp đồng tổng hợp mô tả dạng phản hồi, không phải phản hồi máy chủ.", "ValidArray":"Ánh xạ mảng hợp lệ", "MissingData":"Thiếu data", "InvalidArray":"Data không phải mảng", "MappingFailure":"Lỗi ánh xạ DTO", "ProcedureCompleted":"Procedure đã hoàn tất." },
-  "TemplateConfig": { "Title":"Phòng thí nghiệm cấu hình và nền tảng", "PlatformTitle":"Thông tin nền tảng chỉ đọc", "ConfigExists":"Cấu hình tồn tại", "SystemInfo":"Thông tin hệ thống", "Displays":"Màn hình", "Capabilities":"Khả năng", "EditTitle":"AppConfig có thể chỉnh sửa", "EditNote":"Bản nháp luôn được sao chép cả khi chưa có cấu hình. Lưu thủ công và không bao giờ khởi động lại ứng dụng.", "Before":"Trước", "Draft":"Bản nháp", "After":"Sau", "RestartTitle":"Vùng nguy hiểm", "RestartNote":"Khởi động lại độc lập với Lưu. Desktop tạo tiến trình mới; Web tải lại.", "Restart":"Khởi động lại sau xác nhận kép", "SaveConfirm":"Lưu bản nháp cấu hình này?", "RestartConfirmOne":"Khởi động lại ứng dụng ngay bây giờ?", "RestartConfirmTwo":"Thao tác này kết thúc phiên hiện tại. Tiếp tục?", "Saved":"Đã lưu cấu hình thủ công." },
-  "TemplateLogging": { "Title":"Phòng thí nghiệm nhật ký và lỗi" },
-  "TemplateLifecycle": { "Title":"Phòng thí nghiệm vòng đời", "CancellationTitle":"Hủy trang và dọn dẹp", "CancellationNote":"Đi tới trang khác khi vòng lặp đang chạy. BasePage hủy token trang và cô lập lỗi dọn dẹp.", "Instance":"Phiên bản", "Running":"Đang chạy", "Ticks":"Số nhịp", "Cancelled":"Đã hủy", "Initialized":"Đã khởi tạo", "Navigating":"Đang điều hướng", "CancellationObserved":"Đã quan sát hủy", "Disposed":"Đã hủy tài nguyên", "History":"Lịch sử", "ThrowAfterCleanup":"Ném lỗi sau dọn dẹp", "StartLoop":"Bắt đầu vòng lặp", "CancelledResult":"Vòng lặp đã hủy an toàn." },
-  "TemplateUtilities": { "Title":"Phòng thí nghiệm tiện ích" }
+  "TemplateCommon": {
+    "Advanced": "Nâng cao",
+    "Destructive": "Nguy hiểm",
+    "Back": "Quay lại",
+    "Restore": "Khôi phục",
+    "Save": "Lưu"
+  },
+  "TemplateHome": {
+    "Title": "Demo phát triển module MAP",
+    "Description": "Ví dụ thực tế có thể chạy để phát triển module MAP.",
+    "Success": "Thao tác đã hoàn tất."
+  },
+  "TemplateDetail": { "Title": "Chi tiết tham số" },
+  "TemplateNavigation": {
+    "Title": "Phòng thí nghiệm điều hướng",
+    "StepBTitle": "Bước điều hướng B",
+    "StepCTitle": "Bước điều hướng C",
+    "ReceivedFrom": "Nhận từ",
+    "OpenC": "Mở C không thêm lịch sử",
+    "StepCNote": "C mở mà không thêm B. Quay lại sẽ trực tiếp về A."
+  },
+  "TemplateHeaderUi": {
+    "Title": "Phòng thí nghiệm đầu trang và UI",
+    "CustomTitle": "Đầu trang mẫu tùy chỉnh"
+  },
+  "TemplateLocalization": { "Title": "Phòng thí nghiệm ngôn ngữ, ngữ cảnh và menu" },
+  "TemplateDatabase": {
+    "Title": "Phòng thí nghiệm cơ sở dữ liệu",
+    "OfflineNote": "Không có yêu cầu cơ sở dữ liệu khi khởi tạo. Lỗi endpoint offline được hiển thị an toàn."
+  },
+  "TemplateConfig": {
+    "Title": "Phòng thí nghiệm cấu hình và nền tảng",
+    "PlatformTitle": "Thông tin nền tảng chỉ đọc",
+    "ConfigExists": "Cấu hình tồn tại",
+    "SystemInfo": "Thông tin hệ thống",
+    "Displays": "Màn hình",
+    "Capabilities": "Khả năng",
+    "EditTitle": "AppConfig có thể chỉnh sửa",
+    "EditNote": "Bản nháp hoạt động cả khi chưa có cấu hình. Lưu thủ công và không khởi động lại ứng dụng.",
+    "Before": "Trước",
+    "Draft": "Bản nháp",
+    "After": "Sau",
+    "RestartTitle": "Khởi động lại",
+    "RestartNote": "Khởi động lại độc lập với Lưu và luôn yêu cầu xác nhận.",
+    "Restart": "Khởi động lại ứng dụng",
+    "SaveConfirm": "Lưu bản nháp cấu hình này?",
+    "RestartConfirmOne": "Khởi động lại ứng dụng ngay bây giờ?",
+    "Saved": "Đã lưu cấu hình thủ công."
+  },
+  "TemplateLogging": { "Title": "Phòng thí nghiệm nhật ký và lỗi" },
+  "TemplateLifecycle": { "Title": "Phòng thí nghiệm vòng đời" },
+  "TemplateUtilities": { "Title": "Phòng thí nghiệm tiện ích" }
 }

@@ -4,55 +4,36 @@
 
 <div class="p-4">
     <h2>@Lang.T("TemplateLifecycle.Title")</h2>
+    <p>Start the loop, then navigate to another lab. <code>PageCancellationToken</code> stops the work and <code>DisposePageAsync</code> cleans up the timer.</p>
 
-    <ApiSection Title="@Lang.T("TemplateLifecycle.CancellationTitle")" Note="@Lang.T("TemplateLifecycle.CancellationNote")">
-        <p>@Lang.T("TemplateLifecycle.Instance"): @_instanceId | @Lang.T("TemplateLifecycle.Running"): @_running | @Lang.T("TemplateLifecycle.Ticks"): @_ticks | @Lang.T("TemplateLifecycle.Cancelled"): @PageCancellationToken.IsCancellationRequested</p>
-        <p>@Lang.T("TemplateLifecycle.Initialized"): @TemplateProbeState.InitializedCount | @Lang.T("TemplateLifecycle.Navigating"): @TemplateProbeState.NavigatingCount | @Lang.T("TemplateLifecycle.CancellationObserved"): @TemplateProbeState.CancellationObservedCount | @Lang.T("TemplateLifecycle.Disposed"): @TemplateProbeState.DisposedCount</p>
-        <p>@Lang.T("TemplateLifecycle.History"): @TemplateProbeState.NavigationHistory</p>
-        <label class="mt-3 flex items-center gap-2"><input type="checkbox" @bind="_throwAfterCleanup" /> @Lang.T("TemplateLifecycle.ThrowAfterCleanup")</label>
+    <ApiSection Title="Page cancellation and cleanup">
+        <p>Running: @_running | Ticks: @_ticks | Token cancelled: @PageCancellationToken.IsCancellationRequested</p>
+        <p>Last completed cleanup: @TemplateProbeState.LastCleanup</p>
         <ActionRow>
-            <RadzenButton Text="@Lang.T("TemplateLifecycle.StartLoop")" Click="Start" />
-            <RadzenButton Text="@Lang.T("TemplateCommon.Reset")" Click="ResetProbe" />
+            <RadzenButton Text="Start loop" Disabled="@_running" Click="StartLoop" />
         </ActionRow>
         <ResultPanel Value="@_result" />
     </ApiSection>
 </div>
 
 @code {
-    private readonly string _instanceId = Guid.NewGuid().ToString("N")[..8];
     private PeriodicTimer? _timer;
     private Task? _loop;
     private bool _running;
-    private bool _throwAfterCleanup;
     private int _ticks;
     private string? _result;
 
-    protected override void OnInitialized()
-    {
-        base.OnInitialized();
-        TemplateProbeState.Initialized(_instanceId);
-        Navigator.Navigating += ObserveNavigating;
-    }
-
-    private void Start()
+    private void StartLoop()
     {
         if (_running)
             return;
 
         _running = true;
         _timer = new PeriodicTimer(TimeSpan.FromSeconds(1));
-        _loop = TickAsync();
+        _loop = RunLoopAsync();
     }
 
-    private void ResetProbe() => TemplateProbeState.Reset();
-
-    private void ObserveNavigating()
-    {
-        TemplateProbeState.Navigating(PageId, null);
-        TemplateProbeState.CancellationObserved();
-    }
-
-    private async Task TickAsync()
+    private async Task RunLoopAsync()
     {
         try
         {
@@ -64,7 +45,7 @@
         }
         catch (OperationCanceledException)
         {
-            _result = Lang.T("TemplateLifecycle.CancelledResult");
+            _result = "The page cancellation token stopped the loop.";
         }
         finally
         {
@@ -74,15 +55,11 @@
 
     protected override async ValueTask DisposePageAsync()
     {
-        Navigator.Navigating -= ObserveNavigating;
         _timer?.Dispose();
 
         if (_loop is not null)
             await _loop;
 
-        TemplateProbeState.Disposed(_instanceId);
-
-        if (_throwAfterCleanup)
-            throw new InvalidOperationException("Synthetic cleanup failure after normal cleanup.");
+        TemplateProbeState.RecordCleanup();
     }
 }

@@ -3,30 +3,35 @@
 @inject ILogStore LogStore
 
 <div class="p-4">
-    <h2>Logging and error lab <small>Advanced / guarded side effect</small></h2>
+    <h2>@Lang.T("TemplateLogging.Title")</h2>
 
-    <ApiSection Title="ILogStore sandbox" Note="Only the dedicated 2099-12-31 sandbox day is written or cleared.">
+    <ApiSection Title="ILogStore sandbox" Note="Only the dedicated 2099-12-31 sandbox day is written or cleared; today's logs are never touched.">
         <ActionRow>
-            <RadzenButton Text="Write sandbox entry" Click="WriteAsync" />
-            <RadzenButton Text="Get sandbox days" Click="GetDaysAsync" />
-            <RadzenButton Text="Read sandbox day" Click="ReadAsync" />
-            <RadzenButton Text="Clear sandbox day" ButtonStyle="ButtonStyle.Warning" Click="ClearAsync" />
+            <RadzenButton Text="WriteAsync" Click="WriteAsync" />
+            <RadzenButton Text="GetDaysAsync" Click="GetDaysAsync" />
+            <RadzenButton Text="GetAsync" Click="GetAsync" />
+            <RadzenButton Text="ClearAsync" ButtonStyle="ButtonStyle.Warning" Click="ClearAsync" />
         </ActionRow>
         <p>Days: @_days</p>
+        <p>Sample LogEntry: @_sampleEntry</p>
     </ApiSection>
 
     <ApiSection Title="Module error correlation">
+        <p><code>ModuleErrorId.Create</code> creates a correlation ID; <code>GetOrCreate</code> keeps one on an exception.</p>
         <ActionRow>
-            <RadzenButton Text="Create and correlate error ID" Click="Correlate" />
-            <RadzenButton Text="Notify error ID" Click="Notify" />
+            <RadzenButton Text="Create error ID" Click="CreateErrorId" />
+            <RadzenButton Text="ErrorNotifier.Notify" Click="NotifyError" />
         </ActionRow>
-        <p>The notifier shows a configured notification; it does not log the exception.</p>
     </ApiSection>
 
-    <ApiSection Title="Isolated fault probe" Tier="Advanced" Note="The exception is opt-in and contained by this nested boundary; the rest of the lab remains usable.">
+    <ApiSection Title="Fault boundary" Tier="Advanced" Note="The nested example is opt-in and the error stays inside its boundary.">
         <ModuleErrorBoundary OnFaulted="ProbeFaulted">
-            <ChildContent><FaultProbe /></ChildContent>
-            <ErrorContent Context="error"><p>Probe fault captured: @error.Message</p></ErrorContent>
+            <ChildContent>
+                <FaultProbe />
+            </ChildContent>
+            <ErrorContent Context="error">
+                <p>Probe fault captured: @error.Message</p>
+            </ErrorContent>
         </ModuleErrorBoundary>
     </ApiSection>
 
@@ -35,9 +40,10 @@
 
 @code {
     private static readonly DateOnly SandboxDay = new(2099, 12, 31);
-    private string? _result;
     private string? _days;
     private string? _errorId;
+    private string? _result;
+    private string? _sampleEntry;
 
     private async Task WriteAsync()
     {
@@ -47,13 +53,12 @@
             Level = "Information",
             Category = "MAP.M.Template.Sandbox",
             Message = "Template sandbox entry",
-            Exception = "Synthetic exception field demonstration",
             SessionId = AppSession.Id
         };
 
         await LogStore.WriteAsync(entry, PageCancellationToken);
+        _sampleEntry = JsonSerializer.Serialize(entry);
         _result = "Sandbox entry written.";
-        _days = string.Join(", ", await LogStore.GetDaysAsync(PageCancellationToken));
     }
 
     private async Task GetDaysAsync()
@@ -62,37 +67,37 @@
         _result = "Sandbox days loaded.";
     }
 
-    private async Task ReadAsync()
+    private async Task GetAsync()
     {
-        var items = await LogStore.GetAsync(SandboxDay, PageCancellationToken);
-        _result = JsonSerializer.Serialize(items);
+        var entries = await LogStore.GetAsync(SandboxDay, PageCancellationToken);
+        _result = JsonSerializer.Serialize(entries);
     }
 
     private async Task ClearAsync()
     {
-        if (await ConfirmAsync("Clear only 2099-12-31 sandbox logs?"))
-        {
-            await LogStore.ClearAsync(SandboxDay, PageCancellationToken);
-            _result = "Sandbox day cleared.";
-        }
+        if (!await ConfirmAsync("Clear only 2099-12-31 sandbox logs?"))
+            return;
+
+        await LogStore.ClearAsync(SandboxDay, PageCancellationToken);
+        _result = "Sandbox day cleared.";
     }
 
-    private void Correlate()
+    private void CreateErrorId()
     {
-        var exception = new InvalidOperationException("Synthetic error");
-        var first = ModuleErrorId.GetOrCreate(exception);
-        var again = ModuleErrorId.GetOrCreate(exception);
-        ModuleErrorId.Set(exception, "DEMO0001");
+        var exception = new InvalidOperationException("Template error example");
         _errorId = ModuleErrorId.GetOrCreate(exception);
-        _result = $"created={ModuleErrorId.Create()}, same={first == again}, set={_errorId}";
+        _result = $"Created: {ModuleErrorId.Create()}; correlated: {_errorId}";
     }
 
-    private void Notify()
+    private void NotifyError()
     {
         _errorId ??= ModuleErrorId.Create();
         ErrorNotifier.Notify(_errorId);
-        _result = $"Notifier invoked for {_errorId}.";
+        _result = $"Notification requested for {_errorId}.";
     }
 
-    private void ProbeFaulted() => _result = "Nested ModuleErrorBoundary captured the opt-in probe fault.";
+    private void ProbeFaulted()
+    {
+        _result = "Nested ModuleErrorBoundary captured the opt-in fault.";
+    }
 }

@@ -1,40 +1,72 @@
 @inherits BasePage
 @namespace MAP.M.Template.Pages
-@inject IResourceLoader ResourceLoader
 @inject IModuleLoader ModuleLoader
-@inject Radzen.ILocalizer RadzenLocalizer
 
-<div class="p-4"><h2>Localization, context and menu lab <small>Advanced</small></h2>
-<ApiSection Title="ILanguageService">
-    <p>Current: @Lang.CurrentLanguage | Available: @string.Join(", ", Lang.AvailableLanguages.Select(x => x.Code)) | LanguageChanged: @_languageEvents</p>
-    <p>Known: @Lang.T("TemplateHome.Title") | Missing fallback: @Lang.T("not.found", "fallback") | Radzen known: @RadzenLocalizer.Get("Cancel", System.Globalization.CultureInfo.CurrentCulture) | unknown: @RadzenLocalizer.Get("not.found", System.Globalization.CultureInfo.CurrentCulture)</p>
-    <ActionRow>
-        <RadzenButton Text="Vietnamese" Click="SetVietnamese" />
-        <RadzenButton Text="English" Click="SetEnglish" />
-        <RadzenButton Text="Load template resources" Click="LoadResourcesAsync" />
-    </ActionRow>
-</ApiSection>
-<ApiSection Title="IClientContextService"><p>Program: @ClientContext.Current.ProgramId | User: @UserName | IP: @IpAddress | Local path: @ClientContext.Current.LocalPath</p></ApiSection>
-<ApiSection Title="IMenuService">
-    <p>Start page: @MenuService.StartPageId | Database: @MenuService.DbName | OnMenusLoaded count: @_menuEvents</p>
-    <ActionRow>
-        <RadzenButton Text="Load menus manually" Click="LoadMenusAsync" />
-        <RadzenButton Text="Load selected component" Click="LoadComponentAsync" />
-    </ActionRow>
-    <ul>
-        @foreach (var item in MenuService.Menus)
+<div class="p-4">
+    <h2>@Lang.T("TemplateLocalization.Title")</h2>
+
+    <ApiSection Title="Localization">
+        <p><code>Lang.T("TemplateHome.Title")</code>: @Lang.T("TemplateHome.Title")</p>
+        <p>CurrentLanguage: @Lang.CurrentLanguage</p>
+        <p>AvailableLanguages: @string.Join(", ", Lang.AvailableLanguages.Select(language => language.Code))</p>
+        <ActionRow>
+            <RadzenButton Text="Tiếng Việt" Click="SetVietnamese" />
+            <RadzenButton Text="English" Click="SetEnglish" />
+        </ActionRow>
+    </ApiSection>
+
+    <ApiSection Title="Client context">
+        <p>ProgramId: @ClientContext.Current.ProgramId</p>
+        <p>UserName: @UserName | IpAddress: @IpAddress</p>
+        <p>LocalPath: @ClientContext.Current.LocalPath</p>
+    </ApiSection>
+
+    <ApiSection Title="Application menu">
+        <p>StartPageId: @MenuService.StartPageId | DbName: @MenuService.DbName</p>
+        <label>
+            Menu/Page ID
+            <input @bind="_menuId" />
+        </label>
+        <ActionRow>
+            <RadzenButton Text="FindById" Click="FindMenuItem" />
+            <RadzenButton Text="Load selected component" Disabled="@(_selectedItem is null)" Click="LoadComponentAsync" />
+        </ActionRow>
+        @if (_selectedItem is not null)
         {
-            <MenuNode Item="item" />
+            <p>ID: @_selectedItem.Id | Title: @MenuTitle.Get(_selectedItem, Lang.CurrentLanguage)</p>
+            <p>Assembly: @_selectedItem.Assembly | Component: @_selectedItem.Component</p>
         }
-    </ul>
-    <ResultPanel Value="@_result" />
-</ApiSection>
+        <p>Menus:</p>
+        <ul>
+            @foreach (var item in MenuService.Menus)
+            {
+                <MenuNode Item="item" />
+            }
+        </ul>
+        <ResultPanel Value="@_result" />
+    </ApiSection>
 </div>
-@code { private int _menuEvents; private int _loadingEvents; private int _languageEvents; private string? _result;
- protected override void OnInitialized(){ base.OnInitialized(); Lang.LanguageChanged += LanguageChanged; MenuService.OnMenusLoaded += MenusLoaded; ModuleLoader.OnLoadingChanged += LoadingChanged; }
- private void SetVietnamese() => Lang.SetLanguage("vi"); private void SetEnglish() => Lang.SetLanguage("en"); private void LanguageChanged(){ _languageEvents++; InvokeAsync(StateHasChanged); } private void MenusLoaded(){ _menuEvents++; InvokeAsync(StateHasChanged); } private void LoadingChanged(bool loading){ _loadingEvents++; _result=$"Loading event {loading}; count={_loadingEvents}. Cache hits can resolve before events."; InvokeAsync(StateHasChanged); }
- private async Task LoadResourcesAsync(){ var assembly=GetType().Assembly; var vi = new Dictionary<string, Dictionary<string, object>> { ["TemplateRuntime"] = new() { ["Message"] = "Tài nguyên runtime" } }; var en = new Dictionary<string, Dictionary<string, object>> { ["TemplateRuntime"] = new() { ["Message"] = "Runtime resource" } }; await Lang.LoadModuleResourcesAsync("TemplateRuntime", vi, en); await ResourceLoader.LoadModuleResourcesAsync(Lang, assembly, "MAP.M.Template"); _result=$"{Lang.T("TemplateRuntime.Message")}; runtime merge and ResourceLoader.LoadModuleResourcesAsync completed."; }
- private async Task LoadMenusAsync(){ await MenuService.LoadMenusAsync(); _result="LoadMenusAsync completed; cached startup loads may not raise a new event."; }
- private async Task LoadComponentAsync(){ var page=MenuTree.FindFirstPage(MenuService.Menus); if(page is null){_result="No page in menu.";return;} var type=await ModuleLoader.LoadComponentAsync(page); _result=$"Resolved: {type.FullName}; loading events: {_loadingEvents}. Cache hits may skip transitions."; }
- protected override ValueTask DisposePageAsync(){ Lang.LanguageChanged -= LanguageChanged; MenuService.OnMenusLoaded-=MenusLoaded; ModuleLoader.OnLoadingChanged-=LoadingChanged; return ValueTask.CompletedTask; }
+
+@code {
+    private string _menuId = "template-home";
+    private MenuItem? _selectedItem;
+    private string? _result;
+
+    private void SetVietnamese() => Lang.SetLanguage("vi");
+
+    private void SetEnglish() => Lang.SetLanguage("en");
+
+    private void FindMenuItem()
+    {
+        _selectedItem = MenuService.FindById(_menuId);
+        _result = _selectedItem is null
+            ? $"No menu item was found for '{_menuId}'."
+            : "Menu item found.";
+    }
+
+    private async Task LoadComponentAsync()
+    {
+        var componentType = await ModuleLoader.LoadComponentAsync(_selectedItem!);
+        _result = $"Resolved type: {componentType.FullName}";
+    }
 }

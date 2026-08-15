@@ -1,13 +1,54 @@
 {
-  "TemplateCommon": { "Recommended":"Recommended", "Advanced":"Advanced", "Destructive":"Destructive", "HostGap":"Host gap", "Save":"Save", "Restore":"Restore", "Reset":"Reset", "Back":"Back" },
-  "TemplateHome": { "Title":"MAP Module API Catalog", "Description":"Interactive smoke-test labs for supported MAP module APIs.", "Success":"The operation completed." },
-  "TemplateDetail": { "Title":"Parameter detail" },
-  "TemplateNavigation": { "Title":"Navigation lab", "StepBTitle":"Navigation step B", "StepCTitle":"Navigation step C", "ReceivedFrom":"Received from", "OpenC":"Open C without history", "StepCNote":"Opened without pushing B. Back returns directly to navigation A." },
-  "TemplateHeaderUi": { "Title":"Header and UI lab", "UiStateTitle":"Live UI state", "UiStateNote":"Live host state is separate from persisted AppConfig. Original values are restored when leaving.", "HeaderTitle":"Page header state", "HostGapNote":"Host gap: the current host stores HeaderKind but does not render different visuals.", "RadzenTitle":"Direct Radzen services" },
-  "TemplateLocalization": { "Title":"Localization, context and menu lab" },
-  "TemplateDatabase": { "Title":"Database lab", "OfflineNote":"No database request runs during initialization. Offline endpoint errors are rendered safely.", "RecommendedTitle":"Recommended BasePage helpers", "RecommendedNote":"Configured DbName is read-only because BasePage helpers always use the menu configuration.", "ConfiguredDbName":"Configured DbName", "Command":"Command", "Parameters":"Parameters JSON", "AdvancedTitle":"Low-level database API", "ExplicitDbName":"Explicit DbName", "SyntheticTitle":"Synthetic response validation", "SyntheticNote":"Synthetic contract examples document response shapes; they are not server responses.", "ValidArray":"Valid array mapping", "MissingData":"Missing data", "InvalidArray":"Data is not an array", "MappingFailure":"DTO mapping failure", "ProcedureCompleted":"Procedure completed." },
-  "TemplateConfig": { "Title":"Configuration and platform lab", "PlatformTitle":"Read-only platform information", "ConfigExists":"Config exists", "SystemInfo":"System info", "Displays":"Displays", "Capabilities":"Capabilities", "EditTitle":"Editable AppConfig", "EditNote":"The draft is cloned even when no configuration exists. Save is manual and never restarts the application.", "Before":"Before", "Draft":"Draft", "After":"After", "RestartTitle":"Danger zone", "RestartNote":"Restart is separate from Save. Desktop starts a new process; Web reloads.", "Restart":"Restart after double confirmation", "SaveConfirm":"Save this configuration draft?", "RestartConfirmOne":"Restart the application now?", "RestartConfirmTwo":"This ends the current session. Continue?", "Saved":"Configuration saved manually." },
-  "TemplateLogging": { "Title":"Logging and error lab" },
-  "TemplateLifecycle": { "Title":"Lifecycle lab", "CancellationTitle":"Page cancellation and cleanup", "CancellationNote":"Navigate away while the loop runs. BasePage cancels the page token and isolates cleanup failures.", "Instance":"Instance", "Running":"Running", "Ticks":"Ticks", "Cancelled":"Cancelled", "Initialized":"Initialized", "Navigating":"Navigating", "CancellationObserved":"Cancellation observed", "Disposed":"Disposed", "History":"History", "ThrowAfterCleanup":"Throw after cleanup", "StartLoop":"Start loop", "CancelledResult":"Loop cancelled cleanly." },
-  "TemplateUtilities": { "Title":"Utilities lab" }
+  "TemplateCommon": {
+    "Advanced": "Advanced",
+    "Destructive": "Destructive",
+    "Back": "Back",
+    "Restore": "Restore",
+    "Save": "Save"
+  },
+  "TemplateHome": {
+    "Title": "MAP module developer demo",
+    "Description": "Runnable, practical examples for building a MAP module.",
+    "Success": "The operation completed."
+  },
+  "TemplateDetail": { "Title": "Parameter detail" },
+  "TemplateNavigation": {
+    "Title": "Navigation lab",
+    "StepBTitle": "Navigation step B",
+    "StepCTitle": "Navigation step C",
+    "ReceivedFrom": "Received from",
+    "OpenC": "Open C without history",
+    "StepCNote": "C was opened without pushing B. Back returns directly to A."
+  },
+  "TemplateHeaderUi": {
+    "Title": "Header and UI lab",
+    "CustomTitle": "Custom template header"
+  },
+  "TemplateLocalization": { "Title": "Localization, context and menu lab" },
+  "TemplateDatabase": {
+    "Title": "Database lab",
+    "OfflineNote": "No database request runs during initialization. Offline endpoint errors are displayed safely."
+  },
+  "TemplateConfig": {
+    "Title": "Configuration and platform lab",
+    "PlatformTitle": "Read-only platform information",
+    "ConfigExists": "Config exists",
+    "SystemInfo": "System info",
+    "Displays": "Displays",
+    "Capabilities": "Capabilities",
+    "EditTitle": "Editable AppConfig",
+    "EditNote": "The draft works even when no configuration exists. Save is manual and does not restart the application.",
+    "Before": "Before",
+    "Draft": "Draft",
+    "After": "After",
+    "RestartTitle": "Restart",
+    "RestartNote": "Restart is separate from Save and always requires confirmation.",
+    "Restart": "Restart application",
+    "SaveConfirm": "Save this configuration draft?",
+    "RestartConfirmOne": "Restart the application now?",
+    "Saved": "Configuration saved manually."
+  },
+  "TemplateLogging": { "Title": "Logging and error lab" },
+  "TemplateLifecycle": { "Title": "Lifecycle lab" },
+  "TemplateUtilities": { "Title": "Utilities lab" }
 }
