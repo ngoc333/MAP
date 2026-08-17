@@ -1,4 +1,5 @@
-{  "SystemLogs": {
+{
+  "SystemLogs": {
     "title": "System logs",
     "selectDay": "Select day",
     "level": "Log level",
@@ -39,14 +40,23 @@
     "title": "Menu Registration",
     "pagesTab": "Pages",
     "programsTab": "Programs",
+    "localTab": "page.json (local)",
     "search": "Search",
     "includeInactive": "Include inactive",
     "refresh": "Refresh",
-    "add": "Add",
+    "add": "Add row",
+    "addMenu": "Add menu",
     "newProgram": "New program",
     "save": "Save",
     "useDefault": "Use default menu",
     "defaultInfo": "This program uses all active registered pages.",
-    "saveSuccess": "Saved successfully"
+    "saveSuccess": "Saved successfully",
+    "pageRequired": "Page ID, Vietnamese title, Assembly and Component are required.",
+    "programRequired": "Program ID is required.",
+    "menuRequired": "Menu ID is required.",
+    "reloadLocal": "Reload",
+    "saveLocal": "Save page.json",
+    "localInfo": "Edit the page.json file used by the Desktop application. The configuration is validated before it is saved; restart the application to apply the new menu.",
+    "localSaveSuccess": "page.json saved. Restart the application to apply the new menu."
   }
 }
