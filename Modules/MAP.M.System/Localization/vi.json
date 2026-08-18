@@ -31,7 +31,7 @@
     "machineName": "Tên máy",
     "ipAddress": "Địa chỉ IP",
     "osVersion": "Hệ điều hành",
-    "dotNetVersion": ".NET version",
+    "dotNetVersion": "Phiên bản .NET",
     "userName": "Người dùng",
     "saveSuccess": "Đã lưu cấu hình thành công",
     "restartRequired": "Vui lòng tắt và mở lại chương trình để áp dụng cấu hình mới"
