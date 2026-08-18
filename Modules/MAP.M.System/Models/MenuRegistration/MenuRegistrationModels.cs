@@ -11,6 +11,10 @@ public sealed class PageRegistration
     public bool IsActive { get; set; } = true;
     public string? Note { get; set; }
     public DateTimeOffset? UpdDate { get; set; }
+
+    // Used only by the virtualized page search result.
+    // PostgreSQL ignores this extra property when the row is sent to map_page_save_p.
+    public int TotalCount { get; set; }
 }
 
 public sealed class ProgramRegistration
