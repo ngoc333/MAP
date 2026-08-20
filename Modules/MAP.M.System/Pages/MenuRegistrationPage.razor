@@ -5,158 +5,91 @@
     <Tabs>
         <RadzenTabsItem Text="@Lang.T("MenuRegistration.pagesTab")">
             <RadzenStack Gap=".75rem">
-                <RadzenStack Orientation="Orientation.Horizontal"
-                             AlignItems="AlignItems.Center"
-                             Gap=".5rem"
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap=".5rem"
                              Wrap="FlexWrap.Wrap">
-                    <RadzenTextBox Immediate="true"
-                                   @bind-Value="_search"
-                                   Placeholder="@Lang.T("MenuRegistration.search")"
-                                   Style="min-width:240px;" />
+                    <RadzenTextBox Immediate="true" @bind-Value="_search"
+                                   Placeholder="@Lang.T("MenuRegistration.search")" Style="min-width:240px;" />
                     <RadzenCheckBox @bind-Value="_includeInactive" />
                     <RadzenLabel Text="@Lang.T("MenuRegistration.includeInactive")" />
-                    <RadzenButton Text="@Lang.T("MenuRegistration.refresh")"
-                                  Icon="refresh"
-                                  ButtonStyle="ButtonStyle.Light"
-                                  Click="RefreshPagesAsync" />
-                    <RadzenButton Text="@Lang.T("MenuRegistration.add")"
-                                  Icon="add"
-                                  Click="AddPageAsync" />
-                    <RadzenButton Text="@Lang.T("MenuRegistration.save")"
-                                  Icon="save"
-                                  ButtonStyle="ButtonStyle.Primary"
-                                  Disabled="@(_savingPages || !HasPageChanges)"
-                                  Click="SavePagesAsync" />
+                    <RadzenButton Text="@Lang.T("MenuRegistration.refresh")" Icon="refresh"
+                                  ButtonStyle="ButtonStyle.Light" Click="RefreshPagesAsync" />
+                    <RadzenButton Text="@Lang.T("MenuRegistration.add")" Icon="add" Click="AddPageAsync" />
+                    <RadzenButton Text="@Lang.T("MenuRegistration.save")" Icon="save" ButtonStyle="ButtonStyle.Primary"
+                                  Disabled="@(_savingPages || !HasPageChanges)" Click="SavePagesAsync" />
                 </RadzenStack>
 
-                <RadzenDataGrid @ref="_pageGrid"
-                                Data="@_pages"
-                                Count="@_pageCount"
-                                TItem="PageRegistration"
-                                LoadData="LoadPagesAsync"
-                                CellClick="EditPageCellAsync"
-                                EditMode="DataGridEditMode.Multiple"
-                                IsLoading="@_pagesLoading"
-                                AllowVirtualization="true"
-                                VirtualizationOverscanCount="5"
-                                PageSize="50"
-                                AllowColumnResize="true"
-                                Style="height:55vh; min-height:340px; width:100%;">
+                <RadzenDataGrid @ref="_pageGrid" Data="@_pages" Count="@_pageCount" TItem="PageRegistration"
+                                LoadData="LoadPagesAsync" CellClick="EditPageCellAsync" EditMode="DataGridEditMode.Multiple"
+                                IsLoading="@_pagesLoading" AllowVirtualization="true" VirtualizationOverscanCount="5" PageSize="50"
+                                AllowColumnResize="true" Style="height:55vh; min-height:340px; width:100%;">
                     <Columns>
-                        <RadzenDataGridColumn TItem="PageRegistration"
-                                              Property="PageId"
-                                              Title="Page ID"
-                                              Width="210px"
+                        <RadzenDataGridColumn TItem="PageRegistration" Property="PageId" Title="Page ID" Width="210px"
                                               IsInEditMode="@IsPageCellInEditMode">
                             <EditTemplate Context="page">
-                                <RadzenTextBox Immediate="true"
-                                               @bind-Value="page.PageId"
-                                               Style="width:100%;" />
+                                <RadzenTextBox Immediate="true" @bind-Value="page.PageId" Style="width:100%;" />
                             </EditTemplate>
                         </RadzenDataGridColumn>
 
-                        <RadzenDataGridColumn TItem="PageRegistration"
-                                              Property="TitleVi"
-                                              Title="VI"
-                                              Width="210px"
+                        <RadzenDataGridColumn TItem="PageRegistration" Property="TitleVi" Title="VI" Width="210px"
                                               IsInEditMode="@IsPageCellInEditMode">
                             <EditTemplate Context="page">
-                                <RadzenTextBox Immediate="true"
-                                               @bind-Value="page.TitleVi"
-                                               Change="@(_ => MarkPageDirty(page))"
-                                               Style="width:100%;" />
+                                <RadzenTextBox Immediate="true" @bind-Value="page.TitleVi"
+                                               Change="@(_ => MarkPageDirty(page))" Style="width:100%;" />
                             </EditTemplate>
                         </RadzenDataGridColumn>
 
-                        <RadzenDataGridColumn TItem="PageRegistration"
-                                              Property="TitleEn"
-                                              Title="EN"
-                                              Width="210px"
+                        <RadzenDataGridColumn TItem="PageRegistration" Property="TitleEn" Title="EN" Width="210px"
                                               IsInEditMode="@IsPageCellInEditMode">
                             <EditTemplate Context="page">
-                                <RadzenTextBox Immediate="true"
-                                               @bind-Value="page.TitleEn"
-                                               Change="@(_ => MarkPageDirty(page))"
-                                               Style="width:100%;" />
+                                <RadzenTextBox Immediate="true" @bind-Value="page.TitleEn"
+                                               Change="@(_ => MarkPageDirty(page))" Style="width:100%;" />
                             </EditTemplate>
                         </RadzenDataGridColumn>
 
-                        <RadzenDataGridColumn TItem="PageRegistration"
-                                              Property="Icon"
-                                              Title="Icon"
-                                              Width="150px"
+                        <RadzenDataGridColumn TItem="PageRegistration" Property="Icon" Title="Icon" Width="150px"
                                               IsInEditMode="@IsPageCellInEditMode">
                             <EditTemplate Context="page">
-                                <RadzenTextBox Immediate="true"
-                                               @bind-Value="page.Icon"
-                                               Change="@(_ => MarkPageDirty(page))"
-                                               Style="width:100%;" />
+                                <RadzenTextBox Immediate="true" @bind-Value="page.Icon"
+                                               Change="@(_ => MarkPageDirty(page))" Style="width:100%;" />
                             </EditTemplate>
                         </RadzenDataGridColumn>
 
-                        <RadzenDataGridColumn TItem="PageRegistration"
-                                              Property="AssemblyName"
-                                              Title="Assembly"
-                                              Width="230px"
-                                              IsInEditMode="@IsPageCellInEditMode">
+                        <RadzenDataGridColumn TItem="PageRegistration" Property="AssemblyName" Title="Assembly"
+                                              Width="230px" IsInEditMode="@IsPageCellInEditMode">
                             <EditTemplate Context="page">
-                                <RadzenTextBox Immediate="true"
-                                               @bind-Value="page.AssemblyName"
-                                               Change="@(_ => MarkPageDirty(page))"
-                                               Style="width:100%;" />
+                                <RadzenTextBox Immediate="true" @bind-Value="page.AssemblyName"
+                                               Change="@(_ => MarkPageDirty(page))" Style="width:100%;" />
                             </EditTemplate>
                         </RadzenDataGridColumn>
 
-                        <RadzenDataGridColumn TItem="PageRegistration"
-                                              Property="ComponentName"
-                                              Title="Component"
-                                              Width="320px"
-                                              IsInEditMode="@IsPageCellInEditMode">
+                        <RadzenDataGridColumn TItem="PageRegistration" Property="ComponentName" Title="Component"
+                                              Width="320px" IsInEditMode="@IsPageCellInEditMode">
                             <EditTemplate Context="page">
-                                <RadzenTextBox Immediate="true"
-                                               @bind-Value="page.ComponentName"
-                                               Change="@(_ => MarkPageDirty(page))"
-                                               Style="width:100%;" />
+                                <RadzenTextBox Immediate="true" @bind-Value="page.ComponentName"
+                                               Change="@(_ => MarkPageDirty(page))" Style="width:100%;" />
                             </EditTemplate>
                         </RadzenDataGridColumn>
 
-                        <RadzenDataGridColumn TItem="PageRegistration"
-                                              Property="Note"
-                                              Title="Note"
-                                              Width="220px"
+                        <RadzenDataGridColumn TItem="PageRegistration" Property="Note" Title="Note" Width="220px"
                                               IsInEditMode="@IsPageCellInEditMode">
                             <EditTemplate Context="page">
-                                <RadzenTextBox Immediate="true"
-                                               @bind-Value="page.Note"
-                                               Change="@(_ => MarkPageDirty(page))"
-                                               Style="width:100%;" />
+                                <RadzenTextBox Immediate="true" @bind-Value="page.Note"
+                                               Change="@(_ => MarkPageDirty(page))" Style="width:100%;" />
                             </EditTemplate>
                         </RadzenDataGridColumn>
 
-                        <RadzenDataGridColumn TItem="PageRegistration"
-                                              Property="IsActive"
-                                              Title="Active"
-                                              Width="90px"
-                                              TextAlign="TextAlign.Center"
-                                              IsInEditMode="@IsPageCellInEditMode">
+                        <RadzenDataGridColumn TItem="PageRegistration" Property="IsActive" Title="Active" Width="90px"
+                                              TextAlign="TextAlign.Center" IsInEditMode="@IsPageCellInEditMode">
                             <EditTemplate Context="page">
-                                <RadzenSwitch @bind-Value="page.IsActive"
-                                              Change="@(_ => MarkPageDirty(page))" />
+                                <RadzenSwitch @bind-Value="page.IsActive" Change="@(_ => MarkPageDirty(page))" />
                             </EditTemplate>
                         </RadzenDataGridColumn>
 
-                        <RadzenDataGridColumn TItem="PageRegistration"
-                                              Title=""
-                                              Width="64px"
-                                              Sortable="false"
-                                              Filterable="false"
-                                              TextAlign="TextAlign.Center">
+                        <RadzenDataGridColumn TItem="PageRegistration" Title="" Width="64px" Sortable="false"
+                                              Filterable="false" TextAlign="TextAlign.Center">
                             <Template Context="page">
-                                <RadzenButton Icon="delete"
-                                              Size="ButtonSize.Small"
-                                              ButtonStyle="ButtonStyle.Danger"
-                                              Disabled="@_savingPages"
-                                              Click="@(() => DeletePageAsync(page))" />
+                                <RadzenButton Icon="delete" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Danger"
+                                              Disabled="@_savingPages" Click="@(() => DeletePageAsync(page))" />
                             </Template>
                         </RadzenDataGridColumn>
                     </Columns>
@@ -166,65 +99,35 @@
 
         <RadzenTabsItem Text="@Lang.T("MenuRegistration.programsTab")">
             <RadzenStack Gap=".75rem">
-                <RadzenStack Orientation="Orientation.Horizontal"
-                             AlignItems="AlignItems.Center"
-                             Gap=".5rem"
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap=".5rem"
                              Wrap="FlexWrap.Wrap">
-                    <RadzenDropDown TValue="string"
-                                    Data="@_programs"
-                                    TextProperty="ProgramId"
-                                    ValueProperty="ProgramId"
-                                    @bind-Value="_selectedProgramId"
-                                    Change="LoadProgramAsync"
-                                    Placeholder="Program"
+                    <RadzenDropDown TValue="string" Data="@_programs" TextProperty="ProgramId" ValueProperty="ProgramId"
+                                    @bind-Value="_selectedProgramId" Change="LoadProgramAsync" Placeholder="Program"
                                     Style="min-width:220px;" />
-                    <RadzenButton Text="@Lang.T("MenuRegistration.newProgram")"
-                                  Icon="add"
-                                  Click="NewProgram" />
-                    <RadzenButton Text="@Lang.T("MenuRegistration.refresh")"
-                                  Icon="refresh"
-                                  ButtonStyle="ButtonStyle.Light"
-                                  Click="LoadProgramsAsync" />
-                    <RadzenButton Text="@Lang.T("MenuRegistration.addMenu")"
-                                  Icon="playlist_add"
-                                  Disabled="@(_program is null || _useDefaultMenu || _savingProgram)"
-                                  Click="AddMenuRowAsync" />
-                    <RadzenButton Text="@Lang.T("MenuRegistration.save")"
-                                  Icon="save"
-                                  ButtonStyle="ButtonStyle.Primary"
-                                  Disabled="@(_program is null || _savingProgram)"
-                                  Click="SaveProgramAsync" />
+                    <RadzenButton Text="@Lang.T("MenuRegistration.newProgram")" Icon="add" Click="NewProgram" />
+                    <RadzenButton Text="@Lang.T("MenuRegistration.refresh")" Icon="refresh"
+                                  ButtonStyle="ButtonStyle.Light" Click="LoadProgramsAsync" />
+                    <RadzenButton Text="@Lang.T("MenuRegistration.addMenu")" Icon="playlist_add"
+                                  Disabled="@(_program is null || _useDefaultMenu || _savingProgram)" Click="AddMenuRowAsync" />
+                    <RadzenButton Text="@Lang.T("MenuRegistration.save")" Icon="save" ButtonStyle="ButtonStyle.Primary"
+                                  Disabled="@(_program is null || _savingProgram)" Click="SaveProgramAsync" />
                 </RadzenStack>
 
                 @if (_program is not null)
                 {
-                    <RadzenStack Orientation="Orientation.Horizontal"
-                                 AlignItems="AlignItems.Center"
-                                 Gap=".75rem"
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap=".75rem"
                                  Wrap="FlexWrap.Wrap">
-                        <RadzenTextBox Immediate="true"
-                                       @bind-Value="_program.ProgramId"
-                                       Disabled="@(!_isNewProgram)"
-                                       Placeholder="Program ID"
-                                       Style="min-width:180px;" />
-                        <RadzenDropDown TValue="string"
-                                        Data="@_pageOptions"
-                                        TextProperty="PageId"
-                                        ValueProperty="PageId"
-                                        @bind-Value="_program.StartPageId"
-                                        AllowClear="true"
-                                        AllowFiltering="true"
-                                        FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
-                                        Placeholder="Start page"
+                        <RadzenTextBox Immediate="true" @bind-Value="_program.ProgramId" Disabled="@(!_isNewProgram)"
+                                       Placeholder="Program ID" Style="min-width:180px;" />
+                        <RadzenDropDown TValue="string" Data="@_pageOptions" TextProperty="PageId" ValueProperty="PageId"
+                                        @bind-Value="_program.StartPageId" AllowClear="true" AllowFiltering="true"
+                                        FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" Placeholder="Start page"
                                         Style="min-width:240px;" />
-                        <RadzenTextBox Immediate="true"
-                                       @bind-Value="_program.Note"
-                                       Placeholder="Note"
+                        <RadzenTextBox Immediate="true" @bind-Value="_program.Note" Placeholder="Note"
                                        Style="min-width:220px;" />
                         <RadzenSwitch @bind-Value="_program.IsActive" />
                         <RadzenLabel Text="Active" />
-                        <RadzenSwitch @bind-Value="_useDefaultMenu"
-                                      Change="DefaultMenuChanged" />
+                        <RadzenSwitch @bind-Value="_useDefaultMenu" Change="DefaultMenuChanged" />
                         <RadzenLabel Text="@Lang.T("MenuRegistration.useDefault")" />
                     </RadzenStack>
 
@@ -236,148 +139,85 @@
                     }
                     else
                     {
-                        <RadzenDataGrid @ref="_menuGrid"
-                                        Data="@_menuRows"
-                                        TItem="MenuRegistrationRow"
-                                        CellClick="EditMenuCellAsync"
-                                        EditMode="DataGridEditMode.Multiple"
-                                        AllowVirtualization="true"
-                                        VirtualizationOverscanCount="5"
-                                        PageSize="50"
-                                        AllowColumnResize="true"
+                        <RadzenDataGrid @ref="_menuGrid" Data="@_menuRows" TItem="MenuRegistrationRow"
+                                        CellClick="EditMenuCellAsync" EditMode="DataGridEditMode.Multiple" AllowVirtualization="true"
+                                        VirtualizationOverscanCount="5" PageSize="50" AllowColumnResize="true"
                                         Style="height:50vh; min-height:320px; width:100%;">
                             <Columns>
-                                <RadzenDataGridColumn TItem="MenuRegistrationRow"
-                                                      Property="MenuId"
-                                                      Title="Menu ID"
-                                                      Width="210px"
-                                                      IsInEditMode="@IsMenuCellInEditMode">
+                                <RadzenDataGridColumn TItem="MenuRegistrationRow" Property="MenuId" Title="Menu ID"
+                                                      Width="210px" IsInEditMode="@IsMenuCellInEditMode">
                                     <EditTemplate Context="row">
-                                        <RadzenTextBox Immediate="true"
-                                                       @bind-Value="row.MenuId"
-                                                       Disabled="@(!string.IsNullOrWhiteSpace(row.PageId))"
-                                                       Style="width:100%;" />
+                                        <RadzenTextBox Immediate="true" @bind-Value="row.MenuId"
+                                                       Disabled="@(!string.IsNullOrWhiteSpace(row.PageId))" Style="width:100%;" />
                                     </EditTemplate>
                                 </RadzenDataGridColumn>
 
-                                <RadzenDataGridColumn TItem="MenuRegistrationRow"
-                                                      Property="PageId"
-                                                      Title="Page"
-                                                      Width="230px"
+                                <RadzenDataGridColumn TItem="MenuRegistrationRow" Property="PageId" Title="Page" Width="230px"
                                                       IsInEditMode="@IsMenuCellInEditMode">
                                     <EditTemplate Context="row">
-                                        <RadzenDropDown TValue="string"
-                                                        Data="@_pageOptions"
-                                                        TextProperty="PageId"
-                                                        ValueProperty="PageId"
-                                                        @bind-Value="row.PageId"
-                                                        AllowClear="true"
-                                                        AllowFiltering="true"
-                                                        FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
-                                                        Change="@((object? value) => MenuPageChanged(row, value))"
+                                        <RadzenDropDown TValue="string" Data="@_pageOptions" TextProperty="PageId"
+                                                        ValueProperty="PageId" @bind-Value="row.PageId" AllowClear="true"
+                                                        AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                                        Change="@((object? value) => MenuPageChanged(row, value))" Style="width:100%;" />
+                                    </EditTemplate>
+                                </RadzenDataGridColumn>
+
+                                <RadzenDataGridColumn TItem="MenuRegistrationRow" Property="ParentMenuId" Title="Parent"
+                                                      Width="200px" IsInEditMode="@IsMenuCellInEditMode">
+                                    <EditTemplate Context="row">
+                                        <RadzenDropDown TValue="string" Data="@GetParentOptions(row)" TextProperty="MenuId"
+                                                        ValueProperty="MenuId" @bind-Value="row.ParentMenuId" AllowClear="true"
                                                         Style="width:100%;" />
                                     </EditTemplate>
                                 </RadzenDataGridColumn>
 
-                                <RadzenDataGridColumn TItem="MenuRegistrationRow"
-                                                      Property="ParentMenuId"
-                                                      Title="Parent"
-                                                      Width="200px"
+                                <RadzenDataGridColumn TItem="MenuRegistrationRow" Property="TitleVi" Title="VI" Width="210px"
                                                       IsInEditMode="@IsMenuCellInEditMode">
                                     <EditTemplate Context="row">
-                                        <RadzenDropDown TValue="string"
-                                                        Data="@GetParentOptions(row)"
-                                                        TextProperty="MenuId"
-                                                        ValueProperty="MenuId"
-                                                        @bind-Value="row.ParentMenuId"
-                                                        AllowClear="true"
-                                                        Style="width:100%;" />
+                                        <RadzenTextBox Immediate="true" @bind-Value="row.TitleVi" Style="width:100%;" />
                                     </EditTemplate>
                                 </RadzenDataGridColumn>
 
-                                <RadzenDataGridColumn TItem="MenuRegistrationRow"
-                                                      Property="TitleVi"
-                                                      Title="VI"
-                                                      Width="210px"
+                                <RadzenDataGridColumn TItem="MenuRegistrationRow" Property="TitleEn" Title="EN" Width="210px"
                                                       IsInEditMode="@IsMenuCellInEditMode">
                                     <EditTemplate Context="row">
-                                        <RadzenTextBox Immediate="true"
-                                                       @bind-Value="row.TitleVi"
-                                                       Style="width:100%;" />
+                                        <RadzenTextBox Immediate="true" @bind-Value="row.TitleEn" Style="width:100%;" />
                                     </EditTemplate>
                                 </RadzenDataGridColumn>
 
-                                <RadzenDataGridColumn TItem="MenuRegistrationRow"
-                                                      Property="TitleEn"
-                                                      Title="EN"
-                                                      Width="210px"
+                                <RadzenDataGridColumn TItem="MenuRegistrationRow" Property="Icon" Title="Icon" Width="150px"
                                                       IsInEditMode="@IsMenuCellInEditMode">
                                     <EditTemplate Context="row">
-                                        <RadzenTextBox Immediate="true"
-                                                       @bind-Value="row.TitleEn"
-                                                       Style="width:100%;" />
+                                        <RadzenTextBox Immediate="true" @bind-Value="row.Icon" Style="width:100%;" />
                                     </EditTemplate>
                                 </RadzenDataGridColumn>
 
-                                <RadzenDataGridColumn TItem="MenuRegistrationRow"
-                                                      Property="Icon"
-                                                      Title="Icon"
-                                                      Width="150px"
-                                                      IsInEditMode="@IsMenuCellInEditMode">
+                                <RadzenDataGridColumn TItem="MenuRegistrationRow" Property="SortOrder" Title="Sort"
+                                                      Width="100px" IsInEditMode="@IsMenuCellInEditMode">
                                     <EditTemplate Context="row">
-                                        <RadzenTextBox Immediate="true"
-                                                       @bind-Value="row.Icon"
-                                                       Style="width:100%;" />
+                                        <RadzenNumeric TValue="int" @bind-Value="row.SortOrder" Style="width:100%;" />
                                     </EditTemplate>
                                 </RadzenDataGridColumn>
 
-                                <RadzenDataGridColumn TItem="MenuRegistrationRow"
-                                                      Property="SortOrder"
-                                                      Title="Sort"
-                                                      Width="100px"
+                                <RadzenDataGridColumn TItem="MenuRegistrationRow" Property="Note" Title="Note" Width="220px"
                                                       IsInEditMode="@IsMenuCellInEditMode">
                                     <EditTemplate Context="row">
-                                        <RadzenNumeric TValue="int"
-                                                       @bind-Value="row.SortOrder"
-                                                       Style="width:100%;" />
+                                        <RadzenTextBox Immediate="true" @bind-Value="row.Note" Style="width:100%;" />
                                     </EditTemplate>
                                 </RadzenDataGridColumn>
 
-                                <RadzenDataGridColumn TItem="MenuRegistrationRow"
-                                                      Property="Note"
-                                                      Title="Note"
-                                                      Width="220px"
-                                                      IsInEditMode="@IsMenuCellInEditMode">
-                                    <EditTemplate Context="row">
-                                        <RadzenTextBox Immediate="true"
-                                                       @bind-Value="row.Note"
-                                                       Style="width:100%;" />
-                                    </EditTemplate>
-                                </RadzenDataGridColumn>
-
-                                <RadzenDataGridColumn TItem="MenuRegistrationRow"
-                                                      Property="IsActive"
-                                                      Title="Active"
-                                                      Width="90px"
-                                                      TextAlign="TextAlign.Center"
-                                                      IsInEditMode="@IsMenuCellInEditMode">
+                                <RadzenDataGridColumn TItem="MenuRegistrationRow" Property="IsActive" Title="Active"
+                                                      Width="90px" TextAlign="TextAlign.Center" IsInEditMode="@IsMenuCellInEditMode">
                                     <EditTemplate Context="row">
                                         <RadzenSwitch @bind-Value="row.IsActive" />
                                     </EditTemplate>
                                 </RadzenDataGridColumn>
 
-                                <RadzenDataGridColumn TItem="MenuRegistrationRow"
-                                                      Title=""
-                                                      Width="64px"
-                                                      Sortable="false"
-                                                      Filterable="false"
-                                                      TextAlign="TextAlign.Center">
+                                <RadzenDataGridColumn TItem="MenuRegistrationRow" Title="" Width="64px" Sortable="false"
+                                                      Filterable="false" TextAlign="TextAlign.Center">
                                     <Template Context="row">
-                                        <RadzenButton Icon="delete"
-                                                      Size="ButtonSize.Small"
-                                                      ButtonStyle="ButtonStyle.Danger"
-                                                      Disabled="@_savingProgram"
-                                                      Click="@(() => RemoveMenuRowAsync(row))" />
+                                        <RadzenButton Icon="delete" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Danger"
+                                                      Disabled="@_savingProgram" Click="@(() => RemoveMenuRowAsync(row))" />
                                     </Template>
                                 </RadzenDataGridColumn>
                             </Columns>
@@ -395,19 +235,12 @@
                         @Lang.T("MenuRegistration.localInfo")
                     </RadzenAlert>
 
-                    <RadzenStack Orientation="Orientation.Horizontal"
-                                 AlignItems="AlignItems.Center"
-                                 Gap=".5rem"
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap=".5rem"
                                  Wrap="FlexWrap.Wrap">
-                        <RadzenButton Text="@Lang.T("MenuRegistration.reloadLocal")"
-                                      Icon="refresh"
-                                      ButtonStyle="ButtonStyle.Light"
-                                      Click="LoadLocalConfigAsync" />
-                        <RadzenButton Text="@Lang.T("MenuRegistration.saveLocal")"
-                                      Icon="save"
-                                      ButtonStyle="ButtonStyle.Primary"
-                                      Disabled="@_savingLocal"
-                                      Click="SaveLocalConfigAsync" />
+                        <RadzenButton Text="@Lang.T("MenuRegistration.reloadLocal")" Icon="refresh"
+                                      ButtonStyle="ButtonStyle.Light" Click="LoadLocalConfigAsync" />
+                        <RadzenButton Text="@Lang.T("MenuRegistration.saveLocal")" Icon="save"
+                                      ButtonStyle="ButtonStyle.Primary" Disabled="@_savingLocal" Click="SaveLocalConfigAsync" />
                         <RadzenText TextStyle="TextStyle.Caption"
                                     Text="@(MenuService.LocalConfigLocation ?? "page.json")" />
                     </RadzenStack>
@@ -424,7 +257,7 @@
     private RadzenDataGrid<PageRegistration>? _pageGrid;
     private RadzenDataGrid<MenuRegistrationRow>? _menuGrid;
 
-    private List<PageRegistration> _pages = [];
+    private List<PageRegistration>? _pages;
     private List<PageRegistration> _pageOptions = [];
     private List<ProgramRegistration> _programs = [];
     private List<MenuRegistrationRow> _menuRows = [];
