@@ -5,203 +5,638 @@
     <Tabs>
         <RadzenTabsItem Text="@Lang.T("MenuRegistration.pagesTab")">
             <RadzenStack Gap=".75rem">
-                <RadzenStack Orientation="Orientation.Horizontal" Gap=".5rem" Wrap="FlexWrap.Wrap">
-                    <RadzenTextBox @bind-Value="_search" Placeholder="@Lang.T("MenuRegistration.search")" />
+                <RadzenStack Orientation="Orientation.Horizontal"
+                             AlignItems="AlignItems.Center"
+                             Gap=".5rem"
+                             Wrap="FlexWrap.Wrap">
+                    <RadzenTextBox Immediate="true"
+                                   @bind-Value="_search"
+                                   Placeholder="@Lang.T("MenuRegistration.search")"
+                                   Style="min-width:240px;" />
                     <RadzenCheckBox @bind-Value="_includeInactive" />
                     <RadzenLabel Text="@Lang.T("MenuRegistration.includeInactive")" />
-                    <RadzenButton Text="@Lang.T("MenuRegistration.refresh")" Icon="refresh" Click="LoadPagesAsync" />
-                    <RadzenButton Text="@Lang.T("MenuRegistration.add")" Icon="add" Click="AddPage" />
-                    @if (_editingPage is not null)
-                    {
-                        <RadzenButton Text="@Lang.T("MenuRegistration.save")" Icon="save" Click="SavePageAsync" />
-                    }
+                    <RadzenButton Text="@Lang.T("MenuRegistration.refresh")"
+                                  Icon="refresh"
+                                  ButtonStyle="ButtonStyle.Light"
+                                  Click="RefreshPagesAsync" />
+                    <RadzenButton Text="@Lang.T("MenuRegistration.add")"
+                                  Icon="add"
+                                  Click="AddPageAsync" />
+                    <RadzenButton Text="@Lang.T("MenuRegistration.save")"
+                                  Icon="save"
+                                  ButtonStyle="ButtonStyle.Primary"
+                                  Disabled="@(_savingPages || !HasPageChanges)"
+                                  Click="SavePagesAsync" />
                 </RadzenStack>
-                @if (_editingPage is not null)
-                {
-                    <RadzenStack Orientation="Orientation.Horizontal" Gap=".5rem" Wrap="FlexWrap.Wrap">
-                        <RadzenTextBox @bind-Value="_editingPage.PageId" Disabled="@(!_isNewPage)" Placeholder="Page ID" />
-                        <RadzenTextBox @bind-Value="_editingPage.TitleVi" Placeholder="Vietnamese title" />
-                        <RadzenTextBox @bind-Value="_editingPage.TitleEn" Placeholder="English title" />
-                        <RadzenTextBox @bind-Value="_editingPage.Icon" Placeholder="Icon" />
-                        <RadzenTextBox @bind-Value="_editingPage.AssemblyName" Placeholder="Assembly" />
-                        <RadzenTextBox @bind-Value="_editingPage.ComponentName" Placeholder="Component" />
-                        <RadzenSwitch @bind-Value="_editingPage.IsActive" />
-                    </RadzenStack>
-                }
-                <RadzenDataGrid Data="@_pages" TItem="PageRegistration" AllowPaging="true" PageSize="10">
+
+                <RadzenDataGrid @ref="_pageGrid"
+                                Data="@_pages"
+                                Count="@_pageCount"
+                                TItem="PageRegistration"
+                                LoadData="LoadPagesAsync"
+                                CellClick="EditPageCellAsync"
+                                EditMode="DataGridEditMode.Multiple"
+                                IsLoading="@_pagesLoading"
+                                AllowVirtualization="true"
+                                VirtualizationOverscanCount="5"
+                                PageSize="50"
+                                AllowColumnResize="true"
+                                Style="height:55vh; min-height:340px; width:100%;">
                     <Columns>
-                        <RadzenDataGridColumn TItem="PageRegistration" Property="PageId" Title="Page ID" />
-                        <RadzenDataGridColumn TItem="PageRegistration" Property="TitleVi" Title="VI" />
-                        <RadzenDataGridColumn TItem="PageRegistration" Property="TitleEn" Title="EN" />
-                        <RadzenDataGridColumn TItem="PageRegistration" Property="Icon" Title="Icon" />
-                        <RadzenDataGridColumn TItem="PageRegistration" Property="AssemblyName" Title="Assembly" />
-                        <RadzenDataGridColumn TItem="PageRegistration" Property="ComponentName" Title="Component" />
-                        <RadzenDataGridColumn TItem="PageRegistration" Property="IsActive" Title="Active" />
-                        <RadzenDataGridColumn TItem="PageRegistration" Title="Actions">
+                        <RadzenDataGridColumn TItem="PageRegistration"
+                                              Property="PageId"
+                                              Title="Page ID"
+                                              Width="210px"
+                                              IsInEditMode="@IsPageCellInEditMode">
+                            <EditTemplate Context="page">
+                                <RadzenTextBox Immediate="true"
+                                               @bind-Value="page.PageId"
+                                               Style="width:100%;" />
+                            </EditTemplate>
+                        </RadzenDataGridColumn>
+
+                        <RadzenDataGridColumn TItem="PageRegistration"
+                                              Property="TitleVi"
+                                              Title="VI"
+                                              Width="210px"
+                                              IsInEditMode="@IsPageCellInEditMode">
+                            <EditTemplate Context="page">
+                                <RadzenTextBox Immediate="true"
+                                               @bind-Value="page.TitleVi"
+                                               Change="@(_ => MarkPageDirty(page))"
+                                               Style="width:100%;" />
+                            </EditTemplate>
+                        </RadzenDataGridColumn>
+
+                        <RadzenDataGridColumn TItem="PageRegistration"
+                                              Property="TitleEn"
+                                              Title="EN"
+                                              Width="210px"
+                                              IsInEditMode="@IsPageCellInEditMode">
+                            <EditTemplate Context="page">
+                                <RadzenTextBox Immediate="true"
+                                               @bind-Value="page.TitleEn"
+                                               Change="@(_ => MarkPageDirty(page))"
+                                               Style="width:100%;" />
+                            </EditTemplate>
+                        </RadzenDataGridColumn>
+
+                        <RadzenDataGridColumn TItem="PageRegistration"
+                                              Property="Icon"
+                                              Title="Icon"
+                                              Width="150px"
+                                              IsInEditMode="@IsPageCellInEditMode">
+                            <EditTemplate Context="page">
+                                <RadzenTextBox Immediate="true"
+                                               @bind-Value="page.Icon"
+                                               Change="@(_ => MarkPageDirty(page))"
+                                               Style="width:100%;" />
+                            </EditTemplate>
+                        </RadzenDataGridColumn>
+
+                        <RadzenDataGridColumn TItem="PageRegistration"
+                                              Property="AssemblyName"
+                                              Title="Assembly"
+                                              Width="230px"
+                                              IsInEditMode="@IsPageCellInEditMode">
+                            <EditTemplate Context="page">
+                                <RadzenTextBox Immediate="true"
+                                               @bind-Value="page.AssemblyName"
+                                               Change="@(_ => MarkPageDirty(page))"
+                                               Style="width:100%;" />
+                            </EditTemplate>
+                        </RadzenDataGridColumn>
+
+                        <RadzenDataGridColumn TItem="PageRegistration"
+                                              Property="ComponentName"
+                                              Title="Component"
+                                              Width="320px"
+                                              IsInEditMode="@IsPageCellInEditMode">
+                            <EditTemplate Context="page">
+                                <RadzenTextBox Immediate="true"
+                                               @bind-Value="page.ComponentName"
+                                               Change="@(_ => MarkPageDirty(page))"
+                                               Style="width:100%;" />
+                            </EditTemplate>
+                        </RadzenDataGridColumn>
+
+                        <RadzenDataGridColumn TItem="PageRegistration"
+                                              Property="Note"
+                                              Title="Note"
+                                              Width="220px"
+                                              IsInEditMode="@IsPageCellInEditMode">
+                            <EditTemplate Context="page">
+                                <RadzenTextBox Immediate="true"
+                                               @bind-Value="page.Note"
+                                               Change="@(_ => MarkPageDirty(page))"
+                                               Style="width:100%;" />
+                            </EditTemplate>
+                        </RadzenDataGridColumn>
+
+                        <RadzenDataGridColumn TItem="PageRegistration"
+                                              Property="IsActive"
+                                              Title="Active"
+                                              Width="90px"
+                                              TextAlign="TextAlign.Center"
+                                              IsInEditMode="@IsPageCellInEditMode">
+                            <EditTemplate Context="page">
+                                <RadzenSwitch @bind-Value="page.IsActive"
+                                              Change="@(_ => MarkPageDirty(page))" />
+                            </EditTemplate>
+                        </RadzenDataGridColumn>
+
+                        <RadzenDataGridColumn TItem="PageRegistration"
+                                              Title=""
+                                              Width="64px"
+                                              Sortable="false"
+                                              Filterable="false"
+                                              TextAlign="TextAlign.Center">
                             <Template Context="page">
-                                <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Light" Click="@(() => EditPage(page))" />
-                                <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Click="@(() => DeletePageAsync(page))" />
+                                <RadzenButton Icon="delete"
+                                              Size="ButtonSize.Small"
+                                              ButtonStyle="ButtonStyle.Danger"
+                                              Disabled="@_savingPages"
+                                              Click="@(() => DeletePageAsync(page))" />
                             </Template>
                         </RadzenDataGridColumn>
                     </Columns>
                 </RadzenDataGrid>
             </RadzenStack>
         </RadzenTabsItem>
+
         <RadzenTabsItem Text="@Lang.T("MenuRegistration.programsTab")">
             <RadzenStack Gap=".75rem">
-                <RadzenStack Orientation="Orientation.Horizontal" Gap=".5rem" Wrap="FlexWrap.Wrap">
-                    <RadzenDropDown TValue="string" Data="@_programs" TextProperty="ProgramId" ValueProperty="ProgramId"
-                                    @bind-Value="_selectedProgramId" Change="LoadProgramAsync" />
-                    <RadzenButton Text="@Lang.T("MenuRegistration.newProgram")" Icon="add" Click="NewProgram" />
-                    <RadzenButton Text="@Lang.T("MenuRegistration.refresh")" Icon="refresh" Click="LoadProgramsAsync" />
-                    <RadzenButton Text="@Lang.T("MenuRegistration.save")" Icon="save" Click="SaveProgramAsync" />
+                <RadzenStack Orientation="Orientation.Horizontal"
+                             AlignItems="AlignItems.Center"
+                             Gap=".5rem"
+                             Wrap="FlexWrap.Wrap">
+                    <RadzenDropDown TValue="string"
+                                    Data="@_programs"
+                                    TextProperty="ProgramId"
+                                    ValueProperty="ProgramId"
+                                    @bind-Value="_selectedProgramId"
+                                    Change="LoadProgramAsync"
+                                    Placeholder="Program"
+                                    Style="min-width:220px;" />
+                    <RadzenButton Text="@Lang.T("MenuRegistration.newProgram")"
+                                  Icon="add"
+                                  Click="NewProgram" />
+                    <RadzenButton Text="@Lang.T("MenuRegistration.refresh")"
+                                  Icon="refresh"
+                                  ButtonStyle="ButtonStyle.Light"
+                                  Click="LoadProgramsAsync" />
+                    <RadzenButton Text="@Lang.T("MenuRegistration.addMenu")"
+                                  Icon="playlist_add"
+                                  Disabled="@(_program is null || _useDefaultMenu || _savingProgram)"
+                                  Click="AddMenuRowAsync" />
+                    <RadzenButton Text="@Lang.T("MenuRegistration.save")"
+                                  Icon="save"
+                                  ButtonStyle="ButtonStyle.Primary"
+                                  Disabled="@(_program is null || _savingProgram)"
+                                  Click="SaveProgramAsync" />
                 </RadzenStack>
+
                 @if (_program is not null)
                 {
-                    <RadzenStack Orientation="Orientation.Horizontal" Gap=".75rem" Wrap="FlexWrap.Wrap">
-                        <RadzenTextBox @bind-Value="_program.ProgramId" Placeholder="Program ID" />
-                        <RadzenDropDown TValue="string" Data="@_pages" TextProperty="PageId" ValueProperty="PageId"
-                                        @bind-Value="_program.StartPageId" Placeholder="Start page" />
+                    <RadzenStack Orientation="Orientation.Horizontal"
+                                 AlignItems="AlignItems.Center"
+                                 Gap=".75rem"
+                                 Wrap="FlexWrap.Wrap">
+                        <RadzenTextBox Immediate="true"
+                                       @bind-Value="_program.ProgramId"
+                                       Disabled="@(!_isNewProgram)"
+                                       Placeholder="Program ID"
+                                       Style="min-width:180px;" />
+                        <RadzenDropDown TValue="string"
+                                        Data="@_pageOptions"
+                                        TextProperty="PageId"
+                                        ValueProperty="PageId"
+                                        @bind-Value="_program.StartPageId"
+                                        AllowClear="true"
+                                        AllowFiltering="true"
+                                        FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                        Placeholder="Start page"
+                                        Style="min-width:240px;" />
+                        <RadzenTextBox Immediate="true"
+                                       @bind-Value="_program.Note"
+                                       Placeholder="Note"
+                                       Style="min-width:220px;" />
                         <RadzenSwitch @bind-Value="_program.IsActive" />
                         <RadzenLabel Text="Active" />
-                        <RadzenSwitch @bind-Value="_useDefaultMenu" Change="DefaultMenuChanged" />
+                        <RadzenSwitch @bind-Value="_useDefaultMenu"
+                                      Change="DefaultMenuChanged" />
                         <RadzenLabel Text="@Lang.T("MenuRegistration.useDefault")" />
                     </RadzenStack>
+
                     @if (_useDefaultMenu)
                     {
-                        <RadzenAlert AlertStyle="AlertStyle.Info">@Lang.T("MenuRegistration.defaultInfo")</RadzenAlert>
+                        <RadzenAlert AlertStyle="AlertStyle.Info">
+                            @Lang.T("MenuRegistration.defaultInfo")
+                        </RadzenAlert>
                     }
                     else
                     {
-                        <RadzenDataGrid Data="@_menuRows" TItem="MenuRegistrationRow" AllowPaging="true" PageSize="10">
+                        <RadzenDataGrid @ref="_menuGrid"
+                                        Data="@_menuRows"
+                                        TItem="MenuRegistrationRow"
+                                        CellClick="EditMenuCellAsync"
+                                        EditMode="DataGridEditMode.Multiple"
+                                        AllowVirtualization="true"
+                                        VirtualizationOverscanCount="5"
+                                        PageSize="50"
+                                        AllowColumnResize="true"
+                                        Style="height:50vh; min-height:320px; width:100%;">
                             <Columns>
-                                <RadzenDataGridColumn TItem="MenuRegistrationRow" Property="MenuId" Title="Menu ID" />
-                                <RadzenDataGridColumn TItem="MenuRegistrationRow" Property="PageId" Title="Page" />
-                                <RadzenDataGridColumn TItem="MenuRegistrationRow" Property="ParentMenuId" Title="Parent" />
-                                <RadzenDataGridColumn TItem="MenuRegistrationRow" Property="TitleVi" Title="VI" />
-                                <RadzenDataGridColumn TItem="MenuRegistrationRow" Property="SortOrder" Title="Sort" />
-                                <RadzenDataGridColumn TItem="MenuRegistrationRow" Property="IsActive" Title="Active" />
+                                <RadzenDataGridColumn TItem="MenuRegistrationRow"
+                                                      Property="MenuId"
+                                                      Title="Menu ID"
+                                                      Width="210px"
+                                                      IsInEditMode="@IsMenuCellInEditMode">
+                                    <EditTemplate Context="row">
+                                        <RadzenTextBox Immediate="true"
+                                                       @bind-Value="row.MenuId"
+                                                       Disabled="@(!string.IsNullOrWhiteSpace(row.PageId))"
+                                                       Style="width:100%;" />
+                                    </EditTemplate>
+                                </RadzenDataGridColumn>
+
+                                <RadzenDataGridColumn TItem="MenuRegistrationRow"
+                                                      Property="PageId"
+                                                      Title="Page"
+                                                      Width="230px"
+                                                      IsInEditMode="@IsMenuCellInEditMode">
+                                    <EditTemplate Context="row">
+                                        <RadzenDropDown TValue="string"
+                                                        Data="@_pageOptions"
+                                                        TextProperty="PageId"
+                                                        ValueProperty="PageId"
+                                                        @bind-Value="row.PageId"
+                                                        AllowClear="true"
+                                                        AllowFiltering="true"
+                                                        FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                                        Change="@((object? value) => MenuPageChanged(row, value))"
+                                                        Style="width:100%;" />
+                                    </EditTemplate>
+                                </RadzenDataGridColumn>
+
+                                <RadzenDataGridColumn TItem="MenuRegistrationRow"
+                                                      Property="ParentMenuId"
+                                                      Title="Parent"
+                                                      Width="200px"
+                                                      IsInEditMode="@IsMenuCellInEditMode">
+                                    <EditTemplate Context="row">
+                                        <RadzenDropDown TValue="string"
+                                                        Data="@GetParentOptions(row)"
+                                                        TextProperty="MenuId"
+                                                        ValueProperty="MenuId"
+                                                        @bind-Value="row.ParentMenuId"
+                                                        AllowClear="true"
+                                                        Style="width:100%;" />
+                                    </EditTemplate>
+                                </RadzenDataGridColumn>
+
+                                <RadzenDataGridColumn TItem="MenuRegistrationRow"
+                                                      Property="TitleVi"
+                                                      Title="VI"
+                                                      Width="210px"
+                                                      IsInEditMode="@IsMenuCellInEditMode">
+                                    <EditTemplate Context="row">
+                                        <RadzenTextBox Immediate="true"
+                                                       @bind-Value="row.TitleVi"
+                                                       Style="width:100%;" />
+                                    </EditTemplate>
+                                </RadzenDataGridColumn>
+
+                                <RadzenDataGridColumn TItem="MenuRegistrationRow"
+                                                      Property="TitleEn"
+                                                      Title="EN"
+                                                      Width="210px"
+                                                      IsInEditMode="@IsMenuCellInEditMode">
+                                    <EditTemplate Context="row">
+                                        <RadzenTextBox Immediate="true"
+                                                       @bind-Value="row.TitleEn"
+                                                       Style="width:100%;" />
+                                    </EditTemplate>
+                                </RadzenDataGridColumn>
+
+                                <RadzenDataGridColumn TItem="MenuRegistrationRow"
+                                                      Property="Icon"
+                                                      Title="Icon"
+                                                      Width="150px"
+                                                      IsInEditMode="@IsMenuCellInEditMode">
+                                    <EditTemplate Context="row">
+                                        <RadzenTextBox Immediate="true"
+                                                       @bind-Value="row.Icon"
+                                                       Style="width:100%;" />
+                                    </EditTemplate>
+                                </RadzenDataGridColumn>
+
+                                <RadzenDataGridColumn TItem="MenuRegistrationRow"
+                                                      Property="SortOrder"
+                                                      Title="Sort"
+                                                      Width="100px"
+                                                      IsInEditMode="@IsMenuCellInEditMode">
+                                    <EditTemplate Context="row">
+                                        <RadzenNumeric TValue="int"
+                                                       @bind-Value="row.SortOrder"
+                                                       Style="width:100%;" />
+                                    </EditTemplate>
+                                </RadzenDataGridColumn>
+
+                                <RadzenDataGridColumn TItem="MenuRegistrationRow"
+                                                      Property="Note"
+                                                      Title="Note"
+                                                      Width="220px"
+                                                      IsInEditMode="@IsMenuCellInEditMode">
+                                    <EditTemplate Context="row">
+                                        <RadzenTextBox Immediate="true"
+                                                       @bind-Value="row.Note"
+                                                       Style="width:100%;" />
+                                    </EditTemplate>
+                                </RadzenDataGridColumn>
+
+                                <RadzenDataGridColumn TItem="MenuRegistrationRow"
+                                                      Property="IsActive"
+                                                      Title="Active"
+                                                      Width="90px"
+                                                      TextAlign="TextAlign.Center"
+                                                      IsInEditMode="@IsMenuCellInEditMode">
+                                    <EditTemplate Context="row">
+                                        <RadzenSwitch @bind-Value="row.IsActive" />
+                                    </EditTemplate>
+                                </RadzenDataGridColumn>
+
+                                <RadzenDataGridColumn TItem="MenuRegistrationRow"
+                                                      Title=""
+                                                      Width="64px"
+                                                      Sortable="false"
+                                                      Filterable="false"
+                                                      TextAlign="TextAlign.Center">
+                                    <Template Context="row">
+                                        <RadzenButton Icon="delete"
+                                                      Size="ButtonSize.Small"
+                                                      ButtonStyle="ButtonStyle.Danger"
+                                                      Disabled="@_savingProgram"
+                                                      Click="@(() => RemoveMenuRowAsync(row))" />
+                                    </Template>
+                                </RadzenDataGridColumn>
                             </Columns>
                         </RadzenDataGrid>
                     }
                 }
             </RadzenStack>
         </RadzenTabsItem>
+
+        @if (MenuService.SupportsLocalConfigEditing)
+        {
+            <RadzenTabsItem Text="@Lang.T("MenuRegistration.localTab")">
+                <RadzenStack Gap=".75rem">
+                    <RadzenAlert AlertStyle="AlertStyle.Info">
+                        @Lang.T("MenuRegistration.localInfo")
+                    </RadzenAlert>
+
+                    <RadzenStack Orientation="Orientation.Horizontal"
+                                 AlignItems="AlignItems.Center"
+                                 Gap=".5rem"
+                                 Wrap="FlexWrap.Wrap">
+                        <RadzenButton Text="@Lang.T("MenuRegistration.reloadLocal")"
+                                      Icon="refresh"
+                                      ButtonStyle="ButtonStyle.Light"
+                                      Click="LoadLocalConfigAsync" />
+                        <RadzenButton Text="@Lang.T("MenuRegistration.saveLocal")"
+                                      Icon="save"
+                                      ButtonStyle="ButtonStyle.Primary"
+                                      Disabled="@_savingLocal"
+                                      Click="SaveLocalConfigAsync" />
+                        <RadzenText TextStyle="TextStyle.Caption"
+                                    Text="@(MenuService.LocalConfigLocation ?? "page.json")" />
+                    </RadzenStack>
+
+                    <RadzenTextArea @bind-Value="_localPageJson"
+                                    Style="width:100%; height:58vh; min-height:360px; font-family:Consolas, 'Courier New', monospace;" />
+                </RadzenStack>
+            </RadzenTabsItem>
+        }
     </Tabs>
 </RadzenTabs>
 
 @code {
+    private RadzenDataGrid<PageRegistration>? _pageGrid;
+    private RadzenDataGrid<MenuRegistrationRow>? _menuGrid;
+
     private List<PageRegistration> _pages = [];
+    private List<PageRegistration> _pageOptions = [];
     private List<ProgramRegistration> _programs = [];
     private List<MenuRegistrationRow> _menuRows = [];
+
+    private readonly Dictionary<string, PageRegistration> _dirtyPages =
+        new(StringComparer.Ordinal);
+    private readonly HashSet<PageRegistration> _newPages = [];
+    private readonly HashSet<MenuRegistrationRow> _newMenuRows = [];
+
+    private PageRegistration? _pageEditItem;
+    private string? _pageEditProperty;
+    private MenuRegistrationRow? _menuEditItem;
+    private string? _menuEditProperty;
+
     private ProgramRegistration? _program;
     private string? _selectedProgramId;
     private string? _search;
+    private string _localPageJson = "";
+
+    private int _pageCount;
     private bool _includeInactive = true;
     private bool _useDefaultMenu;
-    private PageRegistration? _editingPage;
-    private bool _isNewPage;
+    private bool _isNewProgram;
+    private bool _pagesLoading;
+    private bool _savingPages;
+    private bool _savingProgram;
+    private bool _savingLocal;
+
+    private bool HasPageChanges => _dirtyPages.Count > 0 || _newPages.Count > 0;
+
+    private IEnumerable<MenuRegistrationRow> AllMenuRows =>
+        _newMenuRows.Concat(_menuRows);
 
     protected override string HeaderTitleKey => "MenuRegistration.title";
 
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
-        await LoadPagesAsync();
+        await LoadPageOptionsAsync();
         await LoadProgramsAsync();
+
+        if (MenuService.SupportsLocalConfigEditing)
+            await LoadLocalConfigAsync();
     }
 
-    private async Task LoadPagesAsync()
+    private async Task LoadPagesAsync(LoadDataArgs args)
     {
-        _pages = await DbClient.QueryPostgreSqlFunctionAsync<PageRegistration>(
-            DbName,
+        try
+        {
+            _pagesLoading = true;
+
+            var rows = await QueryAsync<PageRegistration>(
+                "mes.map_page_search_f",
+                new
+                {
+                    PSearch = _search,
+                    PIncludeInactive = _includeInactive,
+                    PSkip = args.Skip ?? 0,
+                    PTake = args.Top ?? 50
+                });
+
+            _pageCount = rows.FirstOrDefault()?.TotalCount ?? 0;
+            _pages = rows.Select(ResolveDirtyPage).ToList();
+        }
+        catch (Exception ex)
+        {
+            _pages = [];
+            _pageCount = 0;
+            NotifyError(ex.Message);
+        }
+        finally
+        {
+            _pagesLoading = false;
+        }
+    }
+
+    private PageRegistration ResolveDirtyPage(PageRegistration page) =>
+        _dirtyPages.TryGetValue(page.PageId, out var dirty) ? dirty : page;
+
+    private async Task RefreshPagesAsync()
+    {
+        if (_pageGrid is not null)
+            await _pageGrid.RefreshDataAsync();
+    }
+
+    private async Task LoadPageOptionsAsync()
+    {
+        _pageOptions = await QueryAsync<PageRegistration>(
             "mes.map_page_list_f",
             new
             {
-                PSearch = _search,
-                PIncludeInactive = _includeInactive
+                PSearch = (string?)null,
+                PIncludeInactive = false
             });
     }
 
-    private async Task LoadProgramsAsync()
+    private async Task EditPageCellAsync(DataGridCellMouseEventArgs<PageRegistration> args)
     {
-        _programs = await DbClient.QueryPostgreSqlFunctionAsync<ProgramRegistration>(
-            DbName,
-            "mes.map_program_list_f",
-            new { });
-
-        _selectedProgramId ??= _programs.FirstOrDefault()?.ProgramId;
-
-        if (_selectedProgramId is not null)
-            await LoadProgramAsync(_selectedProgramId);
-    }
-
-    private async Task LoadProgramAsync(object? value = null)
-    {
-        _selectedProgramId = value?.ToString() ?? _selectedProgramId;
-        _program = _programs.FirstOrDefault(x => x.ProgramId == _selectedProgramId);
-
-        if (_program is null)
+        if (_pageGrid is null || args.Data is null || args.Column is null)
             return;
 
-        _menuRows = await DbClient.QueryPostgreSqlFunctionAsync<MenuRegistrationRow>(
-            DbName,
-            "mes.map_program_menu_list_f",
-            new
-            {
-                PProgramId = _program.ProgramId
-            });
-        _useDefaultMenu = _menuRows.Count == 0;
+        var property = args.Column.Property;
+        if (string.IsNullOrWhiteSpace(property))
+            return;
+
+        if (property == nameof(PageRegistration.PageId) && !IsNewPage(args.Data))
+            return;
+
+        if (_pageEditItem is not null && !IsNewPage(_pageEditItem))
+            _pageGrid.CancelEditRow(_pageEditItem);
+
+        _pageEditItem = args.Data;
+        _pageEditProperty = property;
+        await _pageGrid.EditRow(args.Data);
     }
 
-    private void NewProgram() => (_program, _menuRows, _useDefaultMenu) = (new ProgramRegistration(), [], true);
+    private bool IsPageCellInEditMode(string property, PageRegistration page) =>
+        IsNewPage(page) ||
+        (ReferenceEquals(page, _pageEditItem) &&
+         string.Equals(property, _pageEditProperty, StringComparison.Ordinal));
 
-    private void DefaultMenuChanged(bool value) => _useDefaultMenu = value;
-
-    private void AddPage()
+    private async Task AddPageAsync()
     {
-        _editingPage = new PageRegistration();
-        _isNewPage = true;
+        var page = new PageRegistration();
+        _newPages.Add(page);
+        _pageEditItem = page;
+        _pageEditProperty = null;
+
+        if (_pageGrid is not null)
+            await _pageGrid.InsertRow(page);
     }
 
-    private void EditPage(PageRegistration page)
+    private bool IsNewPage(PageRegistration page) => _newPages.Contains(page);
+
+    private void MarkPageDirty(PageRegistration page)
     {
-        _editingPage = new PageRegistration
+        if (IsNewPage(page) || string.IsNullOrWhiteSpace(page.PageId))
+            return;
+
+        _dirtyPages[page.PageId] = page;
+    }
+
+    private async Task SavePagesAsync()
+    {
+        var rows = _dirtyPages.Values.Concat(_newPages).ToArray();
+        if (rows.Length == 0)
+            return;
+
+        foreach (var row in rows)
+            NormalizePage(row);
+
+        if (rows.Any(row =>
+                string.IsNullOrWhiteSpace(row.PageId) ||
+                string.IsNullOrWhiteSpace(row.TitleVi) ||
+                string.IsNullOrWhiteSpace(row.AssemblyName) ||
+                string.IsNullOrWhiteSpace(row.ComponentName)))
         {
-            PageId = page.PageId,
-            TitleVi = page.TitleVi,
-            TitleEn = page.TitleEn,
-            Icon = page.Icon,
-            AssemblyName = page.AssemblyName,
-            ComponentName = page.ComponentName,
-            IsActive = page.IsActive,
-            Note = page.Note
-        };
-        _isNewPage = false;
-    }
-
-    private async Task SavePageAsync()
-    {
-        if (_editingPage is null)
+            NotifyWarning(Lang.T("MenuRegistration.pageRequired"));
             return;
+        }
 
-        await DbClient.ExecutePostgreSqlProcedureAsync(
-            DbName,
-            "mes.map_page_save_p",
-            new
+        try
+        {
+            _savingPages = true;
+
+            await ExecuteAsync(
+                "mes.map_page_save_p",
+                new
+                {
+                    PRows = rows,
+                    PUserName = UserName,
+                    PIpAddress = IpAddress
+                });
+
+            if (_pageGrid is not null)
             {
-                PRows = new[] { _editingPage },
-                PUserName = UserName,
-                PIpAddress = IpAddress
-            });
+                foreach (var row in _newPages.ToArray())
+                    _pageGrid.CancelEditRow(row);
+            }
 
-        _editingPage = null;
-        await LoadPagesAsync();
-        Notifications.Notify(NotificationSeverity.Success, Lang.T("MenuRegistration.saveSuccess"));
+            _newPages.Clear();
+            _dirtyPages.Clear();
+            _pageEditItem = null;
+            _pageEditProperty = null;
+
+            await LoadPageOptionsAsync();
+            await RefreshPagesAsync();
+            NotifySuccess(Lang.T("MenuRegistration.saveSuccess"));
+        }
+        catch (Exception ex)
+        {
+            NotifyError(ex.Message);
+        }
+        finally
+        {
+            _savingPages = false;
+        }
     }
 
     private async Task DeletePageAsync(PageRegistration page)
     {
+        if (_newPages.Remove(page))
+        {
+            _pageGrid?.CancelEditRow(page);
+            if (ReferenceEquals(_pageEditItem, page))
+            {
+                _pageEditItem = null;
+                _pageEditProperty = null;
+            }
+            return;
+        }
+
         var confirmed = await Dialogs.Confirm(
             $"{Lang.T("Common.deleteConfirm")} {page.PageId}?",
             Lang.T("Common.confirm"));
@@ -209,15 +644,200 @@
         if (confirmed != true)
             return;
 
-        await DbClient.ExecutePostgreSqlProcedureAsync(
-            DbName,
-            "mes.map_page_delete_p",
-            new
-            {
-                PPageId = page.PageId
-            });
+        try
+        {
+            await ExecuteAsync(
+                "mes.map_page_delete_p",
+                new { PPageId = page.PageId });
 
-        await LoadPagesAsync();
+            _dirtyPages.Remove(page.PageId);
+            await LoadPageOptionsAsync();
+            await RefreshPagesAsync();
+        }
+        catch (Exception ex)
+        {
+            NotifyError(ex.Message);
+        }
+    }
+
+    private static void NormalizePage(PageRegistration page)
+    {
+        page.PageId = page.PageId.Trim();
+        page.TitleVi = page.TitleVi.Trim();
+        page.TitleEn = NullIfWhiteSpace(page.TitleEn);
+        page.Icon = NullIfWhiteSpace(page.Icon);
+        page.AssemblyName = page.AssemblyName.Trim();
+        page.ComponentName = page.ComponentName.Trim();
+        page.Note = NullIfWhiteSpace(page.Note);
+    }
+
+    private async Task LoadProgramsAsync()
+    {
+        ClearNewMenuRows();
+        var currentProgramId = _selectedProgramId;
+
+        _programs = await QueryAsync<ProgramRegistration>(
+            "mes.map_program_list_f");
+
+        if (!string.IsNullOrWhiteSpace(currentProgramId) &&
+            _programs.Any(x => x.ProgramId == currentProgramId))
+        {
+            _selectedProgramId = currentProgramId;
+        }
+        else
+        {
+            _selectedProgramId = _programs.FirstOrDefault()?.ProgramId;
+        }
+
+        if (_selectedProgramId is not null)
+            await LoadProgramAsync(_selectedProgramId);
+        else
+            (_program, _menuRows, _useDefaultMenu, _isNewProgram) = (null, [], true, false);
+    }
+
+    private async Task LoadProgramAsync(object? value = null)
+    {
+        ClearNewMenuRows();
+        _selectedProgramId = value?.ToString() ?? _selectedProgramId;
+        _program = _programs.FirstOrDefault(x => x.ProgramId == _selectedProgramId);
+        _isNewProgram = false;
+        _menuEditItem = null;
+        _menuEditProperty = null;
+
+        if (_program is null)
+        {
+            _menuRows = [];
+            _useDefaultMenu = true;
+            return;
+        }
+
+        _menuRows = await QueryAsync<MenuRegistrationRow>(
+            "mes.map_program_menu_list_f",
+            new { PProgramId = _program.ProgramId });
+
+        _useDefaultMenu = _menuRows.Count == 0;
+    }
+
+    private void NewProgram()
+    {
+        ClearNewMenuRows();
+        _selectedProgramId = null;
+        _program = new ProgramRegistration();
+        _menuRows = [];
+        _useDefaultMenu = true;
+        _isNewProgram = true;
+        _menuEditItem = null;
+        _menuEditProperty = null;
+    }
+
+    private void DefaultMenuChanged(bool value) => _useDefaultMenu = value;
+
+    private async Task EditMenuCellAsync(DataGridCellMouseEventArgs<MenuRegistrationRow> args)
+    {
+        if (_menuGrid is null || args.Data is null || args.Column is null)
+            return;
+
+        var property = args.Column.Property;
+        if (string.IsNullOrWhiteSpace(property))
+            return;
+
+        if (property == nameof(MenuRegistrationRow.MenuId) &&
+            !string.IsNullOrWhiteSpace(args.Data.PageId))
+        {
+            return;
+        }
+
+        if (_menuEditItem is not null && !_newMenuRows.Contains(_menuEditItem))
+            _menuGrid.CancelEditRow(_menuEditItem);
+
+        _menuEditItem = args.Data;
+        _menuEditProperty = property;
+        await _menuGrid.EditRow(args.Data);
+    }
+
+    private bool IsMenuCellInEditMode(string property, MenuRegistrationRow row) =>
+        _newMenuRows.Contains(row) ||
+        (ReferenceEquals(row, _menuEditItem) &&
+         string.Equals(property, _menuEditProperty, StringComparison.Ordinal));
+
+    private async Task AddMenuRowAsync()
+    {
+        if (_program is null || _useDefaultMenu)
+            return;
+
+        var maxSort = AllMenuRows.Select(x => x.SortOrder).DefaultIfEmpty(0).Max();
+        var row = new MenuRegistrationRow
+        {
+            ProgramId = _program.ProgramId,
+            SortOrder = maxSort + 10
+        };
+
+        _newMenuRows.Add(row);
+        _menuEditItem = row;
+        _menuEditProperty = null;
+
+        if (_menuGrid is not null)
+            await _menuGrid.InsertRow(row);
+    }
+
+    private async Task RemoveMenuRowAsync(MenuRegistrationRow row)
+    {
+        if (_newMenuRows.Remove(row))
+        {
+            _menuGrid?.CancelEditRow(row);
+        }
+        else
+        {
+            _menuRows.Remove(row);
+            if (_menuGrid is not null)
+                await _menuGrid.RefreshDataAsync();
+        }
+
+        if (ReferenceEquals(_menuEditItem, row))
+        {
+            _menuEditItem = null;
+            _menuEditProperty = null;
+        }
+    }
+
+    private void ClearNewMenuRows()
+    {
+        if (_menuGrid is not null)
+        {
+            foreach (var row in _newMenuRows.ToArray())
+                _menuGrid.CancelEditRow(row);
+        }
+
+        _newMenuRows.Clear();
+    }
+
+    private IReadOnlyList<MenuRegistrationRow> GetParentOptions(MenuRegistrationRow row) =>
+        AllMenuRows
+            .Where(x => !ReferenceEquals(x, row) &&
+                        x.IsGroup &&
+                        !string.IsNullOrWhiteSpace(x.MenuId))
+            .OrderBy(x => x.SortOrder)
+            .ThenBy(x => x.MenuId)
+            .ToList();
+
+    private void MenuPageChanged(MenuRegistrationRow row, object? value)
+    {
+        row.PageId = NullIfWhiteSpace(value?.ToString());
+        if (row.PageId is null)
+            return;
+
+        row.MenuId = row.PageId;
+
+        var page = _pageOptions.FirstOrDefault(x => x.PageId == row.PageId);
+        if (page is null)
+            return;
+
+        if (string.IsNullOrWhiteSpace(row.TitleVi))
+            row.TitleVi = page.TitleVi;
+        if (string.IsNullOrWhiteSpace(row.TitleEn))
+            row.TitleEn = page.TitleEn;
+        if (string.IsNullOrWhiteSpace(row.Icon))
+            row.Icon = page.Icon;
     }
 
     private async Task SaveProgramAsync()
@@ -225,21 +845,113 @@
         if (_program is null)
             return;
 
-        await DbClient.ExecutePostgreSqlProcedureAsync(
-            DbName,
-            "mes.map_program_save_p",
-            new
-            {
-                PProgramId = _program.ProgramId,
-                PStartPageId = _program.StartPageId,
-                PIsActive = _program.IsActive,
-                PNote = _program.Note,
-                PMenuItems = _useDefaultMenu ? [] : _menuRows,
-                PUserName = UserName,
-                PIpAddress = IpAddress
-            });
+        _program.ProgramId = _program.ProgramId.Trim().ToUpperInvariant();
+        _program.StartPageId = NullIfWhiteSpace(_program.StartPageId);
+        _program.Note = NullIfWhiteSpace(_program.Note);
 
-        await LoadProgramsAsync();
-        Notifications.Notify(NotificationSeverity.Success, Lang.T("MenuRegistration.saveSuccess"));
+        if (string.IsNullOrWhiteSpace(_program.ProgramId))
+        {
+            NotifyWarning(Lang.T("MenuRegistration.programRequired"));
+            return;
+        }
+
+        var menuRows = AllMenuRows.ToArray();
+        foreach (var row in menuRows)
+            NormalizeMenuRow(row, _program.ProgramId);
+
+        if (!_useDefaultMenu && menuRows.Any(x => string.IsNullOrWhiteSpace(x.MenuId)))
+        {
+            NotifyWarning(Lang.T("MenuRegistration.menuRequired"));
+            return;
+        }
+
+        try
+        {
+            _savingProgram = true;
+
+            await ExecuteAsync(
+                "mes.map_program_save_p",
+                new
+                {
+                    PProgramId = _program.ProgramId,
+                    PStartPageId = _program.StartPageId,
+                    PIsActive = _program.IsActive,
+                    PNote = _program.Note,
+                    PMenuItems = _useDefaultMenu
+                        ? Array.Empty<MenuRegistrationRow>()
+                        : menuRows,
+                    PUserName = UserName,
+                    PIpAddress = IpAddress
+                });
+
+            _selectedProgramId = _program.ProgramId;
+            _isNewProgram = false;
+            ClearNewMenuRows();
+            await LoadProgramsAsync();
+            NotifySuccess(Lang.T("MenuRegistration.saveSuccess"));
+        }
+        catch (Exception ex)
+        {
+            NotifyError(ex.Message);
+        }
+        finally
+        {
+            _savingProgram = false;
+        }
     }
+
+    private static void NormalizeMenuRow(MenuRegistrationRow row, string programId)
+    {
+        row.ProgramId = programId;
+        row.MenuId = row.MenuId.Trim();
+        row.ParentMenuId = NullIfWhiteSpace(row.ParentMenuId);
+        row.PageId = NullIfWhiteSpace(row.PageId);
+        row.TitleVi = NullIfWhiteSpace(row.TitleVi);
+        row.TitleEn = NullIfWhiteSpace(row.TitleEn);
+        row.Icon = NullIfWhiteSpace(row.Icon);
+        row.Note = NullIfWhiteSpace(row.Note);
+
+        if (row.PageId is not null)
+            row.MenuId = row.PageId;
+    }
+
+    private async Task LoadLocalConfigAsync()
+    {
+        if (!MenuService.SupportsLocalConfigEditing)
+            return;
+
+        try
+        {
+            _localPageJson = await MenuService.ReadLocalConfigAsync() ?? "";
+        }
+        catch (Exception ex)
+        {
+            NotifyError(ex.Message);
+        }
+    }
+
+    private async Task SaveLocalConfigAsync()
+    {
+        if (!MenuService.SupportsLocalConfigEditing)
+            return;
+
+        try
+        {
+            _savingLocal = true;
+            await MenuService.SaveLocalConfigAsync(_localPageJson);
+            await LoadLocalConfigAsync();
+            NotifySuccess(Lang.T("MenuRegistration.localSaveSuccess"));
+        }
+        catch (Exception ex)
+        {
+            NotifyError(ex.Message);
+        }
+        finally
+        {
+            _savingLocal = false;
+        }
+    }
+
+    private static string? NullIfWhiteSpace(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }

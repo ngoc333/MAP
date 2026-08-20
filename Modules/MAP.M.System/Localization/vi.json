@@ -1,4 +1,5 @@
-{  "SystemLogs": {
+{
+  "SystemLogs": {
     "title": "Nhật ký hệ thống",
     "selectDay": "Chọn ngày",
     "level": "Mức log",
@@ -39,14 +40,23 @@
     "title": "Đăng ký menu",
     "pagesTab": "Trang",
     "programsTab": "Chương trình",
+    "localTab": "page.json (local)",
     "search": "Tìm kiếm",
     "includeInactive": "Bao gồm không hoạt động",
     "refresh": "Làm mới",
-    "add": "Thêm",
+    "add": "Thêm dòng",
+    "addMenu": "Thêm menu",
     "newProgram": "Chương trình mới",
     "save": "Lưu",
     "useDefault": "Dùng menu mặc định",
     "defaultInfo": "Chương trình sử dụng tất cả trang đang hoạt động.",
-    "saveSuccess": "Đã lưu thành công"
+    "saveSuccess": "Đã lưu thành công",
+    "pageRequired": "Page ID, tiêu đề tiếng Việt, Assembly và Component không được để trống.",
+    "programRequired": "Program ID không được để trống.",
+    "menuRequired": "Menu ID không được để trống.",
+    "reloadLocal": "Đọc lại",
+    "saveLocal": "Lưu page.json",
+    "localInfo": "Chỉnh trực tiếp file page.json mà ứng dụng Desktop đang sử dụng. File được kiểm tra cấu trúc trước khi lưu; cần khởi động lại ứng dụng để áp dụng menu mới.",
+    "localSaveSuccess": "Đã lưu page.json. Khởi động lại ứng dụng để áp dụng menu mới."
   }
 }
