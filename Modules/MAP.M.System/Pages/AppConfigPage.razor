@@ -2,6 +2,7 @@
 @namespace MAP.M.System.Pages
 @inject IAppConfigService ConfigService
 @inject IPlatformCapabilities Platform
+@inject DialogService Dialogs
 
 <div class="flex flex-col h-full">
     <RadzenCard class="p-5 max-w-xl">
@@ -112,7 +113,6 @@
     private SystemInfo _systemInfo = new();
     private IReadOnlyList<DisplayInfo> _displays = Array.Empty<DisplayInfo>();
     private IReadOnlyList<LanguageInfo> _languages = Array.Empty<LanguageInfo>();
-    protected override string HeaderTitleKey => "AppConfig.title";
 
     private IReadOnlyList<MenuSourceOption> MenuSources =>
     [
