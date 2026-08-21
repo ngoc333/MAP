@@ -6,6 +6,7 @@ using MAP.C.Contract.Navigation;
 using MAP.C.UI.Errors;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Logging;
+using System.ComponentModel;
 using System.Globalization;
 using System.Text.Json;
 
@@ -67,6 +68,14 @@ public abstract class BasePage : ComponentBase, IAsyncDisposable
     protected string DbName =>
         MenuService.DbName
         ?? throw new InvalidOperationException("Database name is not configured.");
+
+    /// <summary>
+    /// Compatibility hook for legacy pages that still override a header title key.
+    /// It no longer publishes header state; normal titles are resolved from menu metadata.
+    /// New pages should inject IPageHeaderState when custom header behavior is required.
+    /// </summary>
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    protected virtual string? HeaderTitleKey => null;
 
     /// <summary>
     /// Gets an optional navigation parameter converted to <typeparamref name="T"/>.
