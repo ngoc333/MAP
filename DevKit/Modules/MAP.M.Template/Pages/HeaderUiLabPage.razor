@@ -1,18 +1,21 @@
 @inherits BasePage
 @namespace MAP.M.Template.Pages
 @inject IUiStateService UiState
+@inject IPageHeaderState Header
+@inject DialogService Dialogs
+@inject NotificationService Notifications
 
 <div class="p-4">
     <h2>@Lang.T("TemplateHeaderUi.Title")</h2>
 
     <ApiSection Title="@Lang.T("TemplateHeaderUi.HeaderTitle")" Note="@Lang.T("TemplateHeaderUi.HeaderDescription")">
-        <p>HeaderTitleKey: @HeaderTitleKey | HeaderKind: @HeaderKind | ShowBack: @ShowBack</p>
-        <p>HeaderContent: @(_showCustomContent ? "Custom content is active" : "No custom content")</p>
+        <p>TitleKey: @CurrentHeaderTitleKey | Kind: @CurrentHeaderKind | ShowBack: @CurrentShowBack</p>
+        <p>Content: @(_showCustomContent ? "Custom content is active" : "No custom content")</p>
         <ActionRow>
             <RadzenButton Text="Change title" Click="ChangeTitle" />
-            <RadzenButton Text="Toggle HeaderContent" Click="ToggleHeaderContent" />
-            <RadzenButton Text="Toggle ShowBack" Click="ToggleShowBack" />
-            <RadzenButton Text="RefreshHeader()" Click="RefreshHeader" />
+            <RadzenButton Text="Toggle content" Click="ToggleHeaderContent" />
+            <RadzenButton Text="Toggle back" Click="ToggleShowBack" />
+            <RadzenButton Text="Header.Set(...)" Click="RefreshHeader" />
         </ActionRow>
     </ApiSection>
 
@@ -31,10 +34,10 @@
 
     <ApiSection Title="@Lang.T("TemplateHeaderUi.NotificationsTitle")" Note="@Lang.T("TemplateHeaderUi.NotificationsDescription")">
         <ActionRow>
-            <RadzenButton Text="NotifySuccess" ButtonStyle="ButtonStyle.Success" Click="ShowSuccess" />
-            <RadzenButton Text="NotifyWarning" ButtonStyle="ButtonStyle.Warning" Click="ShowWarning" />
-            <RadzenButton Text="NotifyError" ButtonStyle="ButtonStyle.Danger" Click="ShowError" />
-            <RadzenButton Text="ConfirmAsync" Click="ConfirmAsync" />
+            <RadzenButton Text="Notification success" ButtonStyle="ButtonStyle.Success" Click="ShowSuccess" />
+            <RadzenButton Text="Notification warning" ButtonStyle="ButtonStyle.Warning" Click="ShowWarning" />
+            <RadzenButton Text="Notification error" ButtonStyle="ButtonStyle.Danger" Click="ShowError" />
+            <RadzenButton Text="Dialog confirm" Click="ConfirmAsync" />
         </ActionRow>
         <ResultPanel Value="@_result" />
     </ApiSection>
@@ -48,15 +51,15 @@
     private bool _useAlternateTitle;
     private string? _result;
 
-    protected override string? HeaderTitleKey => _useAlternateTitle
+    private string CurrentHeaderTitleKey => _useAlternateTitle
         ? "TemplateHeaderUi.CustomTitle"
         : "TemplateHeaderUi.Title";
 
-    protected override HeaderKind HeaderKind => HeaderKind.Default;
+    private HeaderKind CurrentHeaderKind => HeaderKind.Default;
 
-    protected override bool ShowBack => _showBack;
+    private bool CurrentShowBack => _showBack;
 
-    protected override RenderFragment? HeaderContent => _showCustomContent
+    private RenderFragment? CurrentHeaderContent => _showCustomContent
         ? builder => builder.AddContent(0, "Template custom header content")
         : null;
 
@@ -65,6 +68,22 @@
         base.OnInitialized();
         _initialMenu = UiState.ShowMenu;
         _initialHeader = UiState.ShowHeader;
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+            RefreshHeader();
+    }
+
+    private void RefreshHeader()
+    {
+        Header.Set(new PageHeader(
+            PageId,
+            CurrentHeaderKind,
+            CurrentHeaderTitleKey,
+            CurrentHeaderContent,
+            CurrentShowBack));
     }
 
     private void ChangeTitle()
@@ -91,15 +110,22 @@
         UiState.SetHeader(_initialHeader);
     }
 
-    private void ShowSuccess() => NotifySuccess("Header change saved.");
+    private void ShowSuccess() => Notify("Header change saved.", NotificationSeverity.Success);
 
-    private void ShowWarning() => NotifyWarning("This is a warning notification.");
+    private void ShowWarning() => Notify("This is a warning notification.", NotificationSeverity.Warning);
 
-    private void ShowError() => NotifyError("This is an error notification.");
+    private void ShowError() => Notify("This is an error notification.", NotificationSeverity.Error);
+
+    private void Notify(string message, NotificationSeverity severity) =>
+        Notifications.Notify(new NotificationMessage
+        {
+            Severity = severity,
+            Detail = message
+        });
 
     private async Task ConfirmAsync()
     {
-        _result = await base.ConfirmAsync("Apply this header example?")
+        _result = await Dialogs.Confirm("Apply this header example?") == true
             ? "Confirmed"
             : "Cancelled";
     }
