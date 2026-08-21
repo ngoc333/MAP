@@ -1,22 +1,20 @@
-using MAP.C.Contract.Context;
 using MAP.C.Contract.Database;
 using MAP.C.Contract.Diagnostics;
 using MAP.C.Contract.Localization;
 using MAP.C.Contract.Menus;
 using MAP.C.Contract.Navigation;
 using MAP.C.UI.Errors;
-using MAP.C.UI.Headers;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Logging;
-using Radzen;
 using System.Globalization;
 using System.Text.Json;
 
 namespace MAP.C.UI.Pages;
 
 /// <summary>
-/// Base component for MAP module pages. Inherit from this type to access navigation,
-/// localization, notifications, confirmation dialogs, and the configured database API.
+/// Base component for MAP module pages. Provides the capabilities shared by nearly every page:
+/// navigation, localization, database access, navigation parameters, and page lifecycle handling.
+/// Inject optional UI or platform services directly in pages that need them.
 /// </summary>
 public abstract class BasePage : ComponentBase, IAsyncDisposable
 {
@@ -36,10 +34,6 @@ public abstract class BasePage : ComponentBase, IAsyncDisposable
     [Inject]
     protected IPageNavigator Navigator { get; private set; } = default!;
 
-    /// <summary>Gets the state used to render the host page header.</summary>
-    [Inject]
-    protected IPageHeaderState Header { get; private set; } = default!;
-
     /// <summary>Gets localized text from core and loaded module resources.</summary>
     [Inject]
     protected ILanguageService Lang { get; private set; } = default!;
@@ -48,23 +42,11 @@ public abstract class BasePage : ComponentBase, IAsyncDisposable
     [Inject]
     protected IDbApiClient DbClient { get; private set; } = default!;
 
-    /// <summary>Gets the current user, client IP address, and program context.</summary>
-    [Inject]
-    protected IClientContextService ClientContext { get; private set; } = default!;
-
     /// <summary>Gets the loaded menu and its current database configuration.</summary>
     [Inject]
     protected IMenuService MenuService { get; private set; } = default!;
 
-    /// <summary>Gets the Radzen dialog service for advanced dialog scenarios.</summary>
-    [Inject]
-    protected DialogService Dialogs { get; private set; } = default!;
-
-    /// <summary>Gets the Radzen notification service for advanced notification scenarios.</summary>
-    [Inject]
-    protected NotificationService Notifications { get; private set; } = default!;
-
-    /// <summary>Gets the notifier used to show safely correlated module errors.</summary>
+    /// <summary>Gets the notifier used to show safely correlated module navigation errors.</summary>
     [Inject]
     protected ModuleErrorNotifier ErrorNotifier { get; private set; } = default!;
 
@@ -85,12 +67,6 @@ public abstract class BasePage : ComponentBase, IAsyncDisposable
     protected string DbName =>
         MenuService.DbName
         ?? throw new InvalidOperationException("Database name is not configured.");
-
-    /// <summary>Gets the user name supplied by the current client context.</summary>
-    protected string? UserName => ClientContext.Current.UserName;
-
-    /// <summary>Gets the client IP address supplied by the current client context.</summary>
-    protected string? IpAddress => ClientContext.Current.IpAddress;
 
     /// <summary>
     /// Gets an optional navigation parameter converted to <typeparamref name="T"/>.
@@ -143,7 +119,9 @@ public abstract class BasePage : ComponentBase, IAsyncDisposable
                 return true;
             }
 
-            value = JsonSerializer.Deserialize<T>(JsonSerializer.Serialize(rawValue, DbJson.Options), DbJson.Options);
+            value = JsonSerializer.Deserialize<T>(
+                JsonSerializer.Serialize(rawValue, DbJson.Options),
+                DbJson.Options);
             return value is not null || default(T) is null;
         }
         catch (Exception)
@@ -151,22 +129,6 @@ public abstract class BasePage : ComponentBase, IAsyncDisposable
             value = default;
             return false;
         }
-    }
-
-    /// <summary>Shows a success notification.</summary>
-    protected void NotifySuccess(string message) => Notify(message, NotificationSeverity.Success);
-
-    /// <summary>Shows a warning notification.</summary>
-    protected void NotifyWarning(string message) => Notify(message, NotificationSeverity.Warning);
-
-    /// <summary>Shows an error notification.</summary>
-    protected void NotifyError(string message) => Notify(message, NotificationSeverity.Error);
-
-    /// <summary>Shows a confirmation dialog and returns <see langword="true"/> only when confirmed.</summary>
-    protected async Task<bool> ConfirmAsync(string message)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(message);
-        return await Dialogs.Confirm(message) == true;
     }
 
     /// <summary>Queries a PostgreSQL function and returns the validated raw API response.</summary>
@@ -177,7 +139,10 @@ public abstract class BasePage : ComponentBase, IAsyncDisposable
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(commandName);
         return DbClient.QueryPostgreSqlFunctionAsync(
-            DbName, commandName, parameters ?? new { }, cancellationToken ?? PageCancellationToken);
+            DbName,
+            commandName,
+            parameters ?? new { },
+            cancellationToken ?? PageCancellationToken);
     }
 
     /// <summary>Queries a PostgreSQL function and maps its array data to a list.</summary>
@@ -188,7 +153,10 @@ public abstract class BasePage : ComponentBase, IAsyncDisposable
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(commandName);
         return DbClient.QueryPostgreSqlFunctionAsync<T>(
-            DbName, commandName, parameters ?? new { }, cancellationToken ?? PageCancellationToken);
+            DbName,
+            commandName,
+            parameters ?? new { },
+            cancellationToken ?? PageCancellationToken);
     }
 
     /// <summary>Queries a PostgreSQL function and maps its data to a single model.</summary>
@@ -199,7 +167,10 @@ public abstract class BasePage : ComponentBase, IAsyncDisposable
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(commandName);
         return DbClient.QuerySinglePostgreSqlFunctionAsync<T>(
-            DbName, commandName, parameters ?? new { }, cancellationToken ?? PageCancellationToken);
+            DbName,
+            commandName,
+            parameters ?? new { },
+            cancellationToken ?? PageCancellationToken);
     }
 
     /// <summary>Executes a PostgreSQL procedure and returns the validated raw API response.</summary>
@@ -210,31 +181,10 @@ public abstract class BasePage : ComponentBase, IAsyncDisposable
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(commandName);
         return DbClient.ExecutePostgreSqlProcedureAsync(
-            DbName, commandName, parameters ?? new { }, cancellationToken ?? PageCancellationToken);
-    }
-
-    /// <summary>Gets the localization key displayed as the page header title.</summary>
-    /// <remarks>Override to set a localized title; return <see langword="null"/> when the page supplies its own header content.</remarks>
-    protected virtual string? HeaderTitleKey => null;
-
-    /// <summary>Gets the visual kind applied to the page header.</summary>
-    protected virtual HeaderKind HeaderKind => HeaderKind.Default;
-
-    /// <summary>Gets optional custom content rendered in the page header.</summary>
-    protected virtual RenderFragment? HeaderContent => null;
-
-    /// <summary>Gets whether the host should show a back button in the page header.</summary>
-    protected virtual bool ShowBack => true;
-
-    /// <summary>Refreshes the host header after page state or header properties change.</summary>
-    protected void RefreshHeader()
-    {
-        Header.Set(new PageHeader(
-            PageId,
-            HeaderKind,
-            HeaderTitleKey,
-            HeaderContent,
-            ShowBack));
+            DbName,
+            commandName,
+            parameters ?? new { },
+            cancellationToken ?? PageCancellationToken);
     }
 
     /// <summary>
@@ -248,22 +198,6 @@ public abstract class BasePage : ComponentBase, IAsyncDisposable
         _pageParameters = current?.Parameters;
         Navigator.Navigating += OnNavigating;
         Lang.LanguageChanged += OnLanguageChanged;
-    }
-
-    protected override void OnAfterRender(bool firstRender)
-    {
-        if (firstRender)
-            RefreshHeader();
-    }
-
-    private void Notify(string message, NotificationSeverity severity)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(message);
-        Notifications.Notify(new NotificationMessage
-        {
-            Severity = severity,
-            Detail = message
-        });
     }
 
     private void OnNavigating()
@@ -284,9 +218,7 @@ public abstract class BasePage : ComponentBase, IAsyncDisposable
     }
 
     /// <summary>
-    /// Safe navigation method for Module pages.
-    /// Catches navigation exceptions and shows notification instead of
-    /// letting the error propagate to the Module's ErrorBoundary.
+    /// Opens another module page and converts navigation failures to the standard module error notification.
     /// </summary>
     protected async Task OpenPageAsync(
         string pageId,
@@ -299,7 +231,7 @@ public abstract class BasePage : ComponentBase, IAsyncDisposable
         }
         catch (Exception ex)
         {
-            // Logging is owned by PageNavigator — don't duplicate here
+            // Logging is owned by PageNavigator — don't duplicate here.
             ErrorNotifier.Notify(ModuleErrorId.GetOrCreate(ex));
         }
     }
