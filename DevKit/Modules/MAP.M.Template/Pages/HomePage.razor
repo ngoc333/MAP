@@ -1,5 +1,8 @@
 @inherits BasePage
 @namespace MAP.M.Template.Pages
+@inject IClientContextService ClientContext
+@inject DialogService Dialogs
+@inject NotificationService Notifications
 
 <div class="p-4">
     <h2>@Lang.T("TemplateHome.Title")</h2>
@@ -7,16 +10,16 @@
 
     <ApiSection Title="@Lang.T("TemplateHome.RuntimeTitle")" Note="@Lang.T("TemplateHome.RuntimeDescription")">
         <p>PageId: @PageId</p>
-        <p>UserName: @UserName | IpAddress: @IpAddress</p>
+        <p>UserName: @ClientContext.Current.UserName | IpAddress: @ClientContext.Current.IpAddress</p>
         <p>DbName: @MenuService.DbName | Language: @Lang.CurrentLanguage | Session: @AppSession.Id</p>
     </ApiSection>
 
     <ApiSection Title="@Lang.T("TemplateHome.NotificationsTitle")" Note="@Lang.T("TemplateHome.NotificationsDescription")">
         <ActionRow>
-            <RadzenButton Text="NotifySuccess" ButtonStyle="ButtonStyle.Success" Click="ShowSuccess" />
-            <RadzenButton Text="NotifyWarning" ButtonStyle="ButtonStyle.Warning" Click="ShowWarning" />
-            <RadzenButton Text="NotifyError" ButtonStyle="ButtonStyle.Danger" Click="ShowError" />
-            <RadzenButton Text="ConfirmAsync" Click="ConfirmAsync" />
+            <RadzenButton Text="NotificationService success" ButtonStyle="ButtonStyle.Success" Click="ShowSuccess" />
+            <RadzenButton Text="NotificationService warning" ButtonStyle="ButtonStyle.Warning" Click="ShowWarning" />
+            <RadzenButton Text="NotificationService error" ButtonStyle="ButtonStyle.Danger" Click="ShowError" />
+            <RadzenButton Text="DialogService.Confirm" Click="ConfirmAsync" />
         </ActionRow>
         <ResultPanel Value="@_result" />
     </ApiSection>
@@ -51,15 +54,22 @@
 
     private string? _result;
 
-    private void ShowSuccess() => NotifySuccess(Lang.T("TemplateHome.Success"));
+    private void ShowSuccess() => Notify(Lang.T("TemplateHome.Success"), NotificationSeverity.Success);
 
-    private void ShowWarning() => NotifyWarning("This is a warning notification.");
+    private void ShowWarning() => Notify("This is a warning notification.", NotificationSeverity.Warning);
 
-    private void ShowError() => NotifyError("This is an error notification.");
+    private void ShowError() => Notify("This is an error notification.", NotificationSeverity.Error);
+
+    private void Notify(string message, NotificationSeverity severity) =>
+        Notifications.Notify(new NotificationMessage
+        {
+            Severity = severity,
+            Detail = message
+        });
 
     private async Task ConfirmAsync()
     {
-        _result = await base.ConfirmAsync("Run the confirmation dialog?")
+        _result = await Dialogs.Confirm("Run the confirmation dialog?") == true
             ? "Confirmed"
             : "Cancelled";
     }
