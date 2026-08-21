@@ -7,12 +7,12 @@
 
     <ApiSection Title="@Lang.T("TemplateDetail.ParametersTitle")">
         <p class="text-sm text-gray-600"><code>GetParameter&lt;T&gt;</code>: @Lang.T("TemplateDetail.GetParameterDescription")</p>
-        <p class="text-sm text-gray-600"><code>RequireParameter&lt;T&gt;</code>: @Lang.T("TemplateDetail.RequireParameterDescription")</p>
+        <p class="text-sm text-gray-600"><code>TryGetParameter&lt;T&gt;</code>: use when the page must distinguish missing/invalid values from valid default values.</p>
         <p>PageId: @PageId | CanBack: @Navigator.CanBack</p>
         <p>CustomerId: @_customerId</p>
         <p>Status: @_status</p>
         <p>Optional value: @(GetParameter<string>("OptionalNote") ?? "null")</p>
-        <p><code>RequireParameter&lt;string&gt;("Status")</code>: @_requiredStatus</p>
+        <p><code>TryGetParameter&lt;string&gt;("Status")</code>: @_statusLookupResult</p>
         <ActionRow>
             <RadzenButton Text="ConfirmAsync" Click="ConfirmAsync" />
             <RadzenButton Text="Back" Disabled="@(!Navigator.CanBack)" Click="BackAsync" />
@@ -24,7 +24,7 @@
 @code {
     private int _customerId;
     private string? _status;
-    private string? _requiredStatus;
+    private string? _statusLookupResult;
     private string? _result;
 
     protected override void OnInitialized()
@@ -32,9 +32,9 @@
         base.OnInitialized();
         _customerId = GetParameter<int>("CustomerId");
         _status = GetParameter<string>("Status");
-        _requiredStatus = _status is null
-            ? "Status was not supplied."
-            : RequireParameter<string>("Status");
+        _statusLookupResult = TryGetParameter<string>("Status", out var status)
+            ? status
+            : "Status was not supplied or could not be converted.";
     }
 
     private async Task ConfirmAsync()
