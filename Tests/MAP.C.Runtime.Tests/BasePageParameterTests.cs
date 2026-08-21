@@ -31,12 +31,15 @@ public sealed class BasePageParameterTests
     }
 
     [Fact]
-    public void RequireParameter_ThrowsForMissingOrInvalidValues()
+    public void TryGetParameter_ReturnsFalseForMissingOrInvalidValues()
     {
-        var page = CreatePage(new { Invalid = "not-an-int" });
+        var page = CreatePage(new { Count = 42, Invalid = "not-an-int" });
 
-        Assert.Throws<InvalidOperationException>(() => page.GetRequired<int>("Missing"));
-        Assert.Throws<InvalidOperationException>(() => page.GetRequired<int>("Invalid"));
+        Assert.True(page.TryGet<int>("Count", out var count));
+        Assert.Equal(42, count);
+
+        Assert.False(page.TryGet<int>("Missing", out _));
+        Assert.False(page.TryGet<int>("Invalid", out _));
     }
 
     private static TestPage CreatePage(object parameters)
@@ -94,7 +97,7 @@ public sealed class BasePageParameterTests
     {
         public string CurrentPageId => PageId;
         public T? GetOptional<T>(string name) => GetParameter<T>(name);
-        public T GetRequired<T>(string name) => RequireParameter<T>(name);
+        public bool TryGet<T>(string name, out T? value) => TryGetParameter(name, out value);
         public void Initialize() => base.OnInitialized();
     }
 
