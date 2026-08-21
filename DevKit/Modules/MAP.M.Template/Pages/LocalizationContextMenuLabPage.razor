@@ -1,6 +1,7 @@
 @inherits BasePage
 @namespace MAP.M.Template.Pages
 @inject IModuleLoader ModuleLoader
+@inject IClientContextService ClientContext
 
 <div class="p-4">
     <h2>@Lang.T("TemplateLocalization.Title")</h2>
@@ -17,7 +18,7 @@
 
     <ApiSection Title="@Lang.T("TemplateLocalization.ContextTitle")" Note="@Lang.T("TemplateLocalization.ContextDescription")">
         <p>ProgramId: @ClientContext.Current.ProgramId</p>
-        <p>UserName: @UserName | IpAddress: @IpAddress</p>
+        <p>UserName: @ClientContext.Current.UserName | IpAddress: @ClientContext.Current.IpAddress</p>
         <p>LocalPath: @ClientContext.Current.LocalPath</p>
     </ApiSection>
 
