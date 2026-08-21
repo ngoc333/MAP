@@ -1,7 +1,6 @@
 using MAP.C.Contract.Localization;
 using MAP.C.Contract.Models;
 using MAP.C.Contract.Navigation;
-using MAP.C.UI.Headers;
 using MAP.C.UI.Pages;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -101,7 +100,6 @@ public sealed class BasePageLifecycleTests
     private static void ConfigurePage(TestPage page, FakeLanguageService languageService, FakePageNavigator navigator)
     {
         SetInjectedProperty(page, "Lang", languageService);
-        SetInjectedProperty(page, "Header", new PageHeaderState());
         SetInjectedProperty(page, "Navigator", navigator);
         SetInjectedProperty(page, "Logger", NullLogger<BasePage>.Instance);
     }
