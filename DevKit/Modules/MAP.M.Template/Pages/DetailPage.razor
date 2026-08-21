@@ -1,5 +1,6 @@
 @inherits BasePage
 @namespace MAP.M.Template.Pages
+@inject DialogService Dialogs
 
 <div class="p-4">
     <h2>@Lang.T("TemplateDetail.Title")</h2>
@@ -14,7 +15,7 @@
         <p>Optional value: @(GetParameter<string>("OptionalNote") ?? "null")</p>
         <p><code>TryGetParameter&lt;string&gt;("Status")</code>: @_statusLookupResult</p>
         <ActionRow>
-            <RadzenButton Text="ConfirmAsync" Click="ConfirmAsync" />
+            <RadzenButton Text="DialogService.Confirm" Click="ConfirmAsync" />
             <RadzenButton Text="Back" Disabled="@(!Navigator.CanBack)" Click="BackAsync" />
         </ActionRow>
         <ResultPanel Value="@_result" />
@@ -39,7 +40,7 @@
 
     private async Task ConfirmAsync()
     {
-        _result = await base.ConfirmAsync($"Continue with customer {_customerId}?")
+        _result = await Dialogs.Confirm($"Continue with customer {_customerId}?") == true
             ? "Confirmed"
             : "Cancelled";
     }
