@@ -17,6 +17,22 @@ public sealed class DbApiClientExtensionsTests
         new FakeDbApiClient(response);
 
     [Fact]
+    public async Task QueryPostgreSqlFunctionAsync_Raw_ReturnsValidatedResponse()
+    {
+        var response = JsonSerializer.SerializeToElement(new
+        {
+            success = true,
+            data = new { total = 12 }
+        }, JsonOptions);
+
+        var client = CreateClient(response);
+        var result = await client.QueryPostgreSqlFunctionAsync("db", "func", new { });
+
+        Assert.True(result.GetProperty("success").GetBoolean());
+        Assert.Equal(12, result.GetProperty("data").GetProperty("total").GetInt32());
+    }
+
+    [Fact]
     public async Task QueryPostgreSqlFunctionAsync_MapsSnakeCaseToPascalCase()
     {
         var response = JsonSerializer.SerializeToElement(new
@@ -36,6 +52,38 @@ public sealed class DbApiClientExtensionsTests
         Assert.Equal("Kiểm thử", result[0].TitleVi);
         Assert.Equal("Test", result[0].TitleEn);
         Assert.True(result[0].IsActive);
+    }
+
+    [Fact]
+    public async Task QuerySinglePostgreSqlFunctionAsync_MapsObjectData()
+    {
+        var response = JsonSerializer.SerializeToElement(new
+        {
+            success = true,
+            data = new { page_id = "ONE", title_vi = "Một", title_en = "One", is_active = true }
+        }, JsonOptions);
+
+        var client = CreateClient(response);
+        var result = await client.QuerySinglePostgreSqlFunctionAsync<TestPage>("db", "func", new { });
+
+        Assert.NotNull(result);
+        Assert.Equal("ONE", result.PageId);
+        Assert.Equal("Một", result.TitleVi);
+    }
+
+    [Fact]
+    public async Task QuerySinglePostgreSqlFunctionAsync_NullData_ReturnsDefault()
+    {
+        var response = JsonSerializer.SerializeToElement(new
+        {
+            success = true,
+            data = (object?)null
+        }, JsonOptions);
+
+        var client = CreateClient(response);
+        var result = await client.QuerySinglePostgreSqlFunctionAsync<TestPage>("db", "func", new { });
+
+        Assert.Null(result);
     }
 
     [Fact]
@@ -157,15 +205,18 @@ public sealed class DbApiClientExtensionsTests
     }
 
     [Fact]
-    public async Task ExecutePostgreSqlProcedureAsync_SuccessTrue_DoesNotThrow()
+    public async Task ExecutePostgreSqlProcedureAsync_SuccessTrue_ReturnsResponse()
     {
         var response = JsonSerializer.SerializeToElement(new
         {
-            success = true
+            success = true,
+            data = new { id = 123 }
         }, JsonOptions);
 
         var client = CreateClient(response);
-        await client.ExecutePostgreSqlProcedureAsync("db", "proc", new { });
+        var result = await client.ExecutePostgreSqlProcedureAsync("db", "proc", new { });
+
+        Assert.Equal(123, result.GetProperty("data").GetProperty("id").GetInt32());
     }
 
     [Fact]
