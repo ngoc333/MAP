@@ -2,6 +2,7 @@
 @namespace MAP.M.Template.Pages
 @inject IAppConfigService ConfigService
 @inject IPlatformCapabilities Platform
+@inject DialogService Dialogs
 
 <div class="p-4">
     <h2>@Lang.T("TemplateConfig.Title")</h2>
@@ -55,7 +56,7 @@
 
     private async Task SaveAsync()
     {
-        if (!await ConfirmAsync(Lang.T("TemplateConfig.SaveConfirm")))
+        if (await Dialogs.Confirm(Lang.T("TemplateConfig.SaveConfirm")) != true)
             return;
 
         await ConfigService.SaveAsync(_draft);
@@ -65,7 +66,7 @@
 
     private async Task RestartAsync()
     {
-        if (await ConfirmAsync(Lang.T("TemplateConfig.RestartConfirmOne")))
+        if (await Dialogs.Confirm(Lang.T("TemplateConfig.RestartConfirmOne")) == true)
             ConfigService.RestartApp();
     }
 
