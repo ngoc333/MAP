@@ -82,7 +82,6 @@ public abstract class BasePage : ComponentBase, IAsyncDisposable
     protected CancellationToken PageCancellationToken => _pageCancellationToken;
 
     /// <summary>Gets the configured database name for the current menu.</summary>
-
     protected string DbName =>
         MenuService.DbName
         ?? throw new InvalidOperationException("Database name is not configured.");
@@ -104,17 +103,54 @@ public abstract class BasePage : ComponentBase, IAsyncDisposable
     }
 
     /// <summary>
-    /// Gets a required navigation parameter converted to <typeparamref name="T"/>.
+    /// Tries to get a navigation parameter converted to <typeparamref name="T"/>.
     /// </summary>
-    /// <exception cref="InvalidOperationException">Thrown when the parameter is absent or cannot be converted.</exception>
-    protected T RequireParameter<T>(string name)
+    protected bool TryGetParameter<T>(string name, out T? value)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
-        if (TryGetParameter(name, out T? value))
-            return value!;
 
-        throw new InvalidOperationException(
-            $"Required page parameter '{name}' is missing or cannot be converted to {typeof(T).Name}.");
+        value = default;
+        var pageParams = PageParameters;
+        if (pageParams is null || pageParams[name] is not { } rawValue)
+            return false;
+
+        if (rawValue is T typedValue)
+        {
+            value = typedValue;
+            return true;
+        }
+
+        try
+        {
+            if (rawValue is JsonElement jsonElement)
+            {
+                value = jsonElement.Deserialize<T>(DbJson.Options);
+                return value is not null || default(T) is null;
+            }
+
+            var targetType = Nullable.GetUnderlyingType(typeof(T)) ?? typeof(T);
+            if (targetType.IsEnum)
+            {
+                value = rawValue is string enumName
+                    ? (T)Enum.Parse(targetType, enumName, ignoreCase: true)
+                    : (T)Enum.ToObject(targetType, rawValue);
+                return true;
+            }
+
+            if (rawValue is IConvertible)
+            {
+                value = (T?)Convert.ChangeType(rawValue, targetType, CultureInfo.InvariantCulture);
+                return true;
+            }
+
+            value = JsonSerializer.Deserialize<T>(JsonSerializer.Serialize(rawValue, DbJson.Options), DbJson.Options);
+            return value is not null || default(T) is null;
+        }
+        catch (Exception)
+        {
+            value = default;
+            return false;
+        }
     }
 
     /// <summary>Shows a success notification.</summary>
@@ -133,7 +169,18 @@ public abstract class BasePage : ComponentBase, IAsyncDisposable
         return await Dialogs.Confirm(message) == true;
     }
 
-    /// <summary>Queries a PostgreSQL function using the current menu database.</summary>
+    /// <summary>Queries a PostgreSQL function and returns the validated raw API response.</summary>
+    protected Task<JsonElement> QueryAsync(
+        string commandName,
+        object? parameters = null,
+        CancellationToken? cancellationToken = null)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(commandName);
+        return DbClient.QueryPostgreSqlFunctionAsync(
+            DbName, commandName, parameters ?? new { }, cancellationToken ?? PageCancellationToken);
+    }
+
+    /// <summary>Queries a PostgreSQL function and maps its array data to a list.</summary>
     protected Task<List<T>> QueryAsync<T>(
         string commandName,
         object? parameters = null,
@@ -144,8 +191,19 @@ public abstract class BasePage : ComponentBase, IAsyncDisposable
             DbName, commandName, parameters ?? new { }, cancellationToken ?? PageCancellationToken);
     }
 
-    /// <summary>Executes a PostgreSQL procedure using the current menu database.</summary>
-    protected Task ExecuteAsync(
+    /// <summary>Queries a PostgreSQL function and maps its data to a single model.</summary>
+    protected Task<T?> QuerySingleAsync<T>(
+        string commandName,
+        object? parameters = null,
+        CancellationToken? cancellationToken = null)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(commandName);
+        return DbClient.QuerySinglePostgreSqlFunctionAsync<T>(
+            DbName, commandName, parameters ?? new { }, cancellationToken ?? PageCancellationToken);
+    }
+
+    /// <summary>Executes a PostgreSQL procedure and returns the validated raw API response.</summary>
+    protected Task<JsonElement> ExecuteAsync(
         string commandName,
         object? parameters = null,
         CancellationToken? cancellationToken = null)
@@ -196,52 +254,6 @@ public abstract class BasePage : ComponentBase, IAsyncDisposable
     {
         if (firstRender)
             RefreshHeader();
-    }
-
-    private bool TryGetParameter<T>(string name, out T? value)
-    {
-        value = default;
-        var pageParams = PageParameters;
-        if (pageParams is null || pageParams[name] is not { } rawValue)
-            return false;
-
-        if (rawValue is T typedValue)
-        {
-            value = typedValue;
-            return true;
-        }
-
-        try
-        {
-            if (rawValue is JsonElement jsonElement)
-            {
-                value = jsonElement.Deserialize<T>(DbJson.Options);
-                return value is not null || default(T) is null;
-            }
-
-            var targetType = Nullable.GetUnderlyingType(typeof(T)) ?? typeof(T);
-            if (targetType.IsEnum)
-            {
-                value = rawValue is string enumName
-                    ? (T)Enum.Parse(targetType, enumName, ignoreCase: true)
-                    : (T)Enum.ToObject(targetType, rawValue);
-                return true;
-            }
-
-            if (rawValue is IConvertible)
-            {
-                value = (T?)Convert.ChangeType(rawValue, targetType, CultureInfo.InvariantCulture);
-                return true;
-            }
-
-            value = JsonSerializer.Deserialize<T>(JsonSerializer.Serialize(rawValue, DbJson.Options), DbJson.Options);
-            return value is not null || default(T) is null;
-        }
-        catch (Exception)
-        {
-            value = default;
-            return false;
-        }
     }
 
     private void Notify(string message, NotificationSeverity severity)
