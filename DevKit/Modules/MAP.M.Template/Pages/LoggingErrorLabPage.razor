@@ -1,6 +1,7 @@
 @inherits BasePage
 @namespace MAP.M.Template.Pages
 @inject ILogStore LogStore
+@inject DialogService Dialogs
 
 <div class="p-4">
     <h2>@Lang.T("TemplateLogging.Title")</h2>
@@ -74,7 +75,7 @@
 
     private async Task ClearAsync()
     {
-        if (!await ConfirmAsync("Clear only 2099-12-31 sandbox logs?"))
+        if (await Dialogs.Confirm("Clear only 2099-12-31 sandbox logs?") != true)
             return;
 
         await LogStore.ClearAsync(SandboxDay, PageCancellationToken);
