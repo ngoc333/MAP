@@ -7,7 +7,7 @@
     <p>@Lang.T("TemplateDatabase.OfflineNote")</p>
 
     <ApiSection Title="@Lang.T("TemplateDatabase.RecommendedTitle")" Note="@Lang.T("TemplateDatabase.RecommendedDescription")">
-        <p>Configured DbName: @MenuService.DbName</p>
+        <p>Configured DbName: @DbName</p>
         <label>
             Command
             <input @bind="_commandName" />
@@ -17,8 +17,10 @@
             <input @bind="_parametersJson" />
         </label>
         <ActionRow>
-            <RadzenButton Text="QueryAsync&lt;DemoDbRow&gt;" Disabled="@string.IsNullOrWhiteSpace(_commandName)" Click="QueryAsync" />
-            <RadzenButton Text="ExecuteAsync" Disabled="@string.IsNullOrWhiteSpace(_commandName)" Click="ExecuteAsync" />
+            <RadzenButton Text="QueryAsync&lt;DemoDbRow&gt; → List" Disabled="@string.IsNullOrWhiteSpace(_commandName)" Click="QueryListAsync" />
+            <RadzenButton Text="QuerySingleAsync&lt;DemoDbRow&gt; → Model" Disabled="@string.IsNullOrWhiteSpace(_commandName)" Click="QuerySingleDemoAsync" />
+            <RadzenButton Text="QueryAsync → JSON" Disabled="@string.IsNullOrWhiteSpace(_commandName)" Click="QueryRawAsync" />
+            <RadzenButton Text="ExecuteAsync → JSON" Disabled="@string.IsNullOrWhiteSpace(_commandName)" Click="ExecuteDemoAsync" />
         </ActionRow>
     </ApiSection>
 
@@ -65,22 +67,34 @@
     protected override void OnInitialized()
     {
         base.OnInitialized();
-        _lowLevelDbName = MenuService.DbName ?? "";
+        _lowLevelDbName = DbName;
     }
 
-    private Task QueryAsync() => CaptureAsync(async () =>
+    private Task QueryListAsync() => CaptureAsync(async () =>
     {
-        var rows = await base.QueryAsync<DemoDbRow>(
+        var rows = await QueryAsync<DemoDbRow>(
             _commandName,
             ParseParameters(_parametersJson));
         return JsonSerializer.Serialize(rows);
     });
 
-    private Task ExecuteAsync() => CaptureAsync(async () =>
+    private Task QuerySingleDemoAsync() => CaptureAsync(async () =>
     {
-        await base.ExecuteAsync(_commandName, ParseParameters(_parametersJson));
-        return "Procedure completed.";
+        var row = await QuerySingleAsync<DemoDbRow>(
+            _commandName,
+            ParseParameters(_parametersJson));
+        return JsonSerializer.Serialize(row);
     });
+
+    private Task QueryRawAsync() => CaptureAsync(async () =>
+        (await QueryAsync(
+            _commandName,
+            ParseParameters(_parametersJson))).GetRawText());
+
+    private Task ExecuteDemoAsync() => CaptureAsync(async () =>
+        (await ExecuteAsync(
+            _commandName,
+            ParseParameters(_parametersJson))).GetRawText());
 
     private Task CallPostgreSqlFunctionAsync() => CaptureAsync(async () =>
         (await DbClient.CallPostgreSqlFunctionAsync(
@@ -104,14 +118,11 @@
             PageCancellationToken)));
 
     private Task ExecutePostgreSqlProcedureAsync() => CaptureAsync(async () =>
-    {
-        await DbClient.ExecutePostgreSqlProcedureAsync(
+        (await DbClient.ExecutePostgreSqlProcedureAsync(
             _lowLevelDbName,
             _commandName,
             ParseParameters(_parametersJson),
-            PageCancellationToken);
-        return "Procedure completed.";
-    });
+            PageCancellationToken)).GetRawText());
 
     private Task CallOracleAsync() => CaptureAsync(async () =>
         (await DbClient.CallOracleAsync(
